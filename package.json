@@ -1,0 +1,33 @@
+{
+  "name": "monarch",
+  "version": "0.0.0",
+  "description": "Monarch",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thebrodmann/monarch.git"
+  },
+  "keywords": [
+    "frontend",
+    "functional",
+    "elm",
+    "react",
+    "reactive",
+    "TEA",
+    "UI",
+    "front-end",
+    "purescript"
+  ],
+  "author": "Mohammad Hasani <thebrodmann@protonmail.com>",
+  "license": "MPL",
+  "bugs": {
+    "url": "https://github.com/thebrodmann/monarch/issues"
+  },
+  "homepage": "https://github.com/thebrodmann/monarch#readme",
+  "dependencies": {
+    "purescript": "^0.13.8"
+  }
+}
