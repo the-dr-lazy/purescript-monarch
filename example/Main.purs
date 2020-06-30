@@ -2,46 +2,44 @@ module Main ( main ) where
 
 import Prelude
 import Data.Maybe
-import Data.Array                   as Array
 import Effect
-import Effect.Aff ( launchAff_ )
+import Effect.Aff            ( launchAff_ )
 import Monarch.VirtualDOM
-import Monarch                      as Monarch
+import Monarch                                 as Monarch
+import API                                     as API
 import Utils
 
-type Model
-  = Array Int
+type Model = Int
 
 data Message
-  = Add
-  | Increment Int
-  | Decrement Int
+  = Increment 
+  | Decrement 
 
 init :: Model
-init = []
-
-modifyAt :: forall a. Int -> (a -> a) -> Array a -> Array a
-modifyAt ix f xs = fromMaybe xs $ Array.modifyAt ix f xs
+init = 0
 
 update :: Message -> Model -> Model
-update Add = flip Array.snoc 0
-update (Increment ix) = modifyAt ix (_ + 1)
-update (Decrement ix) = modifyAt ix (_ - 1)
+update Increment = (_ + 1)
+update Decrement = (_ - 1)
 
 list :: Model -> Array (VirtualNode Message)
 list = Array.mapWithIndex \ix x ->
   h_ "div"
-     [ h "button" { on: { click: const $ Decrement ix } } [ text "-" ]
-     , text $ show x
-     , h "button" { on: { click: const $ Increment ix } } [ text "+" ]
-     ]
 
 view :: Model -> VirtualNode Message
 view model =
   h_ "div"
-     [ h "button" { on: { click: const $ Add } } [ text "add" ]
-     , h_ "div" $ list model
+     [ h "button" { on: { click: const $ Decrement } } [ text "-" ]
+     , text $ show model
+     , h "button" { on: { click: const $ Increment } } [ text "+" ]
      ]
+
+command :: Message -> Aff (Maybe Message)
+command Increment = API.increment *> mempty
+command Decrement = API.decrement *> mempty
+
+subscription :: Source Model -> Event Message
+subscription _ = interval 1000 $> Increment
 
 main :: Effect Unit
 main = launchAff_ do
@@ -49,5 +47,7 @@ main = launchAff_ do
   Monarch.document { init
                    , update
                    , view
+                   , command
+                   , subscription
                    , element
                    }
