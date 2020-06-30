@@ -1,7 +1,8 @@
 module Monarch.Document (document) where
 
 import Prelude
-import Prim.Row
+import Type.Row              ( type (+) )
+import Type.Row                                          as Row
 import Data.Maybe
 import Record                                            as Record
 import Effect
@@ -25,14 +26,21 @@ import Monarch.VirtualDOM    ( VirtualNode )
 import Monarch.VirtualDOM                                as VirtualDOM
 import Unsafe.Coerce         ( unsafeCoerce )
 
-type Spec model message
+type OptionalSpec model message r
+  = ( command :: message -> Command message
+    , subscription :: Source model -> Event message
+    | r
+    )
+
+type RequiredSpec model message r
   = ( init :: model
     , update :: message -> model -> model
-    , command :: message -> Command message
-    , subscription :: Source model -> Event message
     , view :: model -> VirtualNode message
     , element :: HTMLElement
+    | r
     )
+
+type Spec model message = RequiredSpec model message + OptionalSpec model message + ()
 
 swap :: forall a. (a -> Effect Unit) -> (a -> a -> Effect Unit) -> Event a -> Effect Unsubscribe
 swap mount patch e = do
@@ -42,7 +50,7 @@ swap mount patch e = do
     Ref.write (Just x) xRef
   where f = maybe mount patch
 
-defaultSpec :: forall model message. { command :: message -> Command message, subscription :: Source model -> Event message }
+defaultSpec :: forall model message. { | OptionalSpec model message + () }
 defaultSpec = { command: const $ pure Nothing, subscription: const eNever }
 
 document' :: forall model message. Record (Spec model message) -> Effect Unsubscribe
@@ -69,12 +77,8 @@ document' spec@{ view, element } = do
     unsubscribeRender
 
 document :: forall model message spec spec'
-          . Union spec spec' (Spec model message)
-         => Lacks "init" spec'
-         => Lacks "update" spec'
-         => Lacks "view" spec'
-         => Lacks "element" spec'
-         => Record spec
+          . Row.Union spec spec' (OptionalSpec model message + ())
+         => { | RequiredSpec model message + spec } 
          -> Aff Unit
 document spec = makeAff \_ -> do
   unsubscribe <- document' $ unsafeCoerce (Record.union defaultSpec spec)

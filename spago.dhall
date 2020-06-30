@@ -12,6 +12,7 @@
   , "psci-support"
   , "web-html"
   , "web-dom"
+  , "typelevel-prelude"
   ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]
