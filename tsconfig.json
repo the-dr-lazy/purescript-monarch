@@ -1,0 +1,16 @@
+{
+  "exclude": ["node_modules", "output", "public", ".cache"],
+  "compilerOptions": {
+    "target": "es5",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "allowJs": true,
+    "noEmitHelpers": true,
+    "importHelpers": true,
+    "lib": ["esnext", "dom", "scripthost", "es2015"],
+    "strict": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "rootDir": "src"
+  }
+}
