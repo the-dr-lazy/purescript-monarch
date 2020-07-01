@@ -7,13 +7,29 @@ import { eventListenersModule } from 'snabbdom/modules/eventlisteners'
 import { h as _h } from 'snabbdom/h'
 import { unsafePerformEffect } from '../../output/Effect.Unsafe'
 
-type VirtualNode<message> = VNode & {
+type VirtualNode<message> = {
+  sel: string
   listener: any
   dispatch?: Dispatch<message>
   children?: Array<string | VirtualNode<message>>
+  data?: VirtualNodeSpec<message>
 }
 
-type VirtualNodeData = VNodeData
+type VirtualNodeProps = Record<string, any>
+type VirtualNodeAttrs = Record<string, string | number | boolean>
+type VirtualNodeStyle = Record<string, string> & {
+  delayed?: Record<string, string>
+  remove?: Record<string, string>
+}
+type VirtualNodeEvent<message> = Record<string, (event: Event) => message>
+
+type VirtualNodeSpec<message> = {
+  key?: string | number | boolean
+  props?: VirtualNodeProps
+  attrs?: VirtualNodeAttrs
+  style?: VirtualNodeStyle
+  on?: VirtualNodeEvent<message>
+}
 
 type Dispatch<message> = (message: message) => Effect<Unit>
 
@@ -26,17 +42,17 @@ const _patch = init([
 
 function bindEventListeners<message>(
   dispatch: Dispatch<message>,
-  virtualNode: VirtualNode<message>,
+  virtualNode: string | VirtualNode<message>,
 ): void {
   if (typeof virtualNode === 'string') return
 
   if (virtualNode.data?.on) {
     Object.entries(virtualNode.data.on).forEach(([key, f]) => {
-      function g(...args: unknown[]) {
-        unsafePerformEffect(dispatch(f(...args)))
+      function g(event: Event) {
+        unsafePerformEffect(dispatch(f(event)))
       }
 
-      virtualNode.data!.on![key] = g
+      virtualNode.data!.on![key] = <any>g
     })
   }
 
@@ -54,7 +70,7 @@ interface Mount {
 
 // prettier-ignore
 export const mount: Mount = dispatch => element => virtualNode =>
-  () => (bindEventListeners(dispatch, virtualNode), _patch(element, virtualNode))
+  () => (bindEventListeners(dispatch, virtualNode), _patch(element, <any>virtualNode))
 
 // prettier-ignore
 interface Patch {
@@ -63,13 +79,13 @@ interface Patch {
 
 // prettier-ignore
 export const patch: Patch = dispatch => previousVirtualNode => nextVirtualNode =>
-  () => (bindEventListeners(dispatch, nextVirtualNode), _patch(previousVirtualNode, nextVirtualNode))
+  () => (bindEventListeners(dispatch, nextVirtualNode), _patch(<any>previousVirtualNode, <any>nextVirtualNode))
 
 // prettier-ignore
 interface H {
-  (selector: string): <message>(data: VirtualNodeData) => (children: VirtualNode<message>[]) => VirtualNode<message>
+  (selector: string): <message>(spec: VirtualNodeSpec<message>) => (children: VirtualNode<message>[]) => VirtualNode<message>
 }
 
 // prettier-ignore
-export const h: H = selector => data => children =>
-  <any>_h(selector, data, children)
+export const h: H = selector => spec => children =>
+  <any>_h(selector, <VNodeData>spec, <any>children)
