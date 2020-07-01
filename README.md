@@ -12,7 +12,7 @@
          src="https://img.shields.io/badge/license-MPL-%23242631?style=for-the-badge"
     >
   </a>
-  <a href="https://t.me/ifpc_channel">
+  <a href="https://t.me/ifpc_group">
     <img alt="Chat" 
          src="https://img.shields.io/badge/chat-Telegram-%23242631?style=for-the-badge"
     >
