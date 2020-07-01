@@ -1,5 +1,5 @@
 {
-  "exclude": ["node_modules", "output", "public", ".cache"],
+  "include": ["src/**/*.ts"],
   "compilerOptions": {
     "target": "es5",
     "module": "commonjs",
@@ -7,10 +7,10 @@
     "allowJs": true,
     "noEmitHelpers": true,
     "importHelpers": true,
-    "lib": ["esnext", "dom", "scripthost", "es2015"],
+    "lib": ["esnext", "dom", "scripthost"],
     "strict": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "rootDir": "src"
+    "removeComments": true
   }
 }
