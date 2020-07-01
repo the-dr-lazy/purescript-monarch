@@ -31,7 +31,7 @@ export const _requestAnimationFrame: _RequestAnimationFrame = f =>
   () => window.requestAnimationFrame(f)
 
 interface _CancelAnimationFrame {
-  (id: Int): Effect<Unti>
+  (id: Int): Effect<Unit>
 }
 
 // prettier-ignore
@@ -43,8 +43,8 @@ interface _RequestIdleCallback {
 }
 
 // prettier-ignore
-export const _requestIdleCallback: _RequestIdleCallback = n => f =>
-  () => window.requestIdleCallback(f, n !== 0 ? { n } : undefined)
+export const _requestIdleCallback: _RequestIdleCallback = timeout => f =>
+  () => window.requestIdleCallback(f, { timeout })
 
 interface _CancelIdleCallback {
   (id: Int): Effect<Unit>
@@ -53,3 +53,32 @@ interface _CancelIdleCallback {
 // prettier-ignore
 export const _cancelIdleCallback: _CancelIdleCallback = id =>
   () => window.cancelIdleCallback(id)
+
+//
+// Experimental Browser APIs Declarations
+//
+
+declare global {
+  interface Window extends IdleCallbackProvider {}
+}
+
+//
+// Request Idle Callback
+//
+type RequestIdleCallbackOptions = {
+  readonly timeout: number
+}
+
+type IdleCallbackDeadline = {
+  readonly didTimeout: boolean
+  readonly timeRemaining: Lazy<Number>
+}
+
+// prettier-ignore
+type IdleCallbackRequestCallback = (deadline: IdleCallbackDeadline) => void
+
+interface IdleCallbackProvider {
+  // prettier-ignore
+  requestIdleCallback(callback: IdleCallbackRequestCallback, options?: RequestIdleCallbackOptions): number
+  cancelIdleCallback(handle: number): void
+}
