@@ -81,7 +81,7 @@ document :: forall model message spec spec'
          => { | RequiredSpec model message + spec } 
          -> Aff Unit
 document spec = makeAff \_ -> do
-  unsubscribe <- document' $ unsafeCoerce (Record.union defaultSpec spec)
+  unsubscribe <- document' (Record.union spec $ unsafeCoerce defaultSpec)
   pure $ effectCanceler unsubscribe
              
              
