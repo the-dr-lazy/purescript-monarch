@@ -28,16 +28,16 @@ import Unsafe.Coerce         ( unsafeCoerce )
 
 -- | Document's optional input specification
 type OptionalSpec model message r
-  = ( command :: message -> Command message
+  = ( command      :: message -> Command message
     , subscription :: Source model -> Event message
     | r
     )
 
 -- | Document's minimal required input specification
 type RequiredSpec model message r
-  = ( init :: model
-    , update :: message -> model -> model
-    , view :: model -> VirtualNode message
+  = ( init    :: model
+    , update  :: message -> model -> model
+    , view    :: model -> VirtualNode message
     , element :: HTMLElement
     | r
     )
