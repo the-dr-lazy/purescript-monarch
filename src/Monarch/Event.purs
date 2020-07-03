@@ -26,7 +26,7 @@ newtype Event a
   = Event ((a -> Effect Unit) -> Effect Unsubscribe)
 
 instance functorEvent :: Functor Event where
-  map f (Event e) = Event \next -> e (next <<< f)
+  map f e = Event \next -> e # subscribe (next <<< f)
 
 instance applyEvent :: Apply Event where
   apply eF eX = Event \next -> do
