@@ -1,4 +1,4 @@
-module Monarch.Document (document) where
+module Monarch.Document (OptionalSpec, RequiredSpec, document) where
 
 import Prelude
 import Type.Row              ( type (+) )
@@ -26,12 +26,14 @@ import Monarch.VirtualDOM    ( VirtualNode )
 import Monarch.VirtualDOM                                as VirtualDOM
 import Unsafe.Coerce         ( unsafeCoerce )
 
+-- | Document's optional input specification
 type OptionalSpec model message r
   = ( command :: message -> Command message
     , subscription :: Source model -> Event message
     | r
     )
 
+-- | Document's minimal required input specification
 type RequiredSpec model message r
   = ( init :: model
     , update :: message -> model -> model
@@ -40,6 +42,7 @@ type RequiredSpec model message r
     | r
     )
 
+-- | Document's full input specification
 type Spec model message = RequiredSpec model message + OptionalSpec model message + ()
 
 swap :: forall a. (a -> Effect Unit) -> (a -> a -> Effect Unit) -> Event a -> Effect Unsubscribe
