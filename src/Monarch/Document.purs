@@ -32,6 +32,7 @@ import Monarch.VirtualDOM    ( VirtualNode )
 import Monarch.VirtualDOM                                as VirtualDOM
 import Monarch.Monad.Maybe   ( whenJustM )
 import Unsafe.Coerce         ( unsafeCoerce )
+
 -- | Document's optional input specification
 type OptionalSpec model message r
   = ( command      :: message -> Command message
