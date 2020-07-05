@@ -1,5 +1,6 @@
 module Monarch.Platform
-  ( Command
+  ( Platform
+  , Command
   , Source
   , mkPlatform
   , runPlatform

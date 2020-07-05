@@ -20,12 +20,18 @@ import Monarch.Event         ( Event
                              , debounceAnimationFrame    
                              , subscribe
                              )
-import Monarch.Platform
+import Monarch.Platform      ( Platform
+                             , Command
+                             , Source
+                             , mkPlatform
+                             , runPlatform
+                             )
+import Monarch.Queue         ( Queue )
 import Monarch.Queue                                     as Queue
 import Monarch.VirtualDOM    ( VirtualNode )
 import Monarch.VirtualDOM                                as VirtualDOM
+import Monarch.Monad.Maybe   ( whenJustM )
 import Unsafe.Coerce         ( unsafeCoerce )
-
 -- | Document's optional input specification
 type OptionalSpec model message r
   = ( command      :: message -> Command message
@@ -38,39 +44,54 @@ type RequiredSpec model message r
   = ( init    :: model
     , update  :: message -> model -> model
     , view    :: model -> VirtualNode message
-    , element :: HTMLElement
+    , container :: HTMLElement
     | r
     )
 
 -- | Document's full input specification
 type Spec model message = RequiredSpec model message + OptionalSpec model message + ()
 
-swap :: forall a. (a -> Effect Unit) -> (a -> a -> Effect Unit) -> Event a -> Effect Unsubscribe
-swap mount patch e = do
+type Document model message
+  = { qVirtualNode :: Queue (VirtualNode message)
+    , platform     :: Platform model message
+    , view         :: model -> VirtualNode message
+    }
+
+swap :: forall a. (a -> Effect Unit) -> (a -> a -> Effect Unit) -> (a -> Effect Unit) -> Event a -> Effect Unsubscribe
+swap mount patch unmount e = do
   xRef <- Ref.new Nothing
-  e # subscribe \x -> do
+  unsubscribe <- e # subscribe \x -> do
     Ref.read xRef >>= flip f x
     Ref.write (Just x) xRef
+  pure do
+    unsubscribe
+    unmount `whenJustM` Ref.read xRef
   where f = maybe mount patch
 
 defaultSpec :: forall model message. { | OptionalSpec model message + () }
 defaultSpec = { command: const $ pure Nothing, subscription: const eNever }
 
-document' :: forall model message. Record (Spec model message) -> Effect Unsubscribe
-document' spec@{ view, element } = do
+mkDocument :: forall model message. { | Spec model message } -> Effect (Document model message)
+mkDocument spec@{ view } = do
   qVirtualNode                         <- Queue.new
   platform@{ eModel, dispatchMessage } <- mkPlatform spec
 
-  let mount = VirtualDOM.mount dispatchMessage element
+  pure { qVirtualNode, platform, view }
+
+runDocument :: forall model message. HTMLElement -> Document model message -> Effect Unsubscribe
+runDocument container { qVirtualNode, platform, view } = do
+  let { eModel, dispatchMessage } = platform
+
+  let mount = VirtualDOM.mount dispatchMessage container
       patch = VirtualDOM.patch dispatchMessage
-      
+
   -- Subscriptions
   unsubscribeRender <- eModel
     # debounceIdleCallback
     # subscribe (qVirtualNode.dispatch <<< view)
   unsubscribeCommit <- qVirtualNode.event
     # debounceAnimationFrame
-    # swap mount patch
+    # swap mount patch VirtualDOM.unmount
   unsubscribePlatform <- runPlatform platform
 
   -- Unsubscribe
@@ -79,12 +100,10 @@ document' spec@{ view, element } = do
     unsubscribeCommit
     unsubscribeRender
 
-document :: forall model message spec spec'
+document :: forall model message spec spec' 
           . Row.Union spec spec' (OptionalSpec model message + ())
          => { | RequiredSpec model message + spec } 
          -> Aff Unit
-document spec = makeAff \_ -> do
-  unsubscribe <- document' (Record.union spec $ unsafeCoerce defaultSpec)
+document spec@{ container } = makeAff \_ -> do
+  unsubscribe <- runDocument container =<< mkDocument (Record.union spec $ unsafeCoerce defaultSpec)
   pure $ effectCanceler unsubscribe
-             
-             

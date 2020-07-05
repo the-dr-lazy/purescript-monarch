@@ -11,6 +11,8 @@ foreign import mount :: forall message. (message -> Effect Unit) -> HTMLElement 
 
 foreign import patch :: forall message. (message -> Effect Unit) -> VirtualNode message -> VirtualNode message -> Effect Unit
 
+foreign import unmount :: forall message. VirtualNode message -> Effect Unit
+
 foreign import h :: forall props message. String -> Record props -> Array (VirtualNode message) -> VirtualNode message 
 
 h_ :: forall message. String -> Array (VirtualNode message) -> VirtualNode message 

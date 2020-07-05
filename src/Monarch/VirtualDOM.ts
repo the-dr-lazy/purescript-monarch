@@ -81,6 +81,14 @@ interface Patch {
 export const patch: Patch = dispatch => previousVirtualNode => nextVirtualNode =>
   () => (bindEventListeners(dispatch, nextVirtualNode), _patch(<any>previousVirtualNode, <any>nextVirtualNode))
 
+interface Unmount {
+  <message>(virtualNode: VirtualNode<message>): Effect<Unit>
+}
+
+// prettier-ignore
+export const unmount: Unmount = virtualNode =>
+  () => _patch(<any>virtualNode, _h('!'))
+
 // prettier-ignore
 interface H {
   (selector: string): <message>(spec: VirtualNodeSpec<message>) => (children: VirtualNode<message>[]) => VirtualNode<message>
