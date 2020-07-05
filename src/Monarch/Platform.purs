@@ -70,4 +70,4 @@ runPlatform { eCommand, eMessageFromSubscription, dispatchMessage } = do
   unsubscribeSubscription <- eMessageFromSubscription # subscribe dispatchMessage
   -- Unsubscribe
   pure $ unsubscribeCommand *> unsubscribeSubscription
-  where runCommand = launchAff_ <<< flip whenJustM (liftEffect <<< dispatchMessage)
+  where runCommand = launchAff_ <<< whenJustM (liftEffect <<< dispatchMessage)

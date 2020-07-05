@@ -87,7 +87,7 @@ debounce :: forall id a. (Effect Unit -> Effect id) -> (id -> Effect Unit) -> Ev
 debounce request cancel e = Event \next -> do
   requestIdRef <- Ref.new Nothing
   e # subscribe \x -> do
-    whenJustM (Ref.read requestIdRef) cancel
+    cancel `whenJustM` Ref.read requestIdRef 
     request (next x *> Ref.write Nothing requestIdRef) >>= flip Ref.write requestIdRef <<< Just
 
 debounceTime :: forall a. Int -> Event a -> Event a
