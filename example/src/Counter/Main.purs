@@ -35,11 +35,11 @@ command Increase = API.increase *> pure Nothing
 command Decrease = API.decrease *> pure Nothing
 
 main :: HTMLElement -> Effect Unit
-main element = launchAff_ $
+main container = launchAff_ $
   Monarch.document { init
                    , update
                    , view
-                   , element
                    , command
+                   , container
                    }
 

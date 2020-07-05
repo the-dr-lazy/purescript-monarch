@@ -1,9 +1,10 @@
 import * as Counter from '../output/Counter.Main'
+import { unsafePerformEffect } from '../output/Effect.Unsafe'
 
 function main() {
   const element = document.getElementById('root')
 
-  unsafePerformcEffect(Counter.main(element))
+  unsafePerformEffect(Counter.main(element))
 }
 
 main()
