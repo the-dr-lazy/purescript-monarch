@@ -1,11 +1,10 @@
 import { init } from 'snabbdom'
-import { VNode, VNodeData } from 'snabbdom/vnode'
+import { VNodeData } from 'snabbdom/vnode'
 import { classModule } from 'snabbdom/modules/class'
 import { propsModule } from 'snabbdom/modules/props'
 import { styleModule } from 'snabbdom/modules/style'
 import { eventListenersModule } from 'snabbdom/modules/eventlisteners'
 import { h as _h } from 'snabbdom/h'
-import { unsafePerformEffect } from '../../output/Effect.Unsafe'
 
 type VirtualNode<message> = {
   sel: string
@@ -31,7 +30,44 @@ type VirtualNodeSpec<message> = {
   on?: VirtualNodeEvent<message>
 }
 
+// prettier-ignore
+interface VirtualNodeMap {
+  <a, b>(f: (a: a) => b): (x: string | VirtualNode<a>) => string | VirtualNode<b>
+}
+
+// prettier-ignore
+function uncurryVirtualNodeMap<a, b>(f: (a: a) => b, virtualNode: string | VirtualNode<a>) {
+  if (typeof virtualNode === 'string') return <any>virtualNode
+
+  if (virtualNode.data?.on) {
+    Object.entries(virtualNode.data.on).forEach(([key, g]) => {
+      function h(event: Event) {
+        return f(g(event))
+      }
+
+      virtualNode.data!.on![key] = <any>h
+    })
+  }
+
+  if (virtualNode.children) {
+    virtualNode.children.forEach(child => virtualNodeMap(f)(child))
+  }
+
+  return <any>virtualNode
+}
+
+// prettier-ignore
+export const virtualNodeMap: VirtualNodeMap = f => virtualNode =>
+  uncurryVirtualNodeMap(f, virtualNode)
+
 type Dispatch<message> = (message: message) => Effect<Unit>
+
+function bindEventListeners<message>(
+  dispatch: Dispatch<message>,
+  virtualNode: string | VirtualNode<message>,
+) {
+  uncurryVirtualNodeMap(message => dispatch(message)(), virtualNode)
+}
 
 const _patch = init([
   classModule,
@@ -39,29 +75,6 @@ const _patch = init([
   styleModule,
   eventListenersModule,
 ])
-
-function bindEventListeners<message>(
-  dispatch: Dispatch<message>,
-  virtualNode: string | VirtualNode<message>,
-): void {
-  if (typeof virtualNode === 'string') return
-
-  if (virtualNode.data?.on) {
-    Object.entries(virtualNode.data.on).forEach(([key, f]) => {
-      function g(event: Event) {
-        unsafePerformEffect(dispatch(f(event)))
-      }
-
-      virtualNode.data!.on![key] = <any>g
-    })
-  }
-
-  if (virtualNode.children) {
-    virtualNode.children.forEach(virtualNode =>
-      bindEventListeners(dispatch, virtualNode),
-    )
-  }
-}
 
 // prettier-ignore
 interface Mount {

@@ -7,11 +7,26 @@ import Unsafe.Coerce    ( unsafeCoerce )
 
 foreign import data VirtualNode :: Type -> Type
 
-foreign import mount :: forall message. (message -> Effect Unit) -> HTMLElement -> VirtualNode message -> Effect Unit
+foreign import mount :: forall message
+                      . (message -> Effect Unit)
+                      -> HTMLElement
+                      -> VirtualNode message
+                      -> Effect Unit
 
-foreign import patch :: forall message. (message -> Effect Unit) -> VirtualNode message -> VirtualNode message -> Effect Unit
+foreign import patch :: forall message
+                      . (message -> Effect Unit)
+                      -> VirtualNode message
+                      -> VirtualNode message
+                      -> Effect Unit
 
-foreign import unmount :: forall message. VirtualNode message -> Effect Unit
+foreign import unmount :: forall message
+                        . VirtualNode message
+                        -> Effect Unit
+
+foreign import virtualNodeMap :: forall a b. (a -> b) -> VirtualNode a -> VirtualNode b
+
+instance functorVirtualNode :: Functor VirtualNode where
+  map = virtualNodeMap
 
 foreign import h :: forall props message. String -> Record props -> Array (VirtualNode message) -> VirtualNode message 
 
