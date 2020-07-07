@@ -60,7 +60,7 @@ mkPlatform { init, update, command, subscription } = do
     { bModel
     , eModel
     , dispatchMessage: qMessage.dispatch
-    , eCommand: map command qMessage.event
+    , eCommand: qMessage.event <#> command
     , eMessageFromSubscription: subscription { bModel, eModel }
     }
 
