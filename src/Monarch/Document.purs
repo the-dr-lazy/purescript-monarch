@@ -42,9 +42,9 @@ type OptionalSpec model message r
 
 -- | Document's minimal required input specification
 type RequiredSpec model message r
-  = ( init    :: model
-    , update  :: message -> model -> model
-    , view    :: model -> VirtualNode message
+  = ( init      :: model
+    , update    :: message -> model -> model
+    , view      :: model -> VirtualNode message
     , container :: HTMLElement
     | r
     )

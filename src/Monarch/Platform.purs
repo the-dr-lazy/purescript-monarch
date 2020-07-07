@@ -30,22 +30,25 @@ import Monarch.VirtualDOM     ( VirtualNode )
 import Monarch.VirtualDOM                                  as VirtualDOM
 
 type Spec model message r
-  = { init :: model
-    , update :: message -> model -> model
-    , command :: message -> Command message
+  = { init         :: model
+    , update       :: message -> model -> model
+    , command      :: message -> Command message
     , subscription :: Source model -> Event message
     | r
     }
 
 type Platform model message
-  = { dispatchMessage :: message -> Effect Unit
-    , bModel :: Behavior model
-    , eModel :: Event model
-    , eCommand :: Event (Command message)
+  = { dispatchMessage          :: message -> Effect Unit
+    , bModel                   :: Behavior model
+    , eModel                   :: Event model
+    , eCommand                 :: Event (Command message)
     , eMessageFromSubscription :: Event message
     }
 
-type Source model = { bModel :: Behavior model, eModel :: Event model }
+type Source model
+  = { bModel :: Behavior model
+    , eModel :: Event model
+    }
 
 type Command message
   = Aff (Maybe message)
