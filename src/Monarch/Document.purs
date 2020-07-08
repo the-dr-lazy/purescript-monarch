@@ -35,7 +35,7 @@ import Unsafe.Coerce         ( unsafeCoerce )
 
 -- | Document's optional input specification
 type OptionalSpec model message r
-  = ( command      :: message -> Command message
+  = ( command      :: message -> model -> Command message
     , subscription :: Source model -> Event message
     | r
     )
@@ -70,7 +70,9 @@ swap mount patch unmount e = do
   where f = maybe mount patch
 
 defaultSpec :: forall model message. { | OptionalSpec model message + () }
-defaultSpec = { command: const $ pure Nothing, subscription: const eNever }
+defaultSpec = { command: \_ _ -> pure Nothing
+              , subscription: const eNever
+              }
 
 mkDocument :: forall model message. { | Spec model message } -> Effect (Document model message)
 mkDocument spec@{ view } = do

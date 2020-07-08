@@ -30,9 +30,9 @@ view model =
      , h "button" { on: { click: (\_ -> Increase) } } [ text "+" ]
      ]
 
-command :: Message -> Aff (Maybe Message)
-command Increase = API.increase *> pure Nothing
-command Decrease = API.decrease *> pure Nothing
+command :: Message -> Model -> Aff (Maybe Message)
+command Increase _ = API.increase *> pure Nothing
+command Decrease _ = API.decrease *> pure Nothing
 
 main :: HTMLElement -> Effect Unit
 main container = launchAff_ $

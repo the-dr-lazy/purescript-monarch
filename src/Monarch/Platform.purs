@@ -18,6 +18,7 @@ import Effect.Aff             ( Aff
 import Effect.Ref                                          as Ref
 import Monarch.Behavior       ( Behavior
                               , step
+                              , sample
                               )
 import Monarch.Event          ( Event
                               , Unsubscribe
@@ -32,7 +33,7 @@ import Monarch.VirtualDOM                                  as VirtualDOM
 type Spec model message r
   = { init         :: model
     , update       :: message -> model -> model
-    , command      :: message -> Command message
+    , command      :: message -> model -> Command message
     , subscription :: Source model -> Event message
     | r
     }
@@ -62,8 +63,8 @@ mkPlatform { init, update, command, subscription } = do
   pure
     { bModel
     , eModel
+    , eCommand: qMessage.event <#> command # sample bModel
     , dispatchMessage: qMessage.dispatch
-    , eCommand: qMessage.event <#> command
     , eMessageFromSubscription: subscription { bModel, eModel }
     }
 

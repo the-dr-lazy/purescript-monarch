@@ -13,3 +13,6 @@ instance functorBehavior :: Functor Behavior where
 
 step :: forall a. a -> Event a -> Behavior a
 step x e = Behavior (sampleOn (pure x <|> e))
+
+sample :: forall a b. Behavior a -> Event (a -> b) -> Event b
+sample (Behavior b) e = b e
