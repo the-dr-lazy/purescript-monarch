@@ -58,7 +58,8 @@ mkPlatform :: forall model message r. Spec model message r -> Effect (Platform m
 mkPlatform { init, update, command, subscription } = do
   qMessage <- Queue.new
   let
-    eModel = scan update qMessage.event init # distinctUntilRefChanged
+    eModel = qMessage.event # scan update init
+                            # distinctUntilRefChanged
     bModel = step init eModel
   pure
     { bModel

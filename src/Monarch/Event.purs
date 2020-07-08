@@ -65,12 +65,11 @@ instance monoidEvent :: Monoid a => Monoid (Event a) where
 eNever :: forall a. Event a
 eNever = Event $ const mempty
 
-scan :: forall a b. (a -> b -> b) -> Event a -> b -> Event b
-scan f e b = Event \next -> do
+scan :: forall a b. (a -> b -> b) -> b -> Event a -> Event b
+scan f b e = Event \next -> do
   resultRef <- Ref.new b
   next b
   e # subscribe \x -> Ref.modify (f x) resultRef >>= next
-
 
 distinctUntilChanged :: forall a. (a -> a -> Boolean) -> Event a -> Event a
 distinctUntilChanged f e = Event \next -> do
