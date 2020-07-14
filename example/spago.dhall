@@ -7,6 +7,7 @@ You can edit this file as you like.
   [ "console"
   , "effect"
   , "aff"
+  , "run"
   , "web-html"
   , "web-dom"
   , "monarch"

@@ -1,28 +1,34 @@
-module Monarch.Document (OptionalSpec, RequiredSpec, document) where
+module Monarch.Document
+  ( OptionalSpec
+  , RequiredSpec
+  , Spec
+  , document
+  )
+where
 
 import Prelude
+
 import Type.Row              ( type (+) )
 import Type.Row                                          as Row
 import Data.Maybe
-import Record                                            as Record
-import Effect
+import Run                   ( Run )
+import Effect                ( Effect )
 import Effect.Aff            ( Aff
                              , makeAff
                              , effectCanceler
                              )
-import Effect.Ref            ( Ref )
 import Effect.Ref                                        as Ref
 import Web.HTML              ( HTMLElement )
 import Monarch.Event         ( Event
                              , Unsubscribe
-                             , eNever
                              , debounceIdleCallback
-                             , debounceAnimationFrame    
+                             , debounceAnimationFrame
                              , subscribe
                              )
 import Monarch.Platform      ( Platform
                              , Command
                              , Source
+                             , Effects
                              , mkPlatform
                              , runPlatform
                              )
@@ -34,8 +40,9 @@ import Monarch.Monad.Maybe   ( whenJustM )
 import Unsafe.Coerce         ( unsafeCoerce )
 
 -- | Document's optional input specification
-type OptionalSpec model message r
-  = ( command      :: message -> model -> Command message
+type OptionalSpec model message effects effects' r
+  = ( command      :: message -> model -> Command message effects
+    , interpreter  :: forall a . Run effects a -> Run effects' a
     , subscription :: Source model -> Event message
     | r
     )
@@ -50,7 +57,9 @@ type RequiredSpec model message r
     )
 
 -- | Document's full input specification
-type Spec model message = RequiredSpec model message + OptionalSpec model message + ()
+type Spec model message effects effects'
+  = RequiredSpec model message
+  + OptionalSpec model message effects effects' ()
 
 type Document model message
   = { qVirtualNode :: Queue (VirtualNode message)
@@ -69,12 +78,10 @@ swap mount patch unmount e = do
     unmount `whenJustM` Ref.read xRef
   where f = maybe mount patch
 
-defaultSpec :: forall model message. { | OptionalSpec model message + () }
-defaultSpec = { command: \_ _ -> pure Nothing
-              , subscription: const eNever
-              }
-
-mkDocument :: forall model message. { | Spec model message } -> Effect (Document model message)
+mkDocument :: forall model message effects e e'
+            . Row.Union e e' (Effects message ())
+           => { | Spec model message effects e } 
+           -> Effect (Document model message)
 mkDocument spec@{ view } = do
   qVirtualNode                         <- Queue.new
   platform@{ eModel, dispatchMessage } <- mkPlatform spec
@@ -103,10 +110,10 @@ runDocument container { qVirtualNode, platform, view } = do
     unsubscribeCommit
     unsubscribeRender
 
-document :: forall model message spec spec' 
-          . Row.Union spec spec' (OptionalSpec model message + ())
-         => { | RequiredSpec model message + spec } 
+document :: forall model message effects e e' 
+          . Row.Union e e' (Effects message ())
+         => { | Spec model message effects e } 
          -> Aff Unit
 document spec@{ container } = makeAff \_ -> do
-  unsubscribe <- runDocument container =<< mkDocument (Record.union spec $ unsafeCoerce defaultSpec)
+  unsubscribe <- runDocument container =<< mkDocument spec
   pure $ effectCanceler unsubscribe

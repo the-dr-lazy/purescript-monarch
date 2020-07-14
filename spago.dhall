@@ -4,6 +4,7 @@
 , dependencies =
   [ "aff"
   , "effect"
+  , "run"
   , "refs"
   , "record"
   , "unsafe-reference"
