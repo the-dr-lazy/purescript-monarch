@@ -116,5 +116,5 @@ runPlatform { eAff, eMessageFromSubscription, dispatchMessage } = do
   unsubscribeCommand      <- eAff                     # subscribe launchAff_
   unsubscribeSubscription <- eMessageFromSubscription # subscribe dispatchMessage
   -- Unsubscribe
-  pure $ unsubscribeCommand *> unsubscribeSubscription
+  pure $ unsubscribeSubscription *> unsubscribeCommand
   
