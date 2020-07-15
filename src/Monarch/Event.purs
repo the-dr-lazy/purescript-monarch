@@ -98,6 +98,9 @@ debounceAnimationFrame = debounce requestAnimationFrame cancelAnimationFrame
 debounceIdleCallback :: forall a. Event a -> Event a
 debounceIdleCallback = debounce requestIdleCallback' cancelIdleCallback
 
+finalize :: forall a. a -> Event a
+finalize x = Event \next -> pure $ next x
+
 sampleOn :: forall a b. Event a -> Event (a -> b) -> Event b
 sampleOn eX eF = Event \next -> do
   xRef <- Ref.new Nothing
