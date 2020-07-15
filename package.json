@@ -10,6 +10,7 @@
     "build:purs": "spago build",
     "build": "run-s build:dependencies build:ts build:purs clean:temp",
     "clean": "git clean -Xdf",
+    "clean:temp": "rimraf node_modules/.temp",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
