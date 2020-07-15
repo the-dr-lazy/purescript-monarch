@@ -1,8 +1,8 @@
 module Monarch
-  ( module Monarch.Platform
-  , module Monarch.Document
+  ( module Monarch.Document
+  , module Monarch.Platform
   )
 where
 
-import Monarch.Platform ( Effects, Command, dispatch )
 import Monarch.Document
+import Monarch.Platform ( Effects, Command, Upstream, dispatch )
