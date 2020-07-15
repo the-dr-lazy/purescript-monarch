@@ -1,7 +1,7 @@
 module Monarch.Platform
   ( Platform
   , Command
-  , Source
+  , Upstream
   , Effects
   , COMMAND
   , CommandF
@@ -45,7 +45,7 @@ type Spec model message effects effects' r
     , update       :: message -> model -> model
     , command      :: message -> model -> Command message effects
     , interpreter  :: forall a . Run effects a -> Run effects' a
-    , subscription :: Source model message -> Event message
+    , subscription :: Upstream model message -> Event message
     | r
     }
 
@@ -57,7 +57,7 @@ type Platform model message
     , eMessageFromSubscription :: Event message
     }
 
-type Source model message
+type Upstream model message
   = { bModel   :: Behavior model
     , eModel   :: Event model
     , eMessage :: Event message

@@ -27,7 +27,7 @@ import Monarch.Event         ( Event
                              )
 import Monarch.Platform      ( Platform
                              , Command
-                             , Source
+                             , Upstream
                              , Effects
                              , mkPlatform
                              , runPlatform
@@ -43,7 +43,7 @@ import Unsafe.Coerce         ( unsafeCoerce )
 type OptionalSpec model message effects effects' r
   = ( command      :: message -> model -> Command message effects
     , interpreter  :: forall a . Run effects a -> Run effects' a
-    , subscription :: Source model message -> Event message
+    , subscription :: Upstream model message -> Event message
     | r
     )
 
