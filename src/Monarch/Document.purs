@@ -43,7 +43,7 @@ import Unsafe.Coerce         ( unsafeCoerce )
 type OptionalSpec model message effects effects' r
   = ( command      :: message -> model -> Command message effects
     , interpreter  :: forall a . Run effects a -> Run effects' a
-    , subscription :: Source model -> Event message
+    , subscription :: Source model message -> Event message
     | r
     )
 

@@ -45,7 +45,7 @@ type Spec model message effects effects' r
     , update       :: message -> model -> model
     , command      :: message -> model -> Command message effects
     , interpreter  :: forall a . Run effects a -> Run effects' a
-    , subscription :: Source model -> Event message
+    , subscription :: Source model message -> Event message
     | r
     }
 
@@ -57,9 +57,10 @@ type Platform model message
     , eMessageFromSubscription :: Event message
     }
 
-type Source model
-  = { bModel :: Behavior model
-    , eModel :: Event model
+type Source model message
+  = { bModel   :: Behavior model
+    , eModel   :: Event model
+    , eMessage :: Event message
     }
 
 data CommandF message a = Dispatch message a
@@ -76,8 +77,6 @@ type Command message r = Run (Effects message r) Unit
 
 dispatch :: forall message r. message -> Run (command :: COMMAND message | r) Unit
 dispatch message = Run.lift _command $ Dispatch message unit
-
-
 
 runCommand :: forall message r
             . (message -> Effect Unit)
@@ -108,7 +107,7 @@ mkPlatform { init, update, command, interpreter, subscription } = do
     , eModel
     , dispatchMessage: qMessage.dispatch
     , eAff: qMessage.event <#> command # sample bModel <#> run
-    , eMessageFromSubscription: subscription { bModel, eModel }
+    , eMessageFromSubscription: subscription { bModel, eModel, eMessage: qMessage.event }
     }
 
 runPlatform :: forall model message. Platform model message -> Effect Unsubscribe
