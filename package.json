@@ -9,8 +9,7 @@
     "build:ts": "tsc -p tsconfig.json --outDir node_modules/.temp/ts && cp -r node_modules/.temp/ts/src/ src",
     "build:purs": "spago build",
     "build": "run-s build:dependencies build:ts build:purs clean:temp",
-    "clean:temp": "rimraf node_modules/.temp",
-    "clean": "rimraf output dist .cache .spago .psci_modules .log src/**/*.js || npm run clean:temp",
+    "clean": "git clean -Xdf",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
