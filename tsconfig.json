@@ -11,6 +11,8 @@
     "strict": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "removeComments": true
+    "removeComments": true,
+    "rootDir": "src",
+    "rootDirs": ["src", "output"]
   }
 }
