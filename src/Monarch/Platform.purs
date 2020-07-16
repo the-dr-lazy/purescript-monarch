@@ -55,8 +55,8 @@ type Platform model message output
   = { bModel          :: Behavior model
     , eModel          :: Event model
     , eOutput         :: Event output
-    , eCommand        :: Event (Effect Unit)
-    , eSubscription   :: Event (Effect Unit)
+    , sCommand        :: Effect Unsubscribe
+    , sSubscription   :: Effect Unsubscribe
     , dispatchMessage :: message -> Effect Unit
     }
 
@@ -129,14 +129,16 @@ mkPlatform { init, update, command, interpreter, subscription } = do
     , eModel
     , eOutput
     , dispatchMessage
-    , eCommand: eMessage <#> command # sample bModel <#> run
-    , eSubscription: subscription upstream <#> dispatchMessage
+    , sCommand: eMessage <#> command
+                          #  sample bModel
+                          #  subscribe run
+    , sSubscription: subscription upstream # subscribe dispatchMessage
     }
 
 runPlatform :: forall model message output. Platform model message output -> Effect Unsubscribe
-runPlatform { eCommand, eSubscription } = do
+runPlatform { sCommand, sSubscription } = do
   -- Subscriptions
-  unsubscribeCommand      <- eCommand      # subscribe'
-  unsubscribeSubscription <- eSubscription # subscribe'
+  unsubscribeCommand      <- sCommand
+  unsubscribeSubscription <- sSubscription
   -- Unsubscribe
   pure $ unsubscribeSubscription *> unsubscribeCommand
