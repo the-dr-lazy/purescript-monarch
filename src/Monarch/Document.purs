@@ -39,7 +39,7 @@ import Unsafe.Coerce         ( unsafeCoerce )
 -- | Document's optional input specification
 type OptionalSpec model message output effects effects' r
   = ( command      :: message -> model -> Command message output effects
-    , interpreter  :: forall a . Run effects a -> Run effects' a
+    , interpreter  :: Run effects ~> Run effects'
     , subscription :: Upstream model message -> Event message
     | r
     )

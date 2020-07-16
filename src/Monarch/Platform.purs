@@ -46,7 +46,7 @@ type Spec model message output effects effects' r
   = { init         :: model
     , update       :: message -> model -> model
     , command      :: message -> model -> Command message output effects
-    , interpreter  :: forall a . Run effects a -> Run effects' a
+    , interpreter  :: Run effects ~> Run effects'
     , subscription :: Upstream model message -> Event message
     | r
     }
