@@ -1,6 +1,6 @@
 # /bower_components/
 # Build JavaScript artifacts
-src/**/*.js
+# src/**/*.js
 
 # Created by https://www.toptal.com/developers/gitignore/api/purescript,node,macos,emacs,react,webstorm
 # Edit at https://www.toptal.com/developers/gitignore?templates=purescript,node,macos,emacs,react,webstorm
