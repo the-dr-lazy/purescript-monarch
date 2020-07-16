@@ -1,7 +1,6 @@
 module Monarch.Document
-  ( OptionalSpec
-  , RequiredSpec
-  , Spec
+  ( Spec
+  , Document'
   , document
   , document_
   )
@@ -29,34 +28,20 @@ import Monarch.Platform      ( Platform
                              , mkPlatform
                              , runPlatform
                              )
+import Monarch.Platform                                  as Platform
 import Monarch.Queue         ( Queue )
 import Monarch.Queue                                     as Queue
 import Monarch.VirtualDOM    ( VirtualNode )
 import Monarch.VirtualDOM                                as VirtualDOM
 import Monarch.Monad.Maybe   ( whenJustM )
-import Unsafe.Coerce         ( unsafeCoerce )
 
--- | Document's optional input specification
-type OptionalSpec model message output effects effects' r
-  = ( command      :: message -> model -> Command message output effects
-    , interpreter  :: Run effects ~> Run effects'
-    , subscription :: Upstream model message -> Event message
-    | r
-    )
-
--- | Document's minimal required input specification
-type RequiredSpec model message r
-  = ( init      :: model
-    , update    :: message -> model -> model
-    , view      :: model -> VirtualNode message
+-- | Document's full input specification
+type Spec model message output effects a r
+  = Platform.Spec model message output effects a
+  + ( view      :: model -> VirtualNode message
     , container :: HTMLElement
     | r
     )
-
--- | Document's full input specification
-type Spec model message output effects effects'
-  = RequiredSpec model message
-  + OptionalSpec model message output effects effects' ()
 
 type Document model message output
   = { platform :: Platform model message output
@@ -75,9 +60,8 @@ swap mount patch unmount e = do
     unmount `whenJustM` Ref.read xRef
   where f = maybe mount patch
 
-mkDocument :: forall model message output effects e e'
-            . Row.Union e e' (Effects message output ())
-           => { | Spec model message output effects e }
+mkDocument :: forall model message output effects a r
+            . { | Spec model message output effects a r }
            -> Effect (Document model message output)
 mkDocument spec@{ view, container } = do
   qVirtualNode                         <- Queue.new
@@ -111,17 +95,15 @@ type Document' output
     , eOutput     :: Event output
     }
 
-document :: forall model message output effects e e'
-          . Row.Union e e' (Effects message output ())
-         => { | Spec model message output effects e }
+document :: forall model message output effects a r
+          . { | Spec model message output effects a r }
          -> Effect (Document' output)
 document spec = do
   d@{ platform } <- mkDocument spec
   unsubscribe <- runDocument d
   pure { unsubscribe, eOutput: platform.eOutput }
 
-document_ :: forall model message output effects e e'
-          . Row.Union e e' (Effects message output ())
-         => { | Spec model message output effects e }
-         -> Effect Unit
+document_ :: forall model message output effects a r
+           . { | Spec model message output effects a r }
+          -> Effect Unit
 document_ = void <<< document

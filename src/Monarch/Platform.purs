@@ -1,5 +1,6 @@
 module Monarch.Platform
-  ( Platform
+  ( Spec
+  , Platform
   , Command
   , Upstream
   , Effects
@@ -42,14 +43,14 @@ import Monarch.Event          ( Event
 import Monarch.Queue                                       as Queue
 import Unsafe.Coerce          ( unsafeCoerce )
 
-type Spec model message output effects effects' r
-  = { init         :: model
+type Spec model message output effects a r
+  = ( init         :: model
     , update       :: message -> model -> model
-    , command      :: message -> model -> Command message output effects
-    , interpreter  :: Run effects ~> Run effects'
+    , command      :: message -> model -> Run effects a
+    , interpreter  :: Run effects a -> Run (Effects message output ()) Unit
     , subscription :: Upstream model message -> Event message
     | r
-    }
+    )
 
 type Platform model message output
   = { bModel          :: Behavior model
@@ -83,7 +84,7 @@ type Effects message output r
     | r
     )
 
-type Command message output r = Run (Effects message output r) Unit
+type Command effects message output a = Run (Effects message output effects) a
 
 dispatch :: forall message output r. message -> Run (command :: COMMAND message output | r) Unit
 dispatch message = Run.lift _command $ Dispatch message unit
@@ -107,9 +108,8 @@ handleCommand dispatchMessage dispatchOutput = case _ of
   Dispatch message next -> Run.liftEffect $ dispatchMessage message *> pure next
   Raise    output  next -> Run.liftEffect $ dispatchOutput output   *> pure next
 
-mkPlatform :: forall model message output effects s s' r
-            . Row.Union s s' (Effects message output ())
-           => Spec model message output effects s r
+mkPlatform :: forall model message output effects a r
+            . { | Spec model message output effects a r }
            -> Effect (Platform model message output)
 mkPlatform { init, update, command, interpreter, subscription } = do
   qMessage <- Queue.new
@@ -122,7 +122,7 @@ mkPlatform { init, update, command, interpreter, subscription } = do
     bModel          = step init eModel
     dispatchMessage = qMessage.dispatch
     dispatchOutput  = qOutput.dispatch
-    run             = launchAff_ <<< runBaseAff' <<< runCommand dispatchMessage dispatchOutput <<< unsafeCoerce interpreter
+    run             = launchAff_ <<< runBaseAff' <<< runCommand dispatchMessage dispatchOutput <<< interpreter
     upstream        = { bModel, eModel, eMessage }
   pure
     { bModel

@@ -40,7 +40,7 @@ handleCounterAPI = case _ of
     pure next
 
 
-type Effects r = (effect :: EFFECT, counter :: COUNTER | r)
+type Effects r = (counter :: COUNTER | r)
 
-runAPI :: forall r. Run (Effects r) ~> Run (effect :: EFFECT | r)
+runAPI :: forall r. Run (effect :: EFFECT, counter :: COUNTER | r) ~> Run (effect :: EFFECT | r)
 runAPI = runCounterAPI

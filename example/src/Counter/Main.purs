@@ -2,6 +2,7 @@ module Counter.Main (main) where
 
 import Prelude
 
+import Type.Row              ( type (+) )
 import Run                   ( Run, EFFECT )
 import Effect                ( Effect )
 import Effect.Aff            ( launchAff_ )
@@ -38,15 +39,15 @@ view model =
      , h "button" { on: { click: (\_ -> Increase) } } [ text "+" ]
      ]
 
-type Effects = API.Effects ()
+type Effects = Monarch.Effects Message Output + API.Effects ()
 
 command :: Message
         -> Model
-        -> Command Message Output Effects
+        -> Command (API.Effects ()) Message Output Unit
 command Increase _ = API.increase 
 command Decrease _ = API.decrease 
 
-interpreter :: forall r. Run (API.Effects r) ~> Run (effect :: EFFECT | r)
+interpreter :: Command (API.Effects ()) Message Output Unit -> Command () Message Output Unit
 interpreter = runAPI
 
 subscription :: forall a. a -> Event Message
