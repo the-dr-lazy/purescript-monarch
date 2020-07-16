@@ -117,8 +117,8 @@ subscribe f (Event e) = e f
 subscribe_ :: forall a. (a -> Effect Unit) -> Event a -> Effect Unit
 subscribe_ f = void <<< subscribe f
 
-subscribe' :: forall a. Event a -> Effect Unsubscribe
-subscribe' = subscribe $ const (pure unit)
+subscribe' :: Event (Effect Unit) -> Effect Unsubscribe
+subscribe' = subscribe identity
 
-subscribe'_ :: forall a. Event a -> Effect Unit
+subscribe'_ :: Event (Effect Unit) -> Effect Unit
 subscribe'_ = void <<< subscribe'
