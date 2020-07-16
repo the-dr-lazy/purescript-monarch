@@ -59,9 +59,9 @@ type Spec model message output effects effects'
   + OptionalSpec model message output effects effects' ()
 
 type Document model message output
-  = { qVirtualNode :: Queue (VirtualNode message)
-    , platform     :: Platform model message output
-    , view         :: model -> VirtualNode message
+  = { platform :: Platform model message output
+    , sRender  :: Effect Unsubscribe
+    , sCommit  :: Effect Unsubscribe
     }
 
 swap :: forall a. (a -> Effect Unit) -> (a -> a -> Effect Unit) -> (a -> Effect Unit) -> Event a -> Effect Unsubscribe
@@ -79,28 +79,27 @@ mkDocument :: forall model message output effects e e'
             . Row.Union e e' (Effects message output ())
            => { | Spec model message output effects e }
            -> Effect (Document model message output)
-mkDocument spec@{ view } = do
+mkDocument spec@{ view, container } = do
   qVirtualNode                         <- Queue.new
   platform@{ eModel, dispatchMessage } <- mkPlatform spec
+  let
+    render = qVirtualNode.dispatch <<< view
+    mount = VirtualDOM.mount dispatchMessage container
+    patch = VirtualDOM.patch dispatchMessage
+  pure
+    { platform
+    , sRender: eModel # debounceIdleCallback
+                      # subscribe render
+    , sCommit: qVirtualNode.event # debounceAnimationFrame
+                                  # swap mount patch VirtualDOM.unmount
+    }
 
-  pure { qVirtualNode, platform, view }
-
-runDocument :: forall model message output. HTMLElement -> Document model message output -> Effect Unsubscribe
-runDocument container { qVirtualNode, platform, view } = do
-  let { eModel, dispatchMessage } = platform
-
-  let mount = VirtualDOM.mount dispatchMessage container
-      patch = VirtualDOM.patch dispatchMessage
-
+runDocument :: forall model message output. Document model message output -> Effect Unsubscribe
+runDocument { sRender, sCommit, platform } = do
   -- Subscriptions
-  unsubscribeRender <- eModel
-    # debounceIdleCallback
-    # subscribe (qVirtualNode.dispatch <<< view)
-  unsubscribeCommit <- qVirtualNode.event
-    # debounceAnimationFrame
-    # swap mount patch VirtualDOM.unmount
+  unsubscribeRender   <- sRender
+  unsubscribeCommit   <- sCommit
   unsubscribePlatform <- runPlatform platform
-
   -- Unsubscribe
   pure do
     unsubscribePlatform
@@ -116,9 +115,9 @@ document :: forall model message output effects e e'
           . Row.Union e e' (Effects message output ())
          => { | Spec model message output effects e }
          -> Effect (Document' output)
-document spec@{ container } = do
+document spec = do
   d@{ platform } <- mkDocument spec
-  unsubscribe <- runDocument container d
+  unsubscribe <- runDocument d
   pure { unsubscribe, eOutput: platform.eOutput }
 
 document_ :: forall model message output effects e e'
