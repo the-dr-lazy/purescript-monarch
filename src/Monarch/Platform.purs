@@ -36,6 +36,7 @@ import Monarch.Event          ( Event
                               , Unsubscribe
                               , scan
                               , subscribe
+                              , subscribe'
                               , distinctUntilRefChanged
                               )
 import Monarch.Queue                                       as Queue
@@ -51,12 +52,12 @@ type Spec model message output effects effects' r
     }
 
 type Platform model message output
-  = { dispatchMessage          :: message -> Effect Unit
-    , bModel                   :: Behavior model
-    , eModel                   :: Event model
-    , eOutput                  :: Event output
-    , eAff                     :: Event (Aff Unit)
-    , eMessageFromSubscription :: Event message
+  = { bModel          :: Behavior model
+    , eModel          :: Event model
+    , eOutput         :: Event output
+    , eCommand        :: Event (Effect Unit)
+    , eSubscription   :: Event (Effect Unit)
+    , dispatchMessage :: message -> Effect Unit
     }
 
 type Upstream model message
@@ -114,23 +115,28 @@ mkPlatform { init, update, command, interpreter, subscription } = do
   qMessage <- Queue.new
   qOutput  <- Queue.new
   let
-    eModel = qMessage.event # scan update init
-                            # distinctUntilRefChanged
-    bModel = step init eModel
-    run = runBaseAff' <<< runCommand qMessage.dispatch qOutput.dispatch <<< unsafeCoerce interpreter
+    eMessage        = qMessage.event
+    eOutput         = qOutput.event
+    eModel          = eMessage # scan update init
+                               # distinctUntilRefChanged
+    bModel          = step init eModel
+    dispatchMessage = qMessage.dispatch
+    dispatchOutput  = qOutput.dispatch
+    run             = launchAff_ <<< runBaseAff' <<< runCommand dispatchMessage dispatchOutput <<< unsafeCoerce interpreter
+    upstream        = { bModel, eModel, eMessage }
   pure
     { bModel
     , eModel
-    , eOutput: qOutput.event
-    , dispatchMessage: qMessage.dispatch
-    , eAff: qMessage.event <#> command # sample bModel <#> run
-    , eMessageFromSubscription: subscription { bModel, eModel, eMessage: qMessage.event }
+    , eOutput
+    , dispatchMessage
+    , eCommand: eMessage <#> command # sample bModel <#> run
+    , eSubscription: subscription upstream <#> dispatchMessage
     }
 
 runPlatform :: forall model message output. Platform model message output -> Effect Unsubscribe
-runPlatform { eAff, eMessageFromSubscription, dispatchMessage } = do
+runPlatform { eCommand, eSubscription } = do
   -- Subscriptions
-  unsubscribeCommand      <- eAff                     # subscribe launchAff_
-  unsubscribeSubscription <- eMessageFromSubscription # subscribe dispatchMessage
+  unsubscribeCommand      <- eCommand      # subscribe'
+  unsubscribeSubscription <- eSubscription # subscribe'
   -- Unsubscribe
   pure $ unsubscribeSubscription *> unsubscribeCommand
