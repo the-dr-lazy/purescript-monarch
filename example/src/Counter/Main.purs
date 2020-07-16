@@ -20,6 +20,8 @@ type Model = Int
 data Message = Increase
              | Decrease
 
+type Output = Void
+
 init :: Model
 init = 0
 
@@ -36,9 +38,11 @@ view model =
      , h "button" { on: { click: (\_ -> Increase) } } [ text "+" ]
      ]
 
+type Effects = API.Effects ()
+
 command :: Message
         -> Model
-        -> Command Message (API.Effects ())
+        -> Command Message Output Effects
 command Increase _ = API.increase 
 command Decrease _ = API.decrease 
 
@@ -49,14 +53,13 @@ subscription :: forall a. a -> Event Message
 subscription = const eNever
 
 main :: HTMLElement -> Effect Unit
-main container = launchAff_ $
-  Monarch.document { init
-                   , update
-                   , view
-                   , command
-                   , interpreter
-                   , subscription
-                   , container
-                   }
-  
+main container = do
+  Monarch.document_ { init
+                    , update
+                    , view
+                    , command
+                    , interpreter
+                    , subscription
+                    , container
+                    }
 

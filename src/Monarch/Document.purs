@@ -3,6 +3,7 @@ module Monarch.Document
   , RequiredSpec
   , Spec
   , document
+  , document_
   )
 where
 
@@ -13,10 +14,6 @@ import Type.Row                                          as Row
 import Data.Maybe
 import Run                   ( Run )
 import Effect                ( Effect )
-import Effect.Aff            ( Aff
-                             , makeAff
-                             , effectCanceler
-                             )
 import Effect.Ref                                        as Ref
 import Web.HTML              ( HTMLElement )
 import Monarch.Event         ( Event
@@ -40,8 +37,8 @@ import Monarch.Monad.Maybe   ( whenJustM )
 import Unsafe.Coerce         ( unsafeCoerce )
 
 -- | Document's optional input specification
-type OptionalSpec model message effects effects' r
-  = ( command      :: message -> model -> Command message effects
+type OptionalSpec model message output effects effects' r
+  = ( command      :: message -> model -> Command message output effects
     , interpreter  :: forall a . Run effects a -> Run effects' a
     , subscription :: Upstream model message -> Event message
     | r
@@ -57,13 +54,13 @@ type RequiredSpec model message r
     )
 
 -- | Document's full input specification
-type Spec model message effects effects'
+type Spec model message output effects effects'
   = RequiredSpec model message
-  + OptionalSpec model message effects effects' ()
+  + OptionalSpec model message output effects effects' ()
 
-type Document model message
+type Document model message output
   = { qVirtualNode :: Queue (VirtualNode message)
-    , platform     :: Platform model message
+    , platform     :: Platform model message output
     , view         :: model -> VirtualNode message
     }
 
@@ -78,17 +75,17 @@ swap mount patch unmount e = do
     unmount `whenJustM` Ref.read xRef
   where f = maybe mount patch
 
-mkDocument :: forall model message effects e e'
-            . Row.Union e e' (Effects message ())
-           => { | Spec model message effects e } 
-           -> Effect (Document model message)
+mkDocument :: forall model message output effects e e'
+            . Row.Union e e' (Effects message output ())
+           => { | Spec model message output effects e }
+           -> Effect (Document model message output)
 mkDocument spec@{ view } = do
   qVirtualNode                         <- Queue.new
   platform@{ eModel, dispatchMessage } <- mkPlatform spec
 
   pure { qVirtualNode, platform, view }
 
-runDocument :: forall model message. HTMLElement -> Document model message -> Effect Unsubscribe
+runDocument :: forall model message output. HTMLElement -> Document model message output -> Effect Unsubscribe
 runDocument container { qVirtualNode, platform, view } = do
   let { eModel, dispatchMessage } = platform
 
@@ -110,10 +107,22 @@ runDocument container { qVirtualNode, platform, view } = do
     unsubscribeCommit
     unsubscribeRender
 
-document :: forall model message effects e e' 
-          . Row.Union e e' (Effects message ())
-         => { | Spec model message effects e } 
-         -> Aff Unit
-document spec@{ container } = makeAff \_ -> do
-  unsubscribe <- runDocument container =<< mkDocument spec
-  pure $ effectCanceler unsubscribe
+type Document' output
+  = { unsubscribe :: Effect Unit
+    , eOutput     :: Event output
+    }
+
+document :: forall model message output effects e e'
+          . Row.Union e e' (Effects message output ())
+         => { | Spec model message output effects e }
+         -> Effect (Document' output)
+document spec@{ container } = do
+  d@{ platform } <- mkDocument spec
+  unsubscribe <- runDocument container d
+  pure { unsubscribe, eOutput: platform.eOutput }
+
+document_ :: forall model message output effects e e'
+          . Row.Union e e' (Effects message output ())
+         => { | Spec model message output effects e }
+         -> Effect Unit
+document_ = void <<< document

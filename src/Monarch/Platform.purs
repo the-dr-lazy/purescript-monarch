@@ -8,6 +8,7 @@ module Monarch.Platform
   , mkPlatform
   , runPlatform
   , dispatch
+  , raise
   )
 where
 
@@ -40,19 +41,20 @@ import Monarch.Event          ( Event
 import Monarch.Queue                                       as Queue
 import Unsafe.Coerce          ( unsafeCoerce )
 
-type Spec model message effects effects' r
+type Spec model message output effects effects' r
   = { init         :: model
     , update       :: message -> model -> model
-    , command      :: message -> model -> Command message effects
+    , command      :: message -> model -> Command message output effects
     , interpreter  :: forall a . Run effects a -> Run effects' a
     , subscription :: Upstream model message -> Event message
     | r
     }
 
-type Platform model message
+type Platform model message output
   = { dispatchMessage          :: message -> Effect Unit
     , bModel                   :: Behavior model
     , eModel                   :: Event model
+    , eOutput                  :: Event output
     , eAff                     :: Event (Aff Unit)
     , eMessageFromSubscription :: Event message
     }
@@ -63,58 +65,72 @@ type Upstream model message
     , eMessage :: Event message
     }
 
-data CommandF message a = Dispatch message a
+data CommandF message output a
+  = Dispatch message a
+  | Raise output a
 
-derive instance functorCommandF :: Functor (CommandF message)
+derive instance functorCommandF :: Functor (CommandF message output)
 
 _command = SProxy :: SProxy "command"
 
-type COMMAND message = FProxy (CommandF message)
+type COMMAND message output = FProxy (CommandF message output)
 
-type Effects message r = (effect :: EFFECT, aff :: AFF, command :: COMMAND message | r)
+type Effects message output r
+  = ( effect  :: EFFECT
+    , aff     :: AFF
+    , command :: COMMAND message output
+    | r
+    )
 
-type Command message r = Run (Effects message r) Unit
+type Command message output r = Run (Effects message output r) Unit
 
-dispatch :: forall message r. message -> Run (command :: COMMAND message | r) Unit
+dispatch :: forall message output r. message -> Run (command :: COMMAND message output | r) Unit
 dispatch message = Run.lift _command $ Dispatch message unit
 
-runCommand :: forall message r
+raise :: forall message output r. output -> Run (command :: COMMAND message output | r) Unit
+raise output = Run.lift _command $ Raise output unit
+
+runCommand :: forall message output r
             . (message -> Effect Unit)
-           -> Run (effect :: EFFECT, command :: COMMAND message | r) 
+           -> (output -> Effect Unit)
+           -> Run (effect :: EFFECT, command :: COMMAND message output | r) 
            ~> Run (effect :: EFFECT | r)
-runCommand dispatchMessage = interpret (Run.on _command (handleCommand dispatchMessage) Run.send)
+runCommand dispatchMessage dispatchOutput = interpret (Run.on _command (handleCommand dispatchMessage dispatchOutput) Run.send)
 
-handleCommand :: forall message r
+handleCommand :: forall message output r
                . (message -> Effect Unit)
-              -> CommandF message
+              -> (output -> Effect Unit)
+              -> CommandF message output
               ~> Run (effect :: EFFECT | r)
-handleCommand dispatchMessage = case _ of
+handleCommand dispatchMessage dispatchOutput = case _ of
   Dispatch message next -> Run.liftEffect $ dispatchMessage message *> pure next
+  Raise    output  next -> Run.liftEffect $ dispatchOutput output   *> pure next
 
-mkPlatform :: forall model message effects s s' r
-            . Row.Union s s' (Effects message ())
-           => Spec model message effects s r
-           -> Effect (Platform model message)
+mkPlatform :: forall model message output effects s s' r
+            . Row.Union s s' (Effects message output ())
+           => Spec model message output effects s r
+           -> Effect (Platform model message output)
 mkPlatform { init, update, command, interpreter, subscription } = do
   qMessage <- Queue.new
+  qOutput  <- Queue.new
   let
     eModel = qMessage.event # scan update init
                             # distinctUntilRefChanged
     bModel = step init eModel
-    run = runBaseAff' <<< runCommand qMessage.dispatch <<< unsafeCoerce interpreter
+    run = runBaseAff' <<< runCommand qMessage.dispatch qOutput.dispatch <<< unsafeCoerce interpreter
   pure
     { bModel
     , eModel
+    , eOutput: qOutput.event
     , dispatchMessage: qMessage.dispatch
     , eAff: qMessage.event <#> command # sample bModel <#> run
     , eMessageFromSubscription: subscription { bModel, eModel, eMessage: qMessage.event }
     }
 
-runPlatform :: forall model message. Platform model message -> Effect Unsubscribe
+runPlatform :: forall model message output. Platform model message output -> Effect Unsubscribe
 runPlatform { eAff, eMessageFromSubscription, dispatchMessage } = do
   -- Subscriptions
   unsubscribeCommand      <- eAff                     # subscribe launchAff_
   unsubscribeSubscription <- eMessageFromSubscription # subscribe dispatchMessage
   -- Unsubscribe
   pure $ unsubscribeSubscription *> unsubscribeCommand
-  
