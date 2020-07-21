@@ -7,7 +7,7 @@ import Run                   ( Run, EFFECT )
 import Effect                ( Effect )
 import Effect.Aff            ( launchAff_ )
 import Web.HTML              ( HTMLElement )    
-import Monarch               ( Command )
+import Monarch               ( Command, Upstream )
 import Monarch                                   as Monarch
 import Monarch.VirtualDOM    
 import Monarch.Event         ( Event
@@ -15,6 +15,8 @@ import Monarch.Event         ( Event
                              )
 import Counter.API           ( runAPI )
 import Counter.API                               as API
+
+type Input = Unit
 
 type Model = Int
 
@@ -50,12 +52,13 @@ command Decrease _ = API.decrease
 interpreter :: Command (API.Effects ()) Message Output Unit -> Command () Message Output Unit
 interpreter = runAPI
 
-subscription :: forall a. a -> Event Message
-subscription = const eNever
+subscription :: Upstream Input Model Message -> Event Message
+subscription _ = const eNever
 
 main :: HTMLElement -> Effect Unit
 main container = do
-  Monarch.document_ { init
+  Monarch.document_ { input: unit
+                    , init: const init
                     , update
                     , view
                     , command

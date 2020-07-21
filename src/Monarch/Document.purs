@@ -36,15 +36,15 @@ import Monarch.VirtualDOM                                as VirtualDOM
 import Monarch.Monad.Maybe   ( whenJustM )
 
 -- | Document's full input specification
-type Spec model message output effects a r
-  = Platform.Spec model message output effects a
+type Spec input model message output effects a r
+  = Platform.Spec input model message output effects a
   + ( view      :: model -> VirtualNode message
     , container :: HTMLElement
     | r
     )
 
-type Document model message output
-  = { platform :: Platform model message output
+type Document input model message output
+  = { platform :: Platform input model message output
     , sRender  :: Effect Unsubscribe
     , sCommit  :: Effect Unsubscribe
     }
@@ -60,9 +60,9 @@ swap mount patch unmount e = do
     unmount `whenJustM` Ref.read xRef
   where f = maybe mount patch
 
-mkDocument :: forall model message output effects a r
-            . { | Spec model message output effects a r }
-           -> Effect (Document model message output)
+mkDocument :: forall input model message output effects a r
+            . { | Spec input model message output effects a r }
+           -> Effect (Document input model message output)
 mkDocument spec@{ view, container } = do
   qVirtualNode                         <- Queue.new
   platform@{ eModel, dispatchMessage } <- mkPlatform spec
@@ -78,7 +78,7 @@ mkDocument spec@{ view, container } = do
                                   # swap mount patch VirtualDOM.unmount
     }
 
-runDocument :: forall model message output. Document model message output -> Effect Unsubscribe
+runDocument :: forall input model message output. Document input model message output -> Effect Unsubscribe
 runDocument { sRender, sCommit, platform } = do
   -- Subscriptions
   unsubscribeRender   <- sRender
@@ -90,20 +90,24 @@ runDocument { sRender, sCommit, platform } = do
     unsubscribeCommit
     unsubscribeRender
 
-type Document' output
-  = { unsubscribe :: Effect Unit
-    , eOutput     :: Event output
+type Document' input output
+  = { unsubscribe   :: Effect Unit
+    , eOutput       :: Event output
+    , dispatchInput :: input -> Effect Unit
     }
 
-document :: forall model message output effects a r
-          . { | Spec model message output effects a r }
-         -> Effect (Document' output)
+document :: forall input model message output effects a r
+          . { | Spec input model message output effects a r }
+         -> Effect (Document' input output)
 document spec = do
   d@{ platform } <- mkDocument spec
   unsubscribe <- runDocument d
-  pure { unsubscribe, eOutput: platform.eOutput }
+  pure { unsubscribe
+       , eOutput: platform.eOutput
+       , dispatchInput: platform.dispatchInput
+       }
 
-document_ :: forall model message output effects a r
-           . { | Spec model message output effects a r }
+document_ :: forall input model message output effects a r
+           . { | Spec input model message output effects a r }
           -> Effect Unit
 document_ = void <<< document
