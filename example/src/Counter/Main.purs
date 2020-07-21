@@ -53,7 +53,7 @@ interpreter :: Command (API.Effects ()) Message Output Unit -> Command () Messag
 interpreter = runAPI
 
 subscription :: Upstream Input Model Message -> Event Message
-subscription _ = const eNever
+subscription = const eNever
 
 main :: HTMLElement -> Effect Unit
 main container = do
