@@ -8,6 +8,6 @@ class OptionalRecordCons (row :: RowList) (name :: Symbol) (s :: # Type) (t :: #
 
 instance nilOptionalRecordCons :: OptionalRecordCons RowList.Nil _name _s _t
 instance consOptionalRecordCons ::
-  (Row.Union t t' s) => OptionalRecordCons (RowList.Cons name { | t } tail) name s t
+  (Row.Union t _t s) => OptionalRecordCons (RowList.Cons name { | t } tail) name s t
 else instance fallbackConsOptionalRecordCons ::
   (OptionalRecordCons tail name s t) => OptionalRecordCons (RowList.Cons _name _t tail) name s t
