@@ -54,8 +54,9 @@ view model =
 command :: Message
         -> Model
         -> Command (API.Effects ()) Message Output Unit
-command UserClickedIncreaseButton _ = API.increase 
-command UserClickedDecreaseButton _ = API.decrease 
+command message _ = case message of
+  UserClickedIncreaseButton -> API.increase 
+  UserClickedDecreaseButton -> API.decrease 
 
 interpreter :: Command (API.Effects ()) Message Output Unit -> Command () Message Output Unit
 interpreter = runAPI
