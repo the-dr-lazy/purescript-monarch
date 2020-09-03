@@ -6,7 +6,7 @@ import Type.Row as Row
 
 class OptionalRecordCons (row :: RowList) (name :: Symbol) (s :: # Type) (t :: # Type)
 
-instance nilOptionalRecordCons :: OptionalRecordCons RowList.Nil name s t
+instance nilOptionalRecordCons :: OptionalRecordCons RowList.Nil _name _s _t
 instance consOptionalRecordCons ::
   (Row.Union t t' s) => OptionalRecordCons (RowList.Cons name { | t } tail) name s t
 else instance fallbackConsOptionalRecordCons ::
