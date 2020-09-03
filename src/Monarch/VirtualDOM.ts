@@ -41,12 +41,7 @@ type VirtualNodeSpec<message> = {
 }
 
 // prettier-ignore
-interface VirtualNodeMap {
-  <a, b>(f: (a: a) => b): (x: string | VirtualNode<a>) => string | VirtualNode<b>
-}
-
-// prettier-ignore
-function uncurryVirtualNodeMap<a, b>(f: (a: a) => b, virtualNode: string | VirtualNode<a>) {
+function unsafe_uncurried_virtualNodeMap<a, b>(f: (a: a) => b, virtualNode: string | VirtualNode<a>) {
   if (typeof virtualNode === 'string') return <any>virtualNode
 
   if (virtualNode.data?.on) {
@@ -67,13 +62,47 @@ function uncurryVirtualNodeMap<a, b>(f: (a: a) => b, virtualNode: string | Virtu
 }
 
 // prettier-ignore
-export const virtualNodeMap: VirtualNodeMap = f => virtualNode =>
-  uncurryVirtualNodeMap(f, virtualNode)
+function uncurried_virtualNodeMap<a, b>(f: (a: a) => b, virtualNode: string | VirtualNode<a>): string | VirtualNode<b> {
+  if (typeof virtualNode === 'string') return <any>virtualNode
+
+  let on: VirtualNodeEvent<b> = {}
+
+  if (virtualNode.data?.on) {
+    for (const key in virtualNode.data.on) {
+      const g = virtualNode.data!.on![key]
+
+      on[key] = (event: Event) => f(g(event))
+    }
+  }
+
+  let children: Array<string | VirtualNode<b>> | undefined = undefined
+
+  if (virtualNode.children) {
+    children = virtualNode.children.map(child => uncurried_virtualNodeMap(f, child))
+  }
+
+  return <VirtualNode<b>>{
+    ...virtualNode,
+    children,
+    data: { ...virtualNode.data!, on },
+  }
+}
+
+// prettier-ignore
+interface VirtualNodeMap {
+  <a, b>(f: (a: a) => b): (x: string | VirtualNode<a>) => string | VirtualNode<b>
+}
+
+// prettier-ignore
+export const virtualNodeMap: VirtualNodeMap = f => virtualNode => uncurried_virtualNodeMap(f, virtualNode)
 
 type Dispatch<message> = (message: message) => Effect<Unit>
 
-function bindEventListeners<message>(dispatch: Dispatch<message>, virtualNode: string | VirtualNode<message>) {
-    uncurryVirtualNodeMap(message => dispatch(message)(), virtualNode)
+function unsafe_bindEventListeners<message>(
+  dispatch: Dispatch<message>,
+  virtualNode: string | VirtualNode<message>,
+): void {
+  unsafe_uncurried_virtualNodeMap(message => dispatch(message)(), virtualNode)
 }
 
 const _patch = init([classModule, propsModule, styleModule, eventListenersModule])
@@ -85,7 +114,7 @@ interface Mount {
 
 // prettier-ignore
 export const mount: Mount = dispatch => element => virtualNode =>
-  () => (bindEventListeners(dispatch, virtualNode), _patch(element, <any>virtualNode))
+  () => (unsafe_bindEventListeners(dispatch, virtualNode), _patch(element, <any>virtualNode))
 
 // prettier-ignore
 interface Patch {
@@ -94,7 +123,7 @@ interface Patch {
 
 // prettier-ignore
 export const patch: Patch = dispatch => previousVirtualNode => nextVirtualNode =>
-  () => (bindEventListeners(dispatch, nextVirtualNode), _patch(<any>previousVirtualNode, <any>nextVirtualNode))
+  () => (unsafe_bindEventListeners(dispatch, nextVirtualNode), _patch(<any>previousVirtualNode, <any>nextVirtualNode))
 
 interface Unmount {
     <message>(virtualNode: VirtualNode<message>): Effect<Unit>
