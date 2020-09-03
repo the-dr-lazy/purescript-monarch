@@ -31,8 +31,8 @@ type Input = Unit
 
 type Model = Int
 
-data Message = Increase
-             | Decrease
+data Message = UserClickedIncreaseButton
+             | UserClickedDecreaseButton
 
 type Output = Void
 
@@ -41,24 +41,21 @@ init = 0
 
 update :: Message -> Model -> Model
 update = case _ of
-  Increase -> (_ + 1)
-  Decrease -> (_ - 1)
+  UserClickedIncreaseButton -> (_ + 1)
+  UserClickedDecreaseButton -> (_ - 1)
 
 view :: Model -> VirtualNode Message
-view model =
-  h_ "div"
-     [ h "button" { on: { click: (\_ -> Decrease) } } [ text "-" ]
-     , text $ show model
-     , h "button" { on: { click: (\_ -> Increase) } } [ text "+" ]
-     ]
-
-type Effects = Monarch.Effects Message Output + API.Effects ()
+view model = 
+  div_ [ button { onClick: const UserClickedDecreaseButton } [ text "-" ]
+       , text $ show model
+       , button { onClick: const UserClickedIncreaseButton } [ text "+" ]
+       ]
 
 command :: Message
         -> Model
         -> Command (API.Effects ()) Message Output Unit
-command Increase _ = API.increase
-command Decrease _ = API.decrease
+command UserClickedIncreaseButton _ = API.increase 
+command UserClickedDecreaseButton _ = API.decrease 
 
 interpreter :: Command (API.Effects ()) Message Output Unit -> Command () Message Output Unit
 interpreter = runAPI
