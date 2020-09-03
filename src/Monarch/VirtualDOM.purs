@@ -12,40 +12,40 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 module Monarch.VirtualDOM where
 
 import Prelude
-import Effect
-import Web.HTML         ( HTMLElement )
-import Unsafe.Coerce    ( unsafeCoerce )
 
-foreign import data VirtualNode :: Type -> Type
+import Effect                           ( Effect )
+import Type.Row                         ( type (+) )
+import Type.Row                                            as Row
+import Web.HTML                         ( HTMLElement )
+import Monarch.Type.Row                                    as Row
+import Monarch.VirtualDOM.Attributes
+import Monarch.VirtualDOM.Hooks
+import Monarch.VirtualDOM.Outputs
+import Monarch.VirtualDOM.Properties
+import Unsafe.Coerce                    ( unsafeCoerce )
 
-foreign import mount :: forall message
-                      . (message -> Effect Unit)
-                      -> HTMLElement
-                      -> VirtualNode message
-                      -> Effect Unit
+foreign import data VirtualNode' :: # Type -> Type -> Type
 
-foreign import patch :: forall message
-                      . (message -> Effect Unit)
-                      -> VirtualNode message
-                      -> VirtualNode message
-                      -> Effect Unit
+type VirtualNode = VirtualNode' ()
 
-foreign import unmount :: forall message
-                        . VirtualNode message
-                       -> Effect Unit
+foreign import mount :: forall slots message. (message -> Effect Unit) -> HTMLElement -> VirtualNode' slots message -> Effect Unit
 
-foreign import virtualNodeMap :: forall a b. (a -> b) -> VirtualNode a -> VirtualNode b
+foreign import patch :: forall slots message. (message -> Effect Unit) -> VirtualNode' slots message -> VirtualNode' slots message -> Effect Unit
 
-instance functorVirtualNode :: Functor VirtualNode where
+foreign import unmount :: forall slots message. VirtualNode' slots message -> Effect Unit
+
+foreign import virtualNodeMap :: forall slots a b. (a -> b) -> VirtualNode' slots a -> VirtualNode' slots b
+
+instance functorVirtualNode :: Functor (VirtualNode' slots) where
   map = virtualNodeMap
 
-foreign import h :: forall props message. String -> Record props -> Array (VirtualNode message) -> VirtualNode message
+foreign import h :: forall r slots message. String -> { | r } -> Array (VirtualNode' slots message) -> VirtualNode' slots message 
 
-h_ :: forall message. String -> Array (VirtualNode message) -> VirtualNode message
+h_ :: forall slots message. String -> Array (VirtualNode' slots message) -> VirtualNode' slots message 
 h_ selector = h selector {}
 
-h' :: forall message. String -> VirtualNode message
+h' :: forall slots message. String -> VirtualNode' slots message 
 h' selector = h_ selector mempty
 
-text :: forall message. String -> VirtualNode message
-text = unsafeCoerce
+text :: forall slots message. String -> VirtualNode' slots message
+text = unsafeCoerce 
