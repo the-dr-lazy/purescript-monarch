@@ -38,3 +38,47 @@ h' selector = h_ selector mempty
 
 text :: forall slots message. String -> VirtualNode' slots message
 text = unsafeCoerce 
+
+type R (attributes :: # Type -> # Type)
+       (outputs    :: # Type -> # Type)
+       (props      :: # Type)
+       (hooks      :: # Type)
+  = attributes
+  + outputs
+  + ( props :: { | props }
+    , hooks :: { | hooks }
+    )
+
+type HTMLDivR props hooks message = R HTMLDivAttributes (HTMLDivOutputs message) props hooks
+
+div :: forall r r' props hooks slots message
+     . Row.Union r r' (HTMLDivR props hooks message)
+    => Row.OptionalRecordCons r "props" (HTMLDivProperties ()) props
+    => Row.OptionalRecordCons r "hooks" (Hooks message) hooks
+    => { | r }
+    -> Array (VirtualNode' slots message)
+    -> VirtualNode' slots message
+div = h "div"
+
+div_ :: forall slots message. Array (VirtualNode' slots message) -> VirtualNode' slots message
+div_ = h "div" {}
+
+div' :: forall slots message. VirtualNode' slots message
+div' = h "div" {} []
+
+type HTMLButtonR props hooks message = R HTMLButtonAttributes (HTMLButtonOutputs message) props hooks
+
+button :: forall r r' props hooks slots message
+        . Row.Union r r' (HTMLButtonR props hooks message)
+       => Row.OptionalRecordCons r "props" (HTMLButtonProperties ()) props
+       => Row.OptionalRecordCons r "hooks" (Hooks message) hooks
+       => { | r }
+       -> Array (VirtualNode' slots message)
+       -> VirtualNode' slots message
+button = h "button"
+
+button_ :: forall slots message. Array (VirtualNode' slots message) -> VirtualNode' slots message
+button_ = h "button" {}
+
+button' :: forall slots message. VirtualNode' slots message
+button' = h "button" {} []
