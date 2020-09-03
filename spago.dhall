@@ -13,6 +13,7 @@
   , "psci-support"
   , "web-html"
   , "web-dom"
+  , "web-uievents"
   , "typelevel-prelude"
   ]
 , packages = ./packages.dhall
