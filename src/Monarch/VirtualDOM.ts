@@ -1,5 +1,5 @@
 import { init } from 'snabbdom'
-import { VNodeData } from 'snabbdom/vnode'
+import { vnode as _vnode, VNodeData, Key } from 'snabbdom/vnode'
 import { classModule } from 'snabbdom/modules/class'
 import { propsModule } from 'snabbdom/modules/props'
 import { styleModule } from 'snabbdom/modules/style'
@@ -7,19 +7,40 @@ import { eventListenersModule } from 'snabbdom/modules/eventlisteners'
 import { h as _h } from 'snabbdom/h'
 
 type VirtualNode<message> = {
-    f?: <a>(a: a) => message
     sel: string
-    listener: any
-    children?: Array<string | VirtualNode<message>>
+    key?: Key
+    text?: string
+    elm?: HTMLElement
+    listener?: any
+    children?: VirtualNode<message>[]
     data?: VirtualNodeSpec<message>
+    f?: <a>(a: a) => message
 }
 
-type TransformedVirtualNode<message> = {
-    f?: <a>(a: a) => message
+type TransformedVirtualNode = {
     sel: string
-    listener: any
-    children?: Array<string | VirtualNode<message>>
-    data?: TransformedVirtualNodeSpec<message>
+    key?: Key
+    text?: string
+    elm?: HTMLElement
+    listener?: any
+    children?: TransformedVirtualNode[]
+    data?: TransformedVirtualNodeSpec
+    f?: <a>(a: a) => Effect<Unit>
+}
+
+type VirtualNodeSpec<message> = {
+    [key: string]: any
+    props?: VirtualNodeProps
+    hooks?: VirtualNodeHooks<message>
+}
+
+type TransformedVirtualNodeSpec = {
+    props?: VirtualNodeProps
+    attrs?: VirtualNodeAttrs
+    style?: VirtualNodeStyle
+    on?: VirtualNodeEvent<void>
+    hooks?: VirtualNodeHooks<void>
+    key?: Key
 }
 
 type VirtualNodeProps = Record<string, any>
@@ -31,33 +52,17 @@ type VirtualNodeStyle = Record<string, string> & {
 type VirtualNodeEvent<message> = Record<string, (event: Event) => message>
 type VirtualNodeHooks<message> = Record<string, (...args: any[]) => message>
 
-type TransformedVirtualNodeSpec<message> = {
-    key?: string | number | boolean
-    props?: VirtualNodeProps
-    attrs?: VirtualNodeAttrs
-    style?: VirtualNodeStyle
-    on?: VirtualNodeEvent<message>
-}
-
-type VirtualNodeSpec<message> = {
-    [key: string]: any
-    props?: VirtualNodeProps
-    hooks?: VirtualNodeHooks<message>
-}
-
 // prettier-ignore
-function unsafe_uncurried_virtualNodeMap<b, c>(g: (b: b) => c, virtualNode: string | VirtualNode<b>) {
-  if (typeof virtualNode === 'string') return
-
+function unsafe_uncurried_virtualNodeMap<b, c>(g: (b: b) => c, virtualNode: VirtualNode<b>): virtualNode is VirtualNode<b> & VirtualNode<c> {
   const f = virtualNode.f
 
   virtualNode.f = <any>(f ? <a>(a: a) => g(f(a)) : g)
+
+  return true
 }
 
 // prettier-ignore
-function uncurried_virtualNodeMap<b, c>(g: (b: b) => c, virtualNode: string | VirtualNode<b>): string | VirtualNode<c> {
-  if (typeof virtualNode === 'string') return <any>virtualNode
-
+function uncurried_virtualNodeMap<b, c>(g: (b: b) => c, virtualNode: VirtualNode<b>): VirtualNode<c> {
   const f = virtualNode.f
 
   return <VirtualNode<c>>{
@@ -68,7 +73,7 @@ function uncurried_virtualNodeMap<b, c>(g: (b: b) => c, virtualNode: string | Vi
 
 // prettier-ignore
 interface VirtualNodeMap {
-  <a, b>(f: (a: a) => b): (x: string | VirtualNode<a>) => string | VirtualNode<b>
+  <a, b>(f: (a: a) => b): (x: VirtualNode<a>) => VirtualNode<b>
 }
 
 // prettier-ignore
@@ -81,8 +86,8 @@ const outputPrefix = 'on'
 function unsafe_uncurried_transform<message>(
     dispatch: Dispatch<message>,
     virtualNode: VirtualNode<message>,
-): virtualNode is TransformedVirtualNode<message> {
-    unsafe_uncurried_virtualNodeMap(dispatch, virtualNode)
+): virtualNode is VirtualNode<message> & TransformedVirtualNode {
+    if (!unsafe_uncurried_virtualNodeMap(dispatch, virtualNode)) throw '### UNREACHABLE CODE ###'
 
     if (virtualNode.data) {
         const attributes: Record<string, any> = {}
@@ -94,7 +99,7 @@ function unsafe_uncurried_transform<message>(
             if (key.startsWith(outputPrefix)) {
                 const name = key.substr(outputPrefix.length).toLowerCase()
 
-                const f = virtualNode.f!
+                const f = <Dispatch<message>>virtualNode.f!
                 const g = virtualNode.data[key]
 
                 outputs[name] = a => f(g(a))()
@@ -111,18 +116,18 @@ function unsafe_uncurried_transform<message>(
 
     if (virtualNode.data?.hooks) {
         for (const name in virtualNode.data.hooks) {
-            const f = virtualNode.f!
+            const f = <Dispatch<any>>virtualNode.f!
             const g = virtualNode.data.hooks[name]
 
-            virtualNode.data.hooks[name] = (...a) => f(g(...a))()
+            virtualNode.data.hooks[name] = <any>((...a: any[]) => f(g(...a))())
+        }
+
+        if (virtualNode.children) {
+            virtualNode.children.forEach(child => unsafe_uncurried_transform(<any>virtualNode.f!, child))
         }
     }
 
-    if (virtualNode.children) {
-        virtualNode.children.forEach(child => unsafe_uncurried_transform(<any>virtualNode.f!, child))
-    }
-
-    return false
+    return true
 }
 
 const _patch = init([classModule, propsModule, styleModule, eventListenersModule])
