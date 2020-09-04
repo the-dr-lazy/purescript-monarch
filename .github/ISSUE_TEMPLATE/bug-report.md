@@ -7,11 +7,6 @@ assignees: ''
 
 ---
 
-<!--
-If you are asking a question rather than filing a bug, try one of these instead:
-- StackOverflow (https://stackoverflow.com/questions/tagged/monarch)
--->
-
 ### Description
 
 <!-- Example: `dispatch` function doesn't dispatch any message. -->
