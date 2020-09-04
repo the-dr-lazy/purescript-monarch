@@ -1,5 +1,5 @@
 ---
-name: Bug Report
+name: Bug Report [English]
 about: Create a report to help us improve
 title: ''
 labels: 'Priority: High, Status: Pending, Type: Bug'
