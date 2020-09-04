@@ -58,11 +58,11 @@ type R (attributes :: # Type -> # Type)
     , hooks :: { | hooks }
     )
 
-type HTMLDivR props hooks message = R HTMLDivAttributes (HTMLDivOutputs message) props hooks
+type HTMLDivR props hooks message = R HTMLDivElementAttributes (HTMLDivElementOutputs message) props hooks
 
 div :: forall r r' props hooks slots message
      . Row.Union r r' (HTMLDivR props hooks message)
-    => Row.OptionalRecordCons r "props" (HTMLDivProperties ()) props
+    => Row.OptionalRecordCons r "props" (HTMLDivElementProperties ()) props
     => Row.OptionalRecordCons r "hooks" (Hooks message) hooks
     => { | r }
     -> Array (VirtualNode' slots message)
@@ -75,11 +75,11 @@ div_ = h "div" {}
 div' :: forall slots message. VirtualNode' slots message
 div' = h "div" {} []
 
-type HTMLButtonR props hooks message = R HTMLButtonAttributes (HTMLButtonOutputs message) props hooks
+type HTMLButtonR props hooks message = R HTMLButtonElementAttributes (HTMLButtonElementOutputs message) props hooks
 
 button :: forall r r' props hooks slots message
         . Row.Union r r' (HTMLButtonR props hooks message)
-       => Row.OptionalRecordCons r "props" (HTMLButtonProperties ()) props
+       => Row.OptionalRecordCons r "props" (HTMLButtonElementProperties ()) props
        => Row.OptionalRecordCons r "hooks" (Hooks message) hooks
        => { | r }
        -> Array (VirtualNode' slots message)

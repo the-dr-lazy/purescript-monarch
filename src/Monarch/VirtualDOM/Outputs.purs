@@ -11,6 +11,6 @@ type ElementOutputs message r = GlobalOutputs message r
 
 type HTMLElementOutputs message r = ElementOutputs message r
 
-type HTMLDivOutputs message r = HTMLElementOutputs message r
+type HTMLDivElementOutputs message r = HTMLElementOutputs message r
 
-type HTMLButtonOutputs message r = HTMLElementOutputs message r
+type HTMLButtonElementOutputs message r = HTMLElementOutputs message r
