@@ -166,3 +166,10 @@ interface H {
 // prettier-ignore
 export const h: H = selector => spec => children =>
   <any>_h(selector, <VNodeData>spec, <any>children)
+
+interface Text {
+  <message>(text: string): VirtualNode<message>
+}
+
+export const text: Text = text =>
+  <any>_vnode(undefined, undefined, undefined, text, undefined)

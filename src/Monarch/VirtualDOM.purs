@@ -30,14 +30,13 @@ instance functorVirtualNode :: Functor (VirtualNode' slots) where
 
 foreign import h :: forall r slots message. String -> { | r } -> Array (VirtualNode' slots message) -> VirtualNode' slots message 
 
+foreign import text :: forall slots message. String -> VirtualNode' slots message 
+
 h_ :: forall slots message. String -> Array (VirtualNode' slots message) -> VirtualNode' slots message 
 h_ selector = h selector {}
 
 h' :: forall slots message. String -> VirtualNode' slots message 
 h' selector = h_ selector mempty
-
-text :: forall slots message. String -> VirtualNode' slots message
-text = unsafeCoerce 
 
 type R (attributes :: # Type -> # Type)
        (outputs    :: # Type -> # Type)
