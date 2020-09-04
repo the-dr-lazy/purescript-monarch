@@ -4,7 +4,6 @@ about: Create a report to help us improve
 title: ''
 labels: 'Priority: High, Status: Pending, Type: Bug'
 assignees: ''
-
 ---
 
 ### Description
