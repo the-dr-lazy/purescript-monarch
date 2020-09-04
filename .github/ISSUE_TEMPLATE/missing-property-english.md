@@ -1,5 +1,5 @@
 ---
-name: Missing DOM Property [English]
+name: Missing Virtual DOM Property [English]
 about: Request to add a missing standard DOM property type definition.
 title: 'Add [PROPERTY_NAME] DOM property'
 labels: 'Priority: Medium, Status: Pending, Type: Enhancement'
