@@ -11,7 +11,6 @@ import Monarch.VirtualDOM.Attributes
 import Monarch.VirtualDOM.Hooks
 import Monarch.VirtualDOM.Outputs
 import Monarch.VirtualDOM.Properties
-import Unsafe.Coerce                    ( unsafeCoerce )
 
 foreign import data VirtualNode' :: # Type -> Type -> Type
 
