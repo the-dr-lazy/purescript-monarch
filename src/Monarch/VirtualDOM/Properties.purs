@@ -3,7 +3,7 @@ module Monarch.VirtualDOM.Properties where
 import Monarch.VirtualDOM.Attributes    ( ClassName )
 import Type.Row                         ( type (+) )
 
-type NodeProperties r = r
+type NodeProperties (r :: # Type) = r
 
 type ElementProperties r
   = NodeProperties
@@ -13,9 +13,9 @@ type ElementProperties r
 
 type HTMLElementProperties r = ElementProperties r
 
-type HTMLDivProperties r = HTMLElementProperties r
+type HTMLDivElementProperties r = HTMLElementProperties r
 
-type HTMLButtonProperties r
+type HTMLButtonElementProperties r
   = HTMLElementProperties
   + ( disabled :: Boolean
     | r
