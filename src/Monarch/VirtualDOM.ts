@@ -7,11 +7,19 @@ import { eventListenersModule } from 'snabbdom/modules/eventlisteners'
 import { h as _h } from 'snabbdom/h'
 
 type VirtualNode<message> = {
+    f?: <a>(a: a) => message
     sel: string
     listener: any
-    dispatch?: Dispatch<message>
     children?: Array<string | VirtualNode<message>>
     data?: VirtualNodeSpec<message>
+}
+
+type TransformedVirtualNode<message> = {
+    f?: <a>(a: a) => message
+    sel: string
+    listener: any
+    children?: Array<string | VirtualNode<message>>
+    data?: TransformedVirtualNodeSpec<message>
 }
 
 type VirtualNodeProps = Record<string, any>
@@ -21,8 +29,9 @@ type VirtualNodeStyle = Record<string, string> & {
     remove?: Record<string, string>
 }
 type VirtualNodeEvent<message> = Record<string, (event: Event) => message>
+type VirtualNodeHooks<message> = Record<string, (...args: any[]) => message>
 
-type VirtualNodeSpec<message> = {
+type TransformedVirtualNodeSpec<message> = {
     key?: string | number | boolean
     props?: VirtualNodeProps
     attrs?: VirtualNodeAttrs
@@ -30,51 +39,30 @@ type VirtualNodeSpec<message> = {
     on?: VirtualNodeEvent<message>
 }
 
-// prettier-ignore
-function unsafe_uncurried_virtualNodeMap<a, b>(f: (a: a) => b, virtualNode: string | VirtualNode<a>) {
-  if (typeof virtualNode === 'string') return <any>virtualNode
-
-  if (virtualNode.data?.on) {
-    Object.entries(virtualNode.data.on).forEach(([key, g]) => {
-      function h(event: Event) {
-        return f(g(event))
-      }
-
-      virtualNode.data!.on![key] = <any>h
-    })
-  }
-
-  if (virtualNode.children) {
-    virtualNode.children.forEach(child => virtualNodeMap(f)(child))
-  }
-
-  return <any>virtualNode
+type VirtualNodeSpec<message> = {
+    [key: string]: any
+    props?: VirtualNodeProps
+    hooks?: VirtualNodeHooks<message>
 }
 
 // prettier-ignore
-function uncurried_virtualNodeMap<a, b>(f: (a: a) => b, virtualNode: string | VirtualNode<a>): string | VirtualNode<b> {
+function unsafe_uncurried_virtualNodeMap<b, c>(g: (b: b) => c, virtualNode: string | VirtualNode<b>) {
+  if (typeof virtualNode === 'string') return
+
+  const f = virtualNode.f
+
+  virtualNode.f = <any>(f ? <a>(a: a) => g(f(a)) : g)
+}
+
+// prettier-ignore
+function uncurried_virtualNodeMap<b, c>(g: (b: b) => c, virtualNode: string | VirtualNode<b>): string | VirtualNode<c> {
   if (typeof virtualNode === 'string') return <any>virtualNode
 
-  let on: VirtualNodeEvent<b> = {}
+  const f = virtualNode.f
 
-  if (virtualNode.data?.on) {
-    for (const key in virtualNode.data.on) {
-      const g = virtualNode.data!.on![key]
-
-      on[key] = (event: Event) => f(g(event))
-    }
-  }
-
-  let children: Array<string | VirtualNode<b>> | undefined = undefined
-
-  if (virtualNode.children) {
-    children = virtualNode.children.map(child => uncurried_virtualNodeMap(f, child))
-  }
-
-  return <VirtualNode<b>>{
+  return <VirtualNode<c>>{
     ...virtualNode,
-    children,
-    data: { ...virtualNode.data!, on },
+    f: f ? <a>(a: a) => g(f(a)) : g,
   }
 }
 
@@ -88,11 +76,53 @@ export const virtualNodeMap: VirtualNodeMap = f => virtualNode => uncurried_virt
 
 type Dispatch<message> = (message: message) => Effect<Unit>
 
-function unsafe_bindEventListeners<message>(
-  dispatch: Dispatch<message>,
-  virtualNode: string | VirtualNode<message>,
-): void {
-  unsafe_uncurried_virtualNodeMap(message => dispatch(message)(), virtualNode)
+const outputPrefix = 'on'
+
+function unsafe_uncurried_transform<message>(
+    dispatch: Dispatch<message>,
+    virtualNode: VirtualNode<message>,
+): virtualNode is TransformedVirtualNode<message> {
+    unsafe_uncurried_virtualNodeMap(dispatch, virtualNode)
+
+    if (virtualNode.data) {
+        const attributes: Record<string, any> = {}
+        const outputs: Record<string, (event: Event) => void> = {}
+
+        for (const key in virtualNode.data) {
+            if (key === 'hooks' || key === 'props') continue
+
+            if (key.startsWith(outputPrefix)) {
+                const name = key.substr(outputPrefix.length).toLowerCase()
+
+                const f = virtualNode.f!
+                const g = virtualNode.data[key]
+
+                outputs[name] = a => f(g(a))()
+
+                continue
+            }
+
+            attributes[key] = virtualNode.data[key]
+        }
+
+        virtualNode.data!.attrs = attributes
+        virtualNode.data!.on = outputs
+    }
+
+    if (virtualNode.data?.hooks) {
+        for (const name in virtualNode.data.hooks) {
+            const f = virtualNode.f!
+            const g = virtualNode.data.hooks[name]
+
+            virtualNode.data.hooks[name] = (...a) => f(g(...a))()
+        }
+    }
+
+    if (virtualNode.children) {
+        virtualNode.children.forEach(child => unsafe_uncurried_transform(<any>virtualNode.f!, child))
+    }
+
+    return false
 }
 
 const _patch = init([classModule, propsModule, styleModule, eventListenersModule])
@@ -104,7 +134,7 @@ interface Mount {
 
 // prettier-ignore
 export const mount: Mount = dispatch => element => virtualNode =>
-  () => (unsafe_bindEventListeners(dispatch, virtualNode), _patch(element, <any>virtualNode))
+  () => (unsafe_uncurried_transform(dispatch, virtualNode), _patch(element, <any>virtualNode))
 
 // prettier-ignore
 interface Patch {
@@ -113,7 +143,7 @@ interface Patch {
 
 // prettier-ignore
 export const patch: Patch = dispatch => previousVirtualNode => nextVirtualNode =>
-  () => (unsafe_bindEventListeners(dispatch, nextVirtualNode), _patch(<any>previousVirtualNode, <any>nextVirtualNode))
+  () => (unsafe_uncurried_transform(dispatch, nextVirtualNode), _patch(<any>previousVirtualNode, <any>nextVirtualNode))
 
 interface Unmount {
     <message>(virtualNode: VirtualNode<message>): Effect<Unit>
