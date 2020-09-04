@@ -17,9 +17,9 @@ type GlobalAttributes r
     | r
     )
 
-type HTMLDivAttributes r = GlobalAttributes r
+type HTMLDivElementAttributes r = GlobalAttributes r
 
-type HTMLButtonAttributes r
+type HTMLButtonElementAttributes r
   = GlobalAttributes
   + ( autofocus :: Boolean -- | Automatically focus the form control when the page is loaded
     , disabled  :: Boolean -- | Whether the form control is disabled
