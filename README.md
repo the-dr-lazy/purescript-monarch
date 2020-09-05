@@ -39,7 +39,7 @@ We use [SemVer](http://semver.org/) for versioning. For the versions available, 
 ## Authors
 
 - **Mohammad Hasani** - _Maintainer_ - [amygdala :: ∀ a. a → IO Memory](https://github.com/thebrodmann)
-- **Mahdi Seyedan** - _Contributor_ - [jedimahdi](https://github.com/jedimahdi)
+- **Mahdi Seyedan** - _Collaborator_ - [jedimahdi](https://github.com/jedimahdi)
 
 ## License
 
