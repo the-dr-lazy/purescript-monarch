@@ -12,9 +12,18 @@ import Monarch.VirtualDOM.Hooks
 import Monarch.VirtualDOM.Outputs
 import Monarch.VirtualDOM.Properties
 
+-- Data Type
+
 foreign import data VirtualNode' :: # Type -> Type -> Type
 
 type VirtualNode = VirtualNode' ()
+
+instance functorVirtualNode :: Functor (VirtualNode' slots) where
+  map = virtualNodeMap
+
+foreign import virtualNodeMap :: forall slots a b. (a -> b) -> VirtualNode' slots a -> VirtualNode' slots b
+
+-- Virtual DOM API
 
 foreign import mount :: forall slots message. (message -> Effect Unit) -> HTMLElement -> VirtualNode' slots message -> Effect Unit
 
@@ -22,10 +31,7 @@ foreign import patch :: forall slots message. (message -> Effect Unit) -> Virtua
 
 foreign import unmount :: forall slots message. VirtualNode' slots message -> Effect Unit
 
-foreign import virtualNodeMap :: forall slots a b. (a -> b) -> VirtualNode' slots a -> VirtualNode' slots b
-
-instance functorVirtualNode :: Functor (VirtualNode' slots) where
-  map = virtualNodeMap
+-- Hyperscript
 
 type Node (r       :: # Type)
           (slots   :: # Type)
@@ -50,6 +56,8 @@ h' :: forall slots message. String -> VirtualNode' slots message
 h' selector = h_ selector mempty
               
 foreign import text :: forall slots message. String -> VirtualNode' slots message 
+
+-- Tags
 
 type R (attributes :: # Type -> # Type)
        (outputs    :: # Type -> # Type)
