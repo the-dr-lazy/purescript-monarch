@@ -38,15 +38,29 @@ foreign import virtualNodeMap :: forall slots a b. (a -> b) -> VirtualNode' slot
 instance functorVirtualNode :: Functor (VirtualNode' slots) where
   map = virtualNodeMap
 
-foreign import h :: forall r slots message. String -> { | r } -> Array (VirtualNode' slots message) -> VirtualNode' slots message 
+type Node (r       :: # Type)
+          (slots   :: # Type)
+          (message :: Type)
+  = { | r } -> Array (VirtualNode' slots message) -> VirtualNode' slots message
 
-foreign import text :: forall slots message. String -> VirtualNode' slots message 
+type Node_ (slots   :: # Type)
+           (message :: Type)
+  = Array (VirtualNode' slots message) -> VirtualNode' slots message
 
-h_ :: forall slots message. String -> Array (VirtualNode' slots message) -> VirtualNode' slots message 
+type Leaf (r       :: # Type)
+          (slots   :: # Type)
+          (message :: Type)
+  = { | r } -> VirtualNode' slots message
+
+foreign import h :: forall r slots message. String -> Node r slots message
+
+h_ :: forall slots message. String -> Node_ slots message
 h_ selector = h selector {}
 
 h' :: forall slots message. String -> VirtualNode' slots message 
 h' selector = h_ selector mempty
+              
+foreign import text :: forall slots message. String -> VirtualNode' slots message 
 
 type R (attributes :: # Type -> # Type)
        (outputs    :: # Type -> # Type)
@@ -81,12 +95,10 @@ button :: forall r r' props hooks slots message
         . Row.Union r r' (HTMLButtonR props hooks message)
        => Row.OptionalRecordCons r "props" (HTMLButtonElementProperties ()) props
        => Row.OptionalRecordCons r "hooks" (Hooks message) hooks
-       => { | r }
-       -> Array (VirtualNode' slots message)
-       -> VirtualNode' slots message
+       => Node r slots message
 button = h "button"
 
-button_ :: forall slots message. Array (VirtualNode' slots message) -> VirtualNode' slots message
+button_ :: forall slots message. Node_ slots message
 button_ = h "button" {}
 
 button' :: forall slots message. VirtualNode' slots message
