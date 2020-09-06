@@ -9,9 +9,7 @@ where
 import Prelude
 
 import Type.Row              ( type (+) )
-import Type.Row                                          as Row
 import Data.Maybe
-import Run                   ( Run )
 import Effect                ( Effect )
 import Effect.Ref                                        as Ref
 import Web.HTML              ( HTMLElement )
@@ -22,14 +20,10 @@ import Monarch.Event         ( Event
                              , subscribe
                              )
 import Monarch.Platform      ( Platform
-                             , Command
-                             , Upstream
-                             , Effects
                              , mkPlatform
                              , runPlatform
                              )
 import Monarch.Platform                                  as Platform
-import Monarch.Queue         ( Queue )
 import Monarch.Queue                                     as Queue
 import Monarch.Html    ( Html )
 import Monarch.Html                                as Html
