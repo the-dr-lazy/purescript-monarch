@@ -3,6 +3,7 @@ import { vnode as _vnode, VNodeData, Key } from 'snabbdom/vnode'
 import { classModule } from 'snabbdom/modules/class'
 import { propsModule } from 'snabbdom/modules/props'
 import { styleModule } from 'snabbdom/modules/style'
+import { attributesModule } from 'snabbdom/modules/attributes'
 import { eventListenersModule } from 'snabbdom/modules/eventlisteners'
 import { h as _h } from 'snabbdom/h'
 
@@ -130,7 +131,7 @@ function unsafe_uncurried_transform<message>(
     return true
 }
 
-const _patch = init([classModule, propsModule, styleModule, eventListenersModule])
+const _patch = init([classModule, propsModule, styleModule, attributesModule, eventListenersModule])
 
 // prettier-ignore
 interface Mount {
@@ -168,8 +169,7 @@ export const h: H = selector => spec => children =>
   <any>_h(selector, <VNodeData>spec, <any>children)
 
 interface Text {
-  <message>(text: string): VirtualNode<message>
+    <message>(text: string): VirtualNode<message>
 }
 
-export const text: Text = text =>
-  <any>_vnode(undefined, undefined, undefined, text, undefined)
+export const text: Text = text => <any>_vnode(undefined, undefined, undefined, text, undefined)
