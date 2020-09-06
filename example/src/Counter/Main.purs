@@ -9,7 +9,7 @@ import Effect.Aff            ( launchAff_ )
 import Web.HTML              ( HTMLElement )
 import Monarch               ( Command, Upstream )
 import Monarch                                   as Monarch
-import Monarch.VirtualDOM
+import Monarch.Html
 import Monarch.Event         ( Event
                              , eNever
                              )
@@ -33,7 +33,7 @@ update = case _ of
   UserClickedIncreaseButton -> (_ + 1)
   UserClickedDecreaseButton -> (_ - 1)
 
-view :: Model -> VirtualNode Message
+view :: Model -> Html Message
 view model = 
   div_ [ button { onClick: const UserClickedDecreaseButton } [ text "-" ]
        , text $ show model

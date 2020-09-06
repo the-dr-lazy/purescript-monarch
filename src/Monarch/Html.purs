@@ -14,48 +14,48 @@ import Monarch.Html.Properties
 
 -- Data Type
 
-foreign import data VirtualNode' :: # Type -> Type -> Type
+foreign import data Html' :: # Type -> Type -> Type
 
-type VirtualNode = VirtualNode' ()
+type Html = Html' ()
 
-instance functorVirtualNode :: Functor (VirtualNode' slots) where
+instance functorVirtualNode :: Functor (Html' slots) where
   map = virtualNodeMap
 
-foreign import virtualNodeMap :: forall slots a b. (a -> b) -> VirtualNode' slots a -> VirtualNode' slots b
+foreign import virtualNodeMap :: forall slots a b. (a -> b) -> Html' slots a -> Html' slots b
 
 -- Virtual DOM API
 
-foreign import mount :: forall slots message. (message -> Effect Unit) -> HTMLElement -> VirtualNode' slots message -> Effect Unit
+foreign import mount :: forall slots message. (message -> Effect Unit) -> HTMLElement -> Html' slots message -> Effect Unit
 
-foreign import patch :: forall slots message. (message -> Effect Unit) -> VirtualNode' slots message -> VirtualNode' slots message -> Effect Unit
+foreign import patch :: forall slots message. (message -> Effect Unit) -> Html' slots message -> Html' slots message -> Effect Unit
 
-foreign import unmount :: forall slots message. VirtualNode' slots message -> Effect Unit
+foreign import unmount :: forall slots message. Html' slots message -> Effect Unit
 
 -- Hyperscript
 
 type Node (r       :: # Type)
           (slots   :: # Type)
           (message :: Type)
-  = { | r } -> Array (VirtualNode' slots message) -> VirtualNode' slots message
+  = { | r } -> Array (Html' slots message) -> Html' slots message
 
 type Node_ (slots   :: # Type)
            (message :: Type)
-  = Array (VirtualNode' slots message) -> VirtualNode' slots message
+  = Array (Html' slots message) -> Html' slots message
 
 type Leaf (r       :: # Type)
           (slots   :: # Type)
           (message :: Type)
-  = { | r } -> VirtualNode' slots message
+  = { | r } -> Html' slots message
 
 foreign import h :: forall r slots message. String -> Node r slots message
 
 h_ :: forall slots message. String -> Node_ slots message
 h_ selector = h selector {}
 
-h' :: forall slots message. String -> VirtualNode' slots message 
+h' :: forall slots message. String -> Html' slots message 
 h' selector = h_ selector mempty
               
-foreign import text :: forall slots message. String -> VirtualNode' slots message 
+foreign import text :: forall slots message. String -> Html' slots message 
 
 -- Tags
 
@@ -76,14 +76,14 @@ div :: forall r r' props hooks slots message
     => Row.OptionalRecordCons r "props" (HTMLDivElementProperties ()) props
     => Row.OptionalRecordCons r "hooks" (Hooks message) hooks
     => { | r }
-    -> Array (VirtualNode' slots message)
-    -> VirtualNode' slots message
+    -> Array (Html' slots message)
+    -> Html' slots message
 div = h "div"
 
-div_ :: forall slots message. Array (VirtualNode' slots message) -> VirtualNode' slots message
+div_ :: forall slots message. Array (Html' slots message) -> Html' slots message
 div_ = h "div" {}
 
-div' :: forall slots message. VirtualNode' slots message
+div' :: forall slots message. Html' slots message
 div' = h "div" {} []
 
 type HTMLButtonR props hooks message = R HTMLButtonElementAttributes (HTMLButtonElementOutputs message) props hooks
@@ -98,5 +98,5 @@ button = h "button"
 button_ :: forall slots message. Node_ slots message
 button_ = h "button" {}
 
-button' :: forall slots message. VirtualNode' slots message
+button' :: forall slots message. Html' slots message
 button' = h "button" {} []
