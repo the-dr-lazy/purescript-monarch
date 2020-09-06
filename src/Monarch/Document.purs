@@ -42,14 +42,14 @@ import Monarch.Platform      ( Platform
 import Monarch.Platform                                  as Platform
 import Monarch.Queue         ( Queue )
 import Monarch.Queue                                     as Queue
-import Monarch.VirtualDOM    ( VirtualNode )
-import Monarch.VirtualDOM                                as VirtualDOM
+import Monarch.Html    ( Html )
+import Monarch.Html                                as Html
 import Monarch.Monad.Maybe   ( whenJustM )
 
 -- | Document's full input specification
 type Spec input model message output effects a r
   = Platform.Spec input model message output effects a
-  + ( view      :: model -> VirtualNode message
+  + ( view      :: model -> Html message
     , container :: HTMLElement
     | r
     )
@@ -75,18 +75,18 @@ mkDocument :: forall input model message output effects a r
             . { | Spec input model message output effects a r }
            -> Effect (Document input model message output)
 mkDocument spec@{ view, container } = do
-  qVirtualNode                         <- Queue.new
+  qHtml <- Queue.new
   platform@{ eModel, dispatchMessage } <- mkPlatform spec
   let
-    render = qVirtualNode.dispatch <<< view
-    mount = VirtualDOM.mount dispatchMessage container
-    patch = VirtualDOM.patch dispatchMessage
+    render = qHtml.dispatch <<< view
+    mount = Html.mount dispatchMessage container
+    patch = Html.patch dispatchMessage
   pure
     { platform
     , sRender: eModel # debounceIdleCallback
                       # subscribe render
-    , sCommit: qVirtualNode.event # debounceAnimationFrame
-                                  # swap mount patch VirtualDOM.unmount
+    , sCommit: qHtml.event # debounceAnimationFrame
+                                  # swap mount patch Html.unmount
     }
 
 runDocument :: forall input model message output. Document input model message output -> Effect Unsubscribe
