@@ -1,6 +1,6 @@
-module Monarch.VirtualDOM.Properties where
+module Monarch.Html.Properties where
 
-import Monarch.VirtualDOM.Attributes    ( ClassName )
+import Monarch.Html.Attributes    ( ClassName )
 import Type.Row                         ( type (+) )
 
 type NodeProperties (r :: # Type) = r

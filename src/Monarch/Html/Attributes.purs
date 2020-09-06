@@ -1,4 +1,4 @@
-module Monarch.VirtualDOM.Attributes where
+module Monarch.Html.Attributes where
 
 import Prelude
 

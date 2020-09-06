@@ -1,4 +1,4 @@
-module Monarch.VirtualDOM where
+module Monarch.Html where
 
 import Prelude
 
@@ -7,10 +7,10 @@ import Type.Row                         ( type (+) )
 import Type.Row                                            as Row
 import Web.HTML                         ( HTMLElement )
 import Monarch.Type.Row                                    as Row
-import Monarch.VirtualDOM.Attributes
-import Monarch.VirtualDOM.Hooks
-import Monarch.VirtualDOM.Outputs
-import Monarch.VirtualDOM.Properties
+import Monarch.Html.Attributes
+import Monarch.Html.Hooks
+import Monarch.Html.Outputs
+import Monarch.Html.Properties
 
 -- Data Type
 

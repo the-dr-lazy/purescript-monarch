@@ -1,4 +1,4 @@
-module Monarch.VirtualDOM.Hooks where
+module Monarch.Html.Hooks where
 
 type Hooks message
   = ( init :: message

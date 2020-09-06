@@ -1,4 +1,4 @@
-module Monarch.VirtualDOM.Outputs where
+module Monarch.Html.Outputs where
 
 import Web.UIEvent.MouseEvent (MouseEvent)
 
