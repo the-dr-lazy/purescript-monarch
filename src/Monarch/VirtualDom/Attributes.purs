@@ -12,6 +12,5 @@ derive newtype instance semigroupClassName :: Semigroup ClassName
 
 type GlobalAttributes r
   = ( class   :: ClassName       -- | Assigning class(es) to an element
-    , classes :: Array ClassName -- | Assigning classes to an element
     | r
     )
