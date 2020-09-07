@@ -15,6 +15,7 @@
   , "web-dom"
   , "web-uievents"
   , "typelevel-prelude"
+  , "strings"
   ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]
