@@ -1,5 +1,5 @@
 {-|
-Module     : Monarch.Html.Properties
+Module     : Monarch.VirtualDom.Properties
 Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <thebrodmann@protonmail.com>
 Copyright  : (c) 2020 Monarch
 License    : MPL 2.0
@@ -9,17 +9,15 @@ License, version 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -}
 
-module Monarch.Html.Properties where
+module Monarch.VirtualDom.Properties where
 
+import Monarch.VirtualDom.Attributes    ( ClassName )
 import Type.Row                         ( type (+) )
-import Monarch.VirtualDom.Properties 
 
-type HTMLElementProperties r = ElementProperties r
+type NodeProperties (r :: # Type) = r
 
-type HTMLDivElementProperties r = HTMLElementProperties r
-
-type HTMLButtonElementProperties r
-  = HTMLElementProperties
-  + ( disabled :: Boolean
+type ElementProperties r
+  = NodeProperties
+  + ( className :: ClassName
     | r
     )

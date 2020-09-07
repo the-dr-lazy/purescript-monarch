@@ -1,5 +1,5 @@
 {-|
-Module     : Monarch.Html.Attributes
+Module     : Monarch.Svg.Attributes
 Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <thebrodmann@protonmail.com>
 Copyright  : (c) 2020 Monarch
 License    : MPL 2.0
@@ -9,16 +9,19 @@ License, version 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -}
 
-module Monarch.Html.Attributes where
+module Monarch.Svg.Attributes where
 
-import Type.Row    ( type (+) )
+import Type.Row (type (+))
 import Monarch.VirtualDom.Attributes
 
-type HTMLDivElementAttributes r = GlobalAttributes r
+newtype ViewBox = ViewBox { minX   :: Number
+                          , minY   :: Number
+                          , width  :: Number
+                          , height :: Number
+                          }
 
-type HTMLButtonElementAttributes r
+type SvgSvgElementAttributes r
   = GlobalAttributes
-  + ( autofocus :: Boolean -- | Automatically focus the form control when the page is loaded
-    , disabled  :: Boolean -- | Whether the form control is disabled
+  + ( viewBox :: ViewBox
     | r
     )

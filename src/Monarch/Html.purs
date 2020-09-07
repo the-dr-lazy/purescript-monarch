@@ -9,7 +9,13 @@ License, version 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -}
 
-module Monarch.Html where
+module Monarch.Html
+  ( module Monarch.VirtualDom.Text
+  , Html , Html'
+  , div, div_, div'
+  , button, button_, button'
+  )
+where
 
 import Prelude
 
@@ -19,56 +25,27 @@ import Type.Row                                            as Row
 import Web.HTML                         ( HTMLElement )
 import Monarch.Type.Row                                    as Row
 import Monarch.Html.Attributes
-import Monarch.Html.Hooks
 import Monarch.Html.Outputs
 import Monarch.Html.Properties
+import Monarch.VirtualDom.NS as NS
+import Monarch.VirtualDom
+import Monarch.VirtualDom as VirtualDom
+import Monarch.VirtualDom.Text
+import Monarch.VirtualDom.Hooks
 
 -- Data Type
 
-foreign import data Html' :: # Type -> Type -> Type
+type Html' = VirtualNode NS.HTML
 
 type Html = Html' ()
 
-instance functorVirtualNode :: Functor (Html' slots) where
-  map = virtualNodeMap
+-- Elements
 
-foreign import virtualNodeMap :: forall slots a b. (a -> b) -> Html' slots a -> Html' slots b
+type Node r slots message = VirtualDom.Node NS.HTML r slots message
 
--- Virtual DOM API
+type Node_ slots message = VirtualDom.Node_ NS.HTML slots message
 
-foreign import mount :: forall slots message. (message -> Effect Unit) -> HTMLElement -> Html' slots message -> Effect Unit
-
-foreign import patch :: forall slots message. (message -> Effect Unit) -> Html' slots message -> Html' slots message -> Effect Unit
-
-foreign import unmount :: forall slots message. Html' slots message -> Effect Unit
-
--- Hyperscript
-
-type Node (r       :: # Type)
-          (slots   :: # Type)
-          (message :: Type)
-  = { | r } -> Array (Html' slots message) -> Html' slots message
-
-type Node_ (slots   :: # Type)
-           (message :: Type)
-  = Array (Html' slots message) -> Html' slots message
-
-type Leaf (r       :: # Type)
-          (slots   :: # Type)
-          (message :: Type)
-  = { | r } -> Html' slots message
-
-foreign import h :: forall r slots message. String -> Node r slots message
-
-h_ :: forall slots message. String -> Node_ slots message
-h_ selector = h selector {}
-
-h' :: forall slots message. String -> Html' slots message 
-h' selector = h_ selector mempty
-              
-foreign import text :: forall slots message. String -> Html' slots message 
-
--- Tags
+type Leaf r slots message = VirtualDom.Leaf NS.HTML r slots message
 
 type R (attributes :: # Type -> # Type)
        (outputs    :: # Type -> # Type)
@@ -86,15 +63,13 @@ div :: forall r r' props hooks slots message
      . Row.Union r r' (HTMLDivR props hooks message)
     => Row.OptionalRecordCons r "props" (HTMLDivElementProperties ()) props
     => Row.OptionalRecordCons r "hooks" (Hooks message) hooks
-    => { | r }
-    -> Array (Html' slots message)
-    -> Html' slots message
+    => Node r slots message
 div = h "div"
 
-div_ :: forall slots message. Array (Html' slots message) -> Html' slots message
+div_ :: forall slots message. Node_ slots message
 div_ = h "div" {}
 
-div' :: forall slots message. Html' slots message
+div' :: forall message. Html' () message
 div' = h "div" {} []
 
 type HTMLButtonR props hooks message = R HTMLButtonElementAttributes (HTMLButtonElementOutputs message) props hooks
@@ -109,5 +84,5 @@ button = h "button"
 button_ :: forall slots message. Node_ slots message
 button_ = h "button" {}
 
-button' :: forall slots message. Html' slots message
+button' :: forall message. Html message
 button' = h "button" {} []

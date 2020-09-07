@@ -37,7 +37,7 @@ import Monarch.Platform      ( Platform
 import Monarch.Platform                                  as Platform
 import Monarch.Queue                                     as Queue
 import Monarch.Html    ( Html )
-import Monarch.Html                                as Html
+import Monarch.VirtualDom as VirtualDom
 import Monarch.Monad.Maybe   ( whenJustM )
 
 -- | Document's full input specification
@@ -73,14 +73,14 @@ mkDocument spec@{ view, container } = do
   platform@{ eModel, dispatchMessage } <- mkPlatform spec
   let
     render = qHtml.dispatch <<< view
-    mount = Html.mount dispatchMessage container
-    patch = Html.patch dispatchMessage
+    mount = VirtualDom.mount dispatchMessage container
+    patch = VirtualDom.patch dispatchMessage
   pure
     { platform
     , sRender: eModel # debounceIdleCallback
                       # subscribe render
     , sCommit: qHtml.event # debounceAnimationFrame
-                                  # swap mount patch Html.unmount
+                           # swap mount patch VirtualDom.unmount
     }
 
 runDocument :: forall input model message output. Document input model message output -> Effect Unsubscribe
