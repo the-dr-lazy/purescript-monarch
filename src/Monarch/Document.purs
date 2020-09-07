@@ -69,17 +69,17 @@ mkDocument :: forall input model message output effects a r
             . { | Spec input model message output effects a r }
            -> Effect (Document input model message output)
 mkDocument spec@{ view, container } = do
-  qHtml <- Queue.new
+  qVirtualNode <- Queue.new
   platform@{ eModel, dispatchMessage } <- mkPlatform spec
   let
-    render = qHtml.dispatch <<< view
+    render = qVirtualNode.dispatch <<< view
     mount = VirtualDom.mount dispatchMessage container
     patch = VirtualDom.patch dispatchMessage
   pure
     { platform
     , sRender: eModel # debounceIdleCallback
                       # subscribe render
-    , sCommit: qHtml.event # debounceAnimationFrame
+    , sCommit: qVirtualNode.event # debounceAnimationFrame
                            # swap mount patch VirtualDom.unmount
     }
 
