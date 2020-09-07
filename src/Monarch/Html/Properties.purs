@@ -3,12 +3,12 @@ module Monarch.Html.Properties where
 import Type.Row                         ( type (+) )
 import Monarch.VirtualDom.Properties 
 
-type HTMLElementProperties r = ElementProperties r
+type HtmlElementProperties r = ElementProperties r
 
-type HTMLDivElementProperties r = HTMLElementProperties r
+type HtmlDivElementProperties r = HtmlElementProperties r
 
-type HTMLButtonElementProperties r
-  = HTMLElementProperties
+type HtmlButtonElementProperties r
+  = HtmlElementProperties
   + ( disabled :: Boolean
     | r
     )

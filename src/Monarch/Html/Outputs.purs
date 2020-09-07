@@ -2,8 +2,8 @@ module Monarch.Html.Outputs where
 
 import Monarch.VirtualDom.Outputs
 
-type HTMLElementOutputs message r = ElementOutputs message r
+type HtmlElementOutputs message r = ElementOutputs message r
 
-type HTMLDivElementOutputs message r = HTMLElementOutputs message r
+type HtmlDivElementOutputs message r = HtmlElementOutputs message r
 
-type HTMLButtonElementOutputs message r = HTMLElementOutputs message r
+type HtmlButtonElementOutputs message r = HtmlElementOutputs message r
