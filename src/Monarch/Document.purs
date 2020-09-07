@@ -80,7 +80,7 @@ mkDocument spec@{ view, container } = do
     , sRender: eModel # debounceIdleCallback
                       # subscribe render
     , sCommit: qVirtualNode.event # debounceAnimationFrame
-                           # swap mount patch VirtualDom.unmount
+                                  # swap mount patch VirtualDom.unmount
     }
 
 runDocument :: forall input model message output. Document input model message output -> Effect Unsubscribe
