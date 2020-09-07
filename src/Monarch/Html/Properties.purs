@@ -1,15 +1,7 @@
 module Monarch.Html.Properties where
 
-import Monarch.Html.Attributes    ( ClassName )
 import Type.Row                         ( type (+) )
-
-type NodeProperties (r :: # Type) = r
-
-type ElementProperties r
-  = NodeProperties
-  + ( className :: ClassName
-    | r
-    )
+import Monarch.VirtualDom.Properties 
 
 type HTMLElementProperties r = ElementProperties r
 
