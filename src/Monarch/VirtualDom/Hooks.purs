@@ -1,5 +1,5 @@
 {-|
-Module     : Monarch.Html.Outputs
+Module     : Monarch.VirtualDom.Hooks
 Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <thebrodmann@protonmail.com>
 Copyright  : (c) 2020 Monarch
 License    : MPL 2.0
@@ -9,12 +9,8 @@ License, version 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -}
 
-module Monarch.Html.Outputs where
+module Monarch.VirtualDom.Hooks where
 
-import Monarch.VirtualDom.Outputs
-
-type HTMLElementOutputs message r = ElementOutputs message r
-
-type HTMLDivElementOutputs message r = HTMLElementOutputs message r
-
-type HTMLButtonElementOutputs message r = HTMLElementOutputs message r
+type Hooks message
+  = ( init :: message
+    )
