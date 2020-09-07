@@ -1,7 +1,7 @@
 ---
 name: Missing Virtual DOM Attribute [English]
 about: Request to add a missing standard HTML attribute type definition.
-title: 'Add [ATTRIBUTE_NAME] HTML attribute'
+title: 'Add missing [ATTRIBUTE_NAME] virtual DOM attribute'
 labels: 'Priority: Medium, Status: Pending, Type: Enhancement'
 assignees: ''
 ---
