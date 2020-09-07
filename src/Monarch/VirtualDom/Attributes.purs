@@ -1,6 +1,7 @@
 module Monarch.VirtualDom.Attributes where
 
 import Prelude
+import Data.Newtype
 
 -- | A wrapper for strings which are used as CSS classes.
 newtype ClassName = ClassName String
