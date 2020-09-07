@@ -1,7 +1,7 @@
 ---
 name: Missing Virtual DOM Output [English]
 about: Request to add a missing standard DOM event output type definition.
-title: 'Add [PROPERTY_NAME] DOM property'
+title: 'Add missing [OUTPUT_NAME] virtual DOM output'
 labels: 'Priority: Medium, Status: Pending, Type: Enhancement'
 assignees: ''
 ---
