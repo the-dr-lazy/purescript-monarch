@@ -25,7 +25,7 @@ Example:
 [W3C UI events specification](https://www.w3.org/TR/uievents/#event-type-click) specifies `click` event as a standard event which targeting `Element` interface.
 -->
 
-#### Proposed Type Definition
+### Proposed Type Definition
 
 <!--
 Tell us your opinion about the best type representation of the proposed output.

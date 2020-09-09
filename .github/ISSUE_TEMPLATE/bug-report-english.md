@@ -6,11 +6,11 @@ labels: 'Priority: High, Status: Pending, Type: Bug'
 assignees: ''
 ---
 
-### Description
+## Description
 
 <!-- Example: `dispatch` function doesn't dispatch any message. -->
 
-#### Minimal, Reproducible Example
+### Minimal, Reproducible Example
 
 <!-- Please provide a link to a minimal, reproducible example. -->
 
@@ -18,7 +18,7 @@ assignees: ''
 
 https://stackoverflow.com/help/minimal-reproducible-example
 
-#### Steps to Reproduce
+### Steps to Reproduce
 
 <!--
 Example:
@@ -28,11 +28,11 @@ Example:
 3. Run the document.
 -->
 
-#### Expected Behavior
+### Expected Behavior
 
 <!-- Example: No error is throw -->
 
-#### Actual Behavior
+### Actual Behavior
 
 <!-- Example: Error is thrown -->
 
