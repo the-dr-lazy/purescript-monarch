@@ -20,7 +20,7 @@ Example:
 [W3C HTML5 specification](https://html.spec.whatwg.org/#attr-hyperlink-href) specifies `href` attribute as a standard attribute of `a` element.
 -->
 
-#### Proposed Type Definition
+### Proposed Type Definition
 
 <!--
 Tell us your opinion about the best type representation of the proposed attribute.

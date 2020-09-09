@@ -18,7 +18,7 @@ Example:
 [W3C DOM specification](https://dom.spec.whatwg.org/#dom-element-classname) specifies `className` property as a standard property of `Element` interface.
 -->
 
-#### Proposed Type Definition
+### Proposed Type Definition
 
 <!--
 Tell us your opinion about the best type representation of the proposed property.
