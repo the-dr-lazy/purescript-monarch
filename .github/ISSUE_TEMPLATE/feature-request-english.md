@@ -6,13 +6,13 @@ labels: 'Priority: High, Status: Pending, Type: Enhancement'
 assignees: ''
 ---
 
-## Summary
-
-<!-- Brief explanation of the feature. -->
-
 ### Motivation
 
 <!-- Why are we doing this? What use cases does it support? What is the expected outcome? -->
+
+## Summary
+
+<!-- Brief explanation of the feature. -->
 
 ### Basic Example
 
