@@ -41,8 +41,8 @@ type Leaf r slots message = VirtualDom.Leaf NS.SVG r slots message
 
 type SvgSvgR props hooks message = R SvgSvgElementAttributes (SvgSvgElementOutputs message) props hooks
 
-svg :: forall r r' props hooks ns message
-     . Row.Union r r' (SvgSvgR props hooks message)
+svg :: forall r _r props hooks ns message
+     . Row.Union r _r (SvgSvgR props hooks message)
     => Row.OptionalRecordCons r "props" (SvgSvgElementProperties ()) props
     => Row.OptionalRecordCons r "hooks" (Hooks message) hooks
     => { | r }

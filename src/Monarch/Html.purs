@@ -59,8 +59,8 @@ type R (attributes :: # Type -> # Type)
 
 type HtmlDivR props hooks message = R HtmlDivElementAttributes (HtmlDivElementOutputs message) props hooks
 
-div :: forall r r' props hooks slots message
-     . Row.Union r r' (HtmlDivR props hooks message)
+div :: forall r _r props hooks slots message
+     . Row.Union r _r (HtmlDivR props hooks message)
     => Row.OptionalRecordCons r "props" (HtmlDivElementProperties ()) props
     => Row.OptionalRecordCons r "hooks" (Hooks message) hooks
     => Node r slots message
@@ -74,8 +74,8 @@ div' = h "div" {} []
 
 type HtmlButtonR props hooks message = R HtmlButtonElementAttributes (HtmlButtonElementOutputs message) props hooks
 
-button :: forall r r' props hooks slots message
-        . Row.Union r r' (HtmlButtonR props hooks message)
+button :: forall r _r props hooks slots message
+        . Row.Union r _r (HtmlButtonR props hooks message)
        => Row.OptionalRecordCons r "props" (HtmlButtonElementProperties ()) props
        => Row.OptionalRecordCons r "hooks" (Hooks message) hooks
        => Node r slots message
