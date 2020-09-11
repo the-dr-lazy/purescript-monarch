@@ -47,21 +47,11 @@ type Node_ slots message = VirtualDom.Node_ NS.HTML slots message
 
 type Leaf r slots message = VirtualDom.Leaf NS.HTML r slots message
 
-type R (attributes :: # Type -> # Type)
-       (outputs    :: # Type -> # Type)
-       (props      :: # Type)
-       (hooks      :: # Type)
-  = attributes
-  + outputs
-  + ( props :: { | props }
-    , hooks :: { | hooks }
-    )
+type HtmlDivR attributes hooks message = R HtmlDivElementProperties (HtmlDivElementOutputs message) attributes hooks
 
-type HtmlDivR props hooks message = R HtmlDivElementAttributes (HtmlDivElementOutputs message) props hooks
-
-div :: forall r _r props hooks slots message
-     . Row.Union r _r (HtmlDivR props hooks message)
-    => Row.OptionalRecordCons r "props" (HtmlDivElementProperties ()) props
+div :: forall r _r attributes hooks slots message
+     . Row.Union r _r (HtmlDivR attributes hooks message)
+    => Row.OptionalRecordCons r "attrs" (HtmlDivElementAttributes ()) attributes
     => Row.OptionalRecordCons r "hooks" (Hooks message) hooks
     => Node r slots message
 div = h "div"
@@ -72,11 +62,11 @@ div_ = h "div" {}
 div' :: forall message. Html' () message
 div' = h "div" {} []
 
-type HtmlButtonR props hooks message = R HtmlButtonElementAttributes (HtmlButtonElementOutputs message) props hooks
+type HtmlButtonR attributes hooks message = R HtmlButtonElementProperties (HtmlButtonElementOutputs message) attributes hooks
 
-button :: forall r _r props hooks slots message
-        . Row.Union r _r (HtmlButtonR props hooks message)
-       => Row.OptionalRecordCons r "props" (HtmlButtonElementProperties ()) props
+button :: forall r _r attributes hooks slots message
+        . Row.Union r _r (HtmlButtonR attributes hooks message)
+       => Row.OptionalRecordCons r "attrs" (HtmlButtonElementAttributes ()) attributes
        => Row.OptionalRecordCons r "hooks" (Hooks message) hooks
        => Node r slots message
 button = h "button"
