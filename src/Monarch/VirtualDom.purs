@@ -55,12 +55,12 @@ h' selector = h_ selector mempty
               
 foreign import text :: forall ns message. String -> VirtualNode' ns message 
 
-type R (attributes :: # Type -> # Type)
+type R (properties :: # Type -> # Type)
        (outputs    :: # Type -> # Type)
-       (props      :: # Type)
+       (attributes :: # Type)
        (hooks      :: # Type)
-  = attributes
+  = properties
   + outputs
-  + ( props :: { | props }
+  + ( attrs :: { | attributes }
     , hooks :: { | hooks }
     )

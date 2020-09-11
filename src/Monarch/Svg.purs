@@ -28,11 +28,11 @@ type Node_ slots message = VirtualDom.Node_ NS.SVG slots message
 
 type Leaf r slots message = VirtualDom.Leaf NS.SVG r slots message
 
-type SvgSvgR props hooks message = R SvgSvgElementAttributes (SvgSvgElementOutputs message) props hooks
+type SvgSvgR attributes hooks message = R SvgSvgElementProperties (SvgSvgElementOutputs message) attributes hooks
 
-svg :: forall r _r props hooks ns message
-     . Row.Union r _r (SvgSvgR props hooks message)
-    => Row.OptionalRecordCons r "props" (SvgSvgElementProperties ()) props
+svg :: forall r _r attributes hooks ns message
+     . Row.Union r _r (SvgSvgR attributes hooks message)
+    => Row.OptionalRecordCons r "attrs" (SvgSvgElementAttributes ()) attributes
     => Row.OptionalRecordCons r "hooks" (Hooks message) hooks
     => { | r }
     -> Array (Svg message)

@@ -31,7 +31,7 @@ type TransformedVirtualNode = {
 
 type VirtualNodeSpec<message> = {
     [key: string]: any
-    props?: VirtualNodeProps
+    attrs?: VirtualNodeAttrs
     hooks?: VirtualNodeHooks<message>
 }
 
@@ -92,26 +92,27 @@ function unsafe_uncurried_transform<message>(
 
     if (virtualNode.data) {
         const attributes: Record<string, any> = {}
+        const properties: Record<string, any> = {}
         const outputs: Record<string, (event: Event) => void> = {}
 
         for (const key in virtualNode.data) {
             if (key === 'hooks' || key === 'props') continue
+            if (key === 'hooks' || key === 'attrs') continue
 
             if (key.startsWith(outputPrefix)) {
                 const name = key.substr(outputPrefix.length).toLowerCase()
-
                 const f = <Dispatch<message>>virtualNode.f!
                 const g = virtualNode.data[key]
-
                 outputs[name] = a => f(g(a))()
-
                 continue
             }
 
             attributes[key] = virtualNode.data[key]
+            properties[key] = virtualNode.data[key]
         }
 
         virtualNode.data!.attrs = attributes
+        virtualNode.data!.props = properties
         virtualNode.data!.on = outputs
     }
 
@@ -119,15 +120,12 @@ function unsafe_uncurried_transform<message>(
         for (const name in virtualNode.data.hooks) {
             const f = <Dispatch<any>>virtualNode.f!
             const g = virtualNode.data.hooks[name]
-
             virtualNode.data.hooks[name] = <any>((...a: any[]) => f(g(...a))())
         }
-
-        if (virtualNode.children) {
-            virtualNode.children.forEach(child => unsafe_uncurried_transform(<any>virtualNode.f!, child))
-        }
     }
-
+    if (virtualNode.children) {
+        virtualNode.children.forEach(child => unsafe_uncurried_transform(<any>virtualNode.f!, child))
+    }
     return true
 }
 
