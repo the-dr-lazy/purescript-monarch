@@ -19,3 +19,7 @@ type Lazy<a> = () => a
 // Data Types
 //
 type Effect<a> = Lazy<a>
+
+interface Tagged<a> {
+  tag: a
+}
