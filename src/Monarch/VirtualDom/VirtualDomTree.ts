@@ -89,7 +89,7 @@ export namespace VirtualDomTree {
    */
   export interface Async {}
 
-  // SUM TYPE: Async
+  // SUM TYPE: Suspense
 
   /**
    * TODO: catch async nodes fallback
