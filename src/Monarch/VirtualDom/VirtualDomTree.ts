@@ -4,12 +4,6 @@
 export type VirtualDomTree<message> =
   | VirtualDomTree.Text
   | VirtualDomTree.Element<message>
-  | VirtualDomTree.Tagger // TODO
-  | VirtualDomTree.Suspense // TODO: cache async node
-  | VirtualDomTree.Thunk // TODO: evaluate given thunk on refrence change
-  | VirtualDomTree.Async // TODO: subscribe to asynchronous virtual dom tree
-  | VirtualDomTree.Fragment // TODO: render subtrees as children of parent node
-  | VirtualDomTree.OffScreen // TODO: evaluate subtree on browser's idles periods
 
 export namespace VirtualDomTree {
   /**
@@ -81,6 +75,55 @@ export namespace VirtualDomTree {
     return { tag: Element, tagName, facts, children }
   }
 
+  // SUM TYPE: Tagger
+
+  /**
+   * TODO: tag Functor
+   */
+  export interface Tagger {}
+
+  // SUM TYPE: Async
+
+  /**
+   * TODO: subscribe to asynchronous virtual dom tree
+   */
+  export interface Async {}
+
+  // SUM TYPE: Async
+
+  /**
+   * TODO: catch async nodes fallback
+   */
+  export interface Suspense {}
+
+  // SUM TYPE: Suspense
+
+  /**
+   * TODO: catch async nodes fallback
+   */
+  export interface Suspense {}
+
+  // SUM TYPE: Thunk
+
+  /**
+   * TODO: evaluate the given thunk on reference change
+   */
+  export interface Thunk {}
+
+  // SUM TYPE: Fragment
+
+  /**
+   * TODO: render subtrees as children of parent node
+   */
+  export interface Fragment {}
+
+  // SUM TYPE: Offscreen
+
+  /**
+   * TODO: evaluate subtree on browsers' idle periods
+   */
+  export interface Offscreen {}
+
   // INTERNAL
 
   interface Parent<message> {
@@ -95,13 +138,4 @@ export namespace VirtualDomTree {
     [key: string]: any | undefined
     attributes?: Record<string, any>
   }
-
-  // TODO
-
-  export interface Tagger {}
-  export interface Suspense {}
-  export interface Thunk {}
-  export interface Async {}
-  export interface Fragment {}
-  export interface OffScreen {}
 }
