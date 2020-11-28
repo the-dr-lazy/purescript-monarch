@@ -96,13 +96,6 @@ export namespace VirtualDomTree {
    */
   export interface Suspense {}
 
-  // SUM TYPE: Suspense
-
-  /**
-   * TODO: catch async nodes fallback
-   */
-  export interface Suspense {}
-
   // SUM TYPE: Thunk
 
   /**
