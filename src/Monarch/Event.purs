@@ -5,7 +5,7 @@ import Data.Maybe
 import Data.HeytingAlgebra
 import Data.Traversable
 import Data.Tuple
-import Control.Plus 
+import Control.Plus
 import Control.Apply         ( lift2 )
 import Effect
 import Effect.Ref                                       as Ref
@@ -18,7 +18,7 @@ import Monarch.Web.Window    ( requestTimeout
                              , cancelIdleCallback
                              )
 import Unsafe.Reference      ( unsafeRefEq )
-  
+
 type Unsubscribe
   = Effect Unit
 
@@ -75,7 +75,7 @@ distinctUntilChanged :: forall a. (a -> a -> Boolean) -> Event a -> Event a
 distinctUntilChanged f e = Event \next -> do
   previousXRef <- Ref.new Nothing
   e # subscribe \x -> do
-    isDistinct <- maybe true (not <<< f x) <$> Ref.read previousXRef 
+    isDistinct <- maybe true (not <<< f x) <$> Ref.read previousXRef
     when isDistinct (next x)
     Ref.write (Just x) previousXRef
 
@@ -86,7 +86,7 @@ debounce :: forall id a. (Effect Unit -> Effect id) -> (id -> Effect Unit) -> Ev
 debounce request cancel e = Event \next -> do
   requestIdRef <- Ref.new Nothing
   e # subscribe \x -> do
-    cancel `whenJustM` Ref.read requestIdRef 
+    cancel `whenJustM` Ref.read requestIdRef
     request (next x *> Ref.write Nothing requestIdRef) >>= flip Ref.write requestIdRef <<< Just
 
 debounceTime :: forall a. Int -> Event a -> Event a

@@ -6,10 +6,10 @@ import Type.Row              ( type (+) )
 import Run                   ( Run, EFFECT )
 import Effect                ( Effect )
 import Effect.Aff            ( launchAff_ )
-import Web.HTML              ( HTMLElement )    
+import Web.HTML              ( HTMLElement )
 import Monarch               ( Command, Upstream )
 import Monarch                                   as Monarch
-import Monarch.VirtualDOM    
+import Monarch.VirtualDOM
 import Monarch.Event         ( Event
                              , eNever
                              )
@@ -34,7 +34,7 @@ update = case _ of
   Decrease -> (_ - 1)
 
 view :: Model -> VirtualNode Message
-view model = 
+view model =
   h_ "div"
      [ h "button" { on: { click: (\_ -> Decrease) } } [ text "-" ]
      , text $ show model
@@ -46,8 +46,8 @@ type Effects = Monarch.Effects Message Output + API.Effects ()
 command :: Message
         -> Model
         -> Command (API.Effects ()) Message Output Unit
-command Increase _ = API.increase 
-command Decrease _ = API.decrease 
+command Increase _ = API.increase
+command Decrease _ = API.decrease
 
 interpreter :: Command (API.Effects ()) Message Output Unit -> Command () Message Output Unit
 interpreter = runAPI
@@ -66,4 +66,3 @@ main container = do
                     , subscription
                     , container
                     }
-
