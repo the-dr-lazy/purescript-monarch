@@ -21,5 +21,5 @@ type Lazy<a> = () => a
 type Effect<a> = Lazy<a>
 
 interface Tagged<a> {
-  tag: a
+    tag: a
 }

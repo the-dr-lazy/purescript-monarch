@@ -1,5 +1,5 @@
 {-|
-Module     : Monarch.Svg.Outputs
+Module     : Monarch.VirtualDom.Facts.Outputs
 Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <thebrodmann@protonmail.com>
 Copyright  : (c) 2020 Monarch
 License    : MPL 2.0
@@ -9,8 +9,13 @@ License, version 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -}
 
-module Monarch.Svg.Outputs where
+module Monarch.VirtualDom.Facts.Outputs where
 
-import Monarch.VirtualDom.Outputs
+import Web.UIEvent.MouseEvent (MouseEvent)
 
-type SvgSvgElementOutputs message r = GlobalOutputs message r
+type GlobalOutputs message r
+  = ( onClick :: MouseEvent -> message
+    | r
+    )
+
+type ElementOutputs message r = GlobalOutputs message r

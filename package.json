@@ -36,7 +36,6 @@
     "homepage": "https://github.com/thebrodmann/monarch#readme",
     "dependencies": {
         "setimmediate": "^1.0.5",
-        "snabbdom": "^0.7.4",
         "tslib": "^2.0.0"
     },
     "devDependencies": {

@@ -1,5 +1,5 @@
 {-|
-Module     : Monarch.VirtualDom.Text
+Module     : Monarch.VirtualDom.Facts.Hooks
 Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <thebrodmann@protonmail.com>
 Copyright  : (c) 2020 Monarch
 License    : MPL 2.0
@@ -9,6 +9,8 @@ License, version 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -}
 
-module Monarch.VirtualDom.Text (module Monarch.VirtualDom) where
+module Monarch.VirtualDom.Facts.Hooks where
 
-import Monarch.VirtualDom (text)
+type Hooks message
+  = ( init :: message
+    )

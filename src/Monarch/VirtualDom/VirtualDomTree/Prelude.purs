@@ -1,5 +1,5 @@
 {-|
-Module     : Monarch.VirtualDom.Properties
+Module     : Monarch.VirtualDom.VirtualDomTree.Prelude
 Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <thebrodmann@protonmail.com>
 Copyright  : (c) 2020 Monarch
 License    : MPL 2.0
@@ -9,15 +9,9 @@ License, version 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -}
 
-module Monarch.VirtualDom.Properties where
+module Monarch.VirtualDom.VirtualDomTree.Prelude
+  ( module Monarch.VirtualDom.VirtualDomTree
+  )
+where
 
-import Monarch.VirtualDom.Attributes    ( ClassName )
-import Type.Row                         ( type (+) )
-
-type NodeProperties (r :: # Type) = r
-
-type ElementProperties r
-  = NodeProperties
-  + ( className :: ClassName
-    | r
-    )
+import Monarch.VirtualDom.VirtualDomTree (text)
