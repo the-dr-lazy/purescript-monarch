@@ -27,6 +27,8 @@ import Monarch.Web.Window    ( requestTimeout
                              , cancelAnimationFrame
                              , requestIdleCallback'
                              , cancelIdleCallback
+                             , requestImmediate
+                             , cancelImmediate
                              )
 import Unsafe.Reference      ( unsafeRefEq )
 
@@ -108,6 +110,9 @@ debounceAnimationFrame = debounce requestAnimationFrame cancelAnimationFrame
 
 debounceIdleCallback :: forall a. Event a -> Event a
 debounceIdleCallback = debounce requestIdleCallback' cancelIdleCallback
+
+debounceImmediate :: forall a. Event a -> Event a
+debounceImmediate = debounce requestImmediate cancelImmediate
 
 finalize :: forall a. a -> Event a
 finalize x = Event \next -> pure $ next x
