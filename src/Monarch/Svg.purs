@@ -10,7 +10,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -}
 
 module Monarch.Svg
-  ( module Monarch.VirtualDom.Text
+  ( module Monarch.VirtualDom.VirtualDomTree.Prelude
   , Svg
   , svg , svg_, svg'
   )
@@ -18,26 +18,26 @@ where
 
 import Type.Row as Row
 import Monarch.Type.Row as Row
-import Monarch.VirtualDom
-import Monarch.VirtualDom as VirtualDom
+import Monarch.VirtualDom.VirtualDomTree
+import Monarch.VirtualDom.VirtualDomTree as VirtualDomTree
 import Monarch.VirtualDom.NS as NS
-import Monarch.VirtualDom.Hooks
-import Monarch.VirtualDom.Text
-import Monarch.Svg.Attributes
-import Monarch.Svg.Properties
-import Monarch.Svg.Outputs
+import Monarch.VirtualDom.Facts.Hooks
+import Monarch.VirtualDom.VirtualDomTree.Prelude
+import Monarch.Svg.Facts.Attributes
+import Monarch.Svg.Facts.Properties
+import Monarch.Svg.Facts.Outputs
 
 -- Data Type
 
-type Svg = VirtualNode' NS.SVG
+type Svg = VirtualDomTree' NS.SVG
 
 -- Elements
 
-type Node r slots message = VirtualDom.Node NS.SVG r slots message
+type Node r slots message = VirtualDomTree.Node NS.SVG r slots message
 
-type Node_ slots message = VirtualDom.Node_ NS.SVG slots message
+type Node_ slots message = VirtualDomTree.Node_ NS.SVG slots message
 
-type Leaf r slots message = VirtualDom.Leaf NS.SVG r slots message
+type Leaf r slots message = VirtualDomTree.Leaf NS.SVG r slots message
 
 type SvgSvgR attributes hooks message = R SvgSvgElementProperties (SvgSvgElementOutputs message) attributes hooks
 
@@ -47,11 +47,11 @@ svg :: forall r _r attributes hooks ns message
     => Row.OptionalRecordCons r "hooks" (Hooks message) hooks
     => { | r }
     -> Array (Svg message)
-    -> VirtualNode' ns message
-svg = h "svg"
+    -> VirtualDomTree' ns message
+svg = node "svg"
 
-svg_ :: forall ns message. Array (Svg message) -> VirtualNode' ns message
-svg_ = h "svg" {} 
+svg_ :: forall ns message. Array (Svg message) -> VirtualDomTree' ns message
+svg_ = node "svg" {} 
 
-svg' :: forall ns message. VirtualNode' ns message
-svg' = h "svg" {} []
+svg' :: forall ns message. VirtualDomTree' ns message
+svg' = node "svg" {} []

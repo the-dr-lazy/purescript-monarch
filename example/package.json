@@ -13,5 +13,8 @@
     "license": "ISC",
     "devDependencies": {
         "parcel": "^1.12.4"
+    },
+    "alias": {
+        "monarch": "../src"
     }
 }

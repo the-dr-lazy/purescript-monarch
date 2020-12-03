@@ -13,6 +13,10 @@
         "resolveJsonModule": true,
         "removeComments": true,
         "rootDir": "src",
-        "rootDirs": ["src", "output"]
+        "rootDirs": ["src", "output"],
+        "baseUrl": ".",
+        "paths": {
+            "monarch/*": ["src/*"]
+        }
     }
 }

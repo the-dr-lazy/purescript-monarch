@@ -1,5 +1,5 @@
 {-|
-Module     : Monarch.Svg.Attributes
+Module     : Monarch.Svg.Facts.Attributes
 Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <thebrodmann@protonmail.com>
 Copyright  : (c) 2020 Monarch
 License    : MPL 2.0
@@ -9,7 +9,7 @@ License, version 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -}
 
-module Monarch.Svg.Attributes
+module Monarch.Svg.Facts.Attributes
   ( SvgSvgElementAttributes
   , ViewBox
   , mkViewBox
@@ -19,7 +19,7 @@ where
 import Prelude
 import Type.Row (type (+))
 import Data.String.Common as String
-import Monarch.VirtualDom.Attributes
+import Monarch.VirtualDom.Facts.Attributes
 
 newtype ViewBox = ViewBox String
 

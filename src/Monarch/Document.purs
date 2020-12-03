@@ -26,7 +26,7 @@ import Effect.Ref                                        as Ref
 import Web.HTML              ( HTMLElement )
 import Monarch.Event         ( Event
                              , Unsubscribe
-                             , debounceIdleCallback
+                             , debounceImmediate
                              , debounceAnimationFrame
                              , subscribe
                              )
@@ -36,8 +36,14 @@ import Monarch.Platform      ( Platform
                              )
 import Monarch.Platform                                  as Platform
 import Monarch.Queue                                     as Queue
-import Monarch.Html    ( Html )
-import Monarch.VirtualDom as VirtualDom
+import Monarch.Html          ( Html )
+import Monarch.Scheduler
+import Monarch.VirtualDom.VirtualDomTree ( VirtualDomTree )
+import Monarch.VirtualDom.OutputHandlerTree
+import Monarch.VirtualDom.PatchTree
+import Monarch.VirtualDom.NS                             as NS
+import Monarch.VirtualDom                                as VirtualDom
+import Monarch.Web.Window    ( requestAnimationFrame )
 import Monarch.Monad.Maybe   ( whenJustM )
 
 -- | Document's full input specification
@@ -49,51 +55,52 @@ type Spec input model message output effects a r
     )
 
 type Document input model message output
-  = { platform :: Platform input model message output
-    , sRender  :: Effect Unsubscribe
-    , sCommit  :: Effect Unsubscribe
+  = { platform  :: Platform input model message output
+    , sRender   :: Effect Unsubscribe
+    , sWorkLoop :: Effect Unsubscribe
+    , sCommit   :: Effect Unsubscribe
     }
-
-swap :: forall a. (a -> Effect Unit) -> (a -> a -> Effect Unit) -> (a -> Effect Unit) -> Event a -> Effect Unsubscribe
-swap mount patch unmount e = do
-  xRef <- Ref.new Nothing
-  unsubscribe <- e # subscribe \x -> do
-    Ref.read xRef >>= flip f x
-    Ref.write (Just x) xRef
-  pure do
-    unsubscribe
-    unmount `whenJustM` Ref.read xRef
-  where f = maybe mount patch
 
 mkDocument :: forall input model message output effects a r
             . { | Spec input model message output effects a r }
            -> Effect (Document input model message output)
 mkDocument spec@{ view, container } = do
-  qVirtualNode <- Queue.new
+  qVNode     <- Queue.new
+  qPatchTree <- Queue.new
+
   platform@{ eModel, dispatchMessage } <- mkPlatform spec
+
   let
-    render = qVirtualNode.dispatch <<< view
-    mount = VirtualDom.mount dispatchMessage container
-    patch = VirtualDom.patch dispatchMessage
+    dispatchPatchTree = qPatchTree.dispatch
+    rootOutputHandlerNode = mkRootOutputHandlerNode dispatchMessage
+    render = qVNode.dispatch <<< view
+    commit = VirtualDom.applyPatchTree container
+
   pure
     { platform
-    , sRender: eModel # debounceIdleCallback
-                      # subscribe render
-    , sCommit: qVirtualNode.event # debounceAnimationFrame
-                                  # swap mount patch VirtualDom.unmount
+    , sRender: eModel # subscribe render
+    , sWorkLoop: workLoop { container
+                          , rootOutputHandlerNode
+                          , dispatchPatchTree
+                          , eVNode: qVNode.event
+                          }
+    , sCommit: qPatchTree.event # debounceAnimationFrame
+                                # subscribe commit
     }
 
 runDocument :: forall input model message output. Document input model message output -> Effect Unsubscribe
-runDocument { sRender, sCommit, platform } = do
+runDocument { sRender, sWorkLoop, sCommit, platform } = do
   -- Subscriptions
-  unsubscribeRender   <- sRender
   unsubscribeCommit   <- sCommit
+  unsubscribeWorkLoop <- sWorkLoop
+  unsubscribeRender   <- sRender
   unsubscribePlatform <- runPlatform platform
   -- Unsubscribe
   pure do
     unsubscribePlatform
-    unsubscribeCommit
     unsubscribeRender
+    unsubscribeWorkLoop
+    unsubscribeCommit
 
 type Document' input output
   = { unsubscribe   :: Effect Unit
@@ -115,4 +122,44 @@ document spec = do
 document_ :: forall input model message output effects a r
            . { | Spec input model message output effects a r }
           -> Effect Unit
-document_ = void <<< document
+document_ = do
+  void <<< document
+
+type WorkLoopSpec slots message
+  = { eVNode                :: Event (VirtualDomTree NS.HTML slots message)
+    , container             :: HTMLElement
+    , dispatchPatchTree     :: PatchTree -> Effect Unit
+    , rootOutputHandlerNode :: OutputHandlerTree
+    }
+
+workLoop :: forall slots message. WorkLoopSpec slots message -> Effect (Unsubscribe)
+workLoop { container, dispatchPatchTree, rootOutputHandlerNode, eVNode } = do
+  qDiffWork        <- Queue.new
+  commitedVNodeRef <- Ref.new Nothing
+  scheduler        <- mkScheduler
+
+  let dispatchDiffWork = qDiffWork.dispatch
+      mount vNode = do
+        Ref.write (Just vNode) commitedVNodeRef
+        void <<< requestAnimationFrame $ VirtualDom.mount { container, rootOutputHandlerNode } vNode
+
+  let finishDiffWork { rootVNode, rootPatchTree } = do
+        Ref.write (Just rootVNode) commitedVNodeRef
+        dispatchPatchTree rootPatchTree
+
+  let environment = { finishDiffWork, dispatchDiffWork, scheduler }
+      dispatchDiffWorkByVNode commitedVNode = dispatchDiffWork <<< VirtualDom.mkDiffWork commitedVNode
+      f = maybe mount dispatchDiffWorkByVNode
+
+  unsubscribeDiffWorkDispatch <- eVNode
+    # subscribe \vNode -> Ref.read commitedVNodeRef >>= flip f vNode
+  unsubscribeDiffWorkPerformance <- qDiffWork.event
+    # debounceImmediate
+    # subscribe (VirtualDom.performDiffWork environment)
+
+  pure do
+    unsubscribeDiffWorkDispatch
+    unsubscribeDiffWorkPerformance
+    unmount `whenJustM` Ref.read commitedVNodeRef
+
+  where unmount = VirtualDom.unmount container

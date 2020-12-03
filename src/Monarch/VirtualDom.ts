@@ -8,176 +8,176 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { init } from 'snabbdom'
-import { vnode as _vnode, VNodeData, Key } from 'snabbdom/vnode'
-import { classModule } from 'snabbdom/modules/class'
-import { propsModule } from 'snabbdom/modules/props'
-import { styleModule } from 'snabbdom/modules/style'
-import { attributesModule } from 'snabbdom/modules/attributes'
-import { eventListenersModule } from 'snabbdom/modules/eventlisteners'
-import { h as _h } from 'snabbdom/h'
+import 'setimmediate'
+import { VirtualDomTree, realize, diff, DownstreamNode } from 'monarch/Monarch/VirtualDom/VirtualDomTree'
+import { PatchTree, unsafe_uncurried_applyPatchTree } from 'monarch/Monarch/VirtualDom/PatchTree'
+import { OutputHandlerTree } from 'monarch/Monarch/VirtualDom/OutputHandlerTree'
 
-type VirtualNode<message> = {
-    sel: string
-    key?: Key
-    text?: string
-    elm?: HTMLElement
-    listener?: any
-    children?: VirtualNode<message>[]
-    data?: VirtualNodeSpec<message>
-    f?: <a>(a: a) => message
-}
-
-type TransformedVirtualNode = {
-    sel: string
-    key?: Key
-    text?: string
-    elm?: HTMLElement
-    listener?: any
-    children?: TransformedVirtualNode[]
-    data?: TransformedVirtualNodeSpec
-    f?: <a>(a: a) => Effect<Unit>
-}
-
-type VirtualNodeSpec<message> = {
-    [key: string]: any
-    attrs?: VirtualNodeAttrs
-    hooks?: VirtualNodeHooks<message>
-}
-
-type TransformedVirtualNodeSpec = {
-    props?: VirtualNodeProps
-    attrs?: VirtualNodeAttrs
-    style?: VirtualNodeStyle
-    on?: VirtualNodeEvent<void>
-    hooks?: VirtualNodeHooks<void>
-    key?: Key
-}
-
-type VirtualNodeProps = Record<string, any>
-type VirtualNodeAttrs = Record<string, string | number | boolean>
-type VirtualNodeStyle = Record<string, string> & {
-    delayed?: Record<string, string>
-    remove?: Record<string, string>
-}
-type VirtualNodeEvent<message> = Record<string, (event: Event) => message>
-type VirtualNodeHooks<message> = Record<string, (...args: any[]) => message>
-
-// prettier-ignore
-function unsafe_uncurried_virtualNodeMap<b, c>(g: (b: b) => c, virtualNode: VirtualNode<b>): virtualNode is VirtualNode<b> & VirtualNode<c> {
-  const f = virtualNode.f
-
-  virtualNode.f = <any>(f ? <a>(a: a) => g(f(a)) : g)
-
-  return true
-}
-
-// prettier-ignore
-function uncurried_virtualNodeMap<b, c>(g: (b: b) => c, virtualNode: VirtualNode<b>): VirtualNode<c> {
-  const f = virtualNode.f
-
-  return <VirtualNode<c>>{
-    ...virtualNode,
-    f: f ? <a>(a: a) => g(f(a)) : g,
-  }
-}
-
-// prettier-ignore
-interface VirtualNodeMap {
-  <a, b>(f: (a: a) => b): (x: VirtualNode<a>) => VirtualNode<b>
-}
-
-// prettier-ignore
-export const virtualNodeMap: VirtualNodeMap = f => virtualNode => uncurried_virtualNodeMap(f, virtualNode)
-
-type Dispatch<message> = (message: message) => Effect<Unit>
-
-const outputPrefix = 'on'
-
-function unsafe_uncurried_transform<message>(
-    dispatch: Dispatch<message>,
-    virtualNode: VirtualNode<message>,
-): virtualNode is VirtualNode<message> & TransformedVirtualNode {
-    if (!unsafe_uncurried_virtualNodeMap(dispatch, virtualNode)) throw '### UNREACHABLE CODE ###'
-
-    if (virtualNode.data) {
-        const attributes: Record<string, any> = {}
-        const properties: Record<string, any> = {}
-        const outputs: Record<string, (event: Event) => void> = {}
-
-        for (const key in virtualNode.data) {
-            if (key === 'hooks' || key === 'props') continue
-            if (key === 'hooks' || key === 'attrs') continue
-
-            if (key.startsWith(outputPrefix)) {
-                const name = key.substr(outputPrefix.length).toLowerCase()
-                const f = <Dispatch<message>>virtualNode.f!
-                const g = virtualNode.data[key]
-                outputs[name] = a => f(g(a))()
-                continue
-            }
-
-            attributes[key] = virtualNode.data[key]
-            properties[key] = virtualNode.data[key]
-        }
-
-        virtualNode.data!.attrs = attributes
-        virtualNode.data!.props = properties
-        virtualNode.data!.on = outputs
+function unsafe_uncurried_mount<a>(domNode: Node, rootOutputHandlerNode: OutputHandlerTree.Root, vNode: VirtualDomTree<a>): void {
+    while (domNode.firstChild) {
+        domNode.removeChild(domNode.lastChild!)
     }
 
-    if (virtualNode.data?.hooks) {
-        for (const name in virtualNode.data.hooks) {
-            const f = <Dispatch<any>>virtualNode.f!
-            const g = virtualNode.data.hooks[name]
-            virtualNode.data.hooks[name] = <any>((...a: any[]) => f(g(...a))())
-        }
-    }
-    if (virtualNode.children) {
-        virtualNode.children.forEach(child => unsafe_uncurried_transform(<any>virtualNode.f!, child))
-    }
-    return true
+    domNode.appendChild(realize(vNode, rootOutputHandlerNode))
 }
-
-const _patch = init([classModule, propsModule, styleModule, attributesModule, eventListenersModule])
 
 // prettier-ignore
 interface Mount {
-  <message>(dispatch: Dispatch<message>): (element: HTMLElement) => (virtualNode: VirtualNode<message>) => Effect<void>
+  (spec: { container: Node, rootOutputHandlerNode: OutputHandlerTree.Root }): <message>(vNode: VirtualDomTree<message>) => Effect<Unit>
 }
 
 // prettier-ignore
-export const mount: Mount = dispatch => element => virtualNode =>
-  () => (unsafe_uncurried_transform(dispatch, virtualNode), _patch(element, <any>virtualNode))
+export const mount: Mount = ({ container, rootOutputHandlerNode }) => vNode =>
+  () => unsafe_uncurried_mount(container, rootOutputHandlerNode, vNode)
 
-// prettier-ignore
-interface Patch {
-  <message>(dispatch: Dispatch<message>): (previousVirtualNode: VirtualNode<message>) => (nextVirtualNode: VirtualNode<message>) => Effect<void>
+type DiffWorkQueue<a, b> = Array<{
+    address: number[]
+    patchTree: PatchTree
+    downstreamNodes: DownstreamNode<a, b>[]
+}>
+
+interface DiffWorkState<a, b> {
+    rootVNode: VirtualDomTree<b>
+    rootPatchTree?: PatchTree
+    firstUpstreamPatchTree?: PatchTree
+    ix: number
+    address: PatchTree.Address
+    queue: DiffWorkQueue<a, b>
+}
+
+interface DiffWork<a, b> {
+    node: DownstreamNode<a, b>
+    state: DiffWorkState<a, b>
 }
 
 // prettier-ignore
-export const patch: Patch = dispatch => previousVirtualNode => nextVirtualNode =>
-  () => (unsafe_uncurried_transform(dispatch, nextVirtualNode), _patch(<any>previousVirtualNode, <any>nextVirtualNode))
+interface MkDiffWork {
+  <a>(commitedVNode: VirtualDomTree<a>): <b>(vNode: VirtualDomTree<b>) => DiffWork<a, b>
+}
 
+export const mkDiffWork: MkDiffWork = x => y => ({
+    node: { x, y },
+    state: {
+        rootVNode: y,
+        ix: -1,
+        address: [],
+        queue: [],
+    },
+})
+
+interface Scheduler {
+    shouldYieldToBrowser: Effect<boolean>
+    promoteDeadline: Effect<Unit>
+}
+
+interface UnsafeDiffWorkEnvironment<a, b> {
+    dispatchDiffWork(work: DiffWork<a, b>): void
+    finishDiffWork(spec: Pick<DiffWorkState<a, b>, 'rootVNode' | 'rootPatchTree'>): void
+    scheduler: Scheduler
+}
+
+function unsafe_uncurried_performDiffWork<a, b>(
+    work: DiffWork<a, b>,
+    { scheduler, finishDiffWork, dispatchDiffWork }: UnsafeDiffWorkEnvironment<a, b>,
+): void {
+    const { state } = work
+
+    let node: DownstreamNode<a, b> | undefined = work.node
+
+    scheduler.promoteDeadline()
+
+    while (node && !scheduler.shouldYieldToBrowser()) {
+        const { patches, downstreamNodes } = diff(node.x, node.y)
+
+        let patchTree
+
+        if (state.firstUpstreamPatchTree && patches.length !== 0) {
+            state.firstUpstreamPatchTree.children = state.firstUpstreamPatchTree.children || []
+
+            patchTree = { address: [...state.address, state.ix], patches }
+
+            state.firstUpstreamPatchTree.children.push(patchTree)
+        } else if (state.firstUpstreamPatchTree) {
+            patchTree = state.firstUpstreamPatchTree
+        } else {
+            state.rootPatchTree = {
+                children: [{ address: [0], patches }],
+            }
+
+            patchTree = state.firstUpstreamPatchTree = state.rootPatchTree.children![0]
+        }
+
+        if (downstreamNodes && downstreamNodes.length > 0) {
+            state.queue.push({
+                address: patches.length !== 0 || state.ix === -1 ? [] : [...state.address, state.ix],
+                patchTree,
+                downstreamNodes,
+            })
+        }
+
+        node = state.queue[0]?.downstreamNodes.shift()
+
+        if (node === undefined) {
+            state.queue.shift()
+            node = state.queue[0]?.downstreamNodes.shift()
+
+            state.ix = -1
+        }
+
+        state.firstUpstreamPatchTree = state.queue[0]?.patchTree
+        state.address = state.queue[0]?.address
+        state.ix += 1
+    }
+
+    if (node) {
+        dispatchDiffWork({ node, state })
+
+        return
+    }
+
+    finishDiffWork(work.state)
+}
+
+interface DiffWorkEnvironment<a, b> {
+    dispatchDiffWork(work: DiffWork<a, b>): Effect<Unit>
+    finishDiffWork(spec: Pick<DiffWorkState<a, b>, 'rootVNode' | 'rootPatchTree'>): Effect<Unit>
+    scheduler: Scheduler
+}
+
+// prettier-ignore
+interface PerformDiffWork {
+  <a, b>(environment: DiffWorkEnvironment<a, b>): (work: DiffWork<a, b>) => Effect<Unit>
+}
+
+// prettier-ignore
+export const performDiffWork: PerformDiffWork = ({ scheduler, finishDiffWork, dispatchDiffWork}) => {
+  const environment: UnsafeDiffWorkEnvironment<any, any> = {
+    scheduler,
+    finishDiffWork(...args) {
+      return finishDiffWork(...args)()
+    },
+    dispatchDiffWork(...args) {
+      return dispatchDiffWork(...args)()
+    }
+  }
+
+  return work => () => unsafe_uncurried_performDiffWork(work, environment)
+}
+
+// prettier-ignore
+interface ApplyPatchTree {
+  (container: Node): (patchTree: PatchTree) => Effect<Unit>
+}
+
+// prettier-ignore
+export const applyPatchTree: ApplyPatchTree = container => patchTree =>
+  () => unsafe_uncurried_applyPatchTree(container, patchTree)
+
+// prettier-ignore
 interface Unmount {
-    <message>(virtualNode: VirtualNode<message>): Effect<Unit>
+  <message>(domNode: Node): (vNode: VirtualDomTree<message>) => Effect<Unit>
 }
 
 // prettier-ignore
-export const unmount: Unmount = virtualNode =>
-  () => _patch(<any>virtualNode, _h('!'))
-
-// prettier-ignore
-interface H {
-  (selector: string): <message>(spec: VirtualNodeSpec<message>) => (children: VirtualNode<message>[]) => VirtualNode<message>
-}
-
-// prettier-ignore
-export const h: H = selector => spec => children =>
-  <any>_h(selector, <VNodeData>spec, <any>children)
-
-interface Text {
-    <message>(text: string): VirtualNode<message>
-}
-
-export const text: Text = text => <any>_vnode(undefined, undefined, undefined, text, undefined)
+export const unmount: Unmount = domNode => vNode =>
+  () => undefined // TODO: should be implemented
