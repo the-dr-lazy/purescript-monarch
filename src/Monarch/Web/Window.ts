@@ -8,6 +8,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import 'setimmediate'
+
 interface SetTimeout {
     (n: Int): (f: Effect<Unit>) => Effect<Int>
 }
@@ -92,3 +94,19 @@ interface IdleCallbackProvider {
     requestIdleCallback(callback: IdleCallbackRequestCallback, options?: RequestIdleCallbackOptions): number
     cancelIdleCallback(handle: number): void
 }
+
+interface RequestImmediate {
+    (f: Effect<Unit>): Effect<Int>
+}
+
+// prettier-ignore
+export const _requestImmediate: RequestImmediate = f =>
+  () => window.setImmediate(f)
+
+interface CancelImmediate {
+    (id: Int): Effect<Unit>
+}
+
+// prettier-ignore
+export const _cancelImmediate: CancelImmediate = id =>
+  () => window.clearImmediate(id)

@@ -81,3 +81,21 @@ requestIdleCallback' = requestIdleCallback 0
 
 cancelIdleCallback :: IdleCallbackId -> Effect Unit
 cancelIdleCallback = _cancelIdleCallback <<< unwrap
+
+-- Request Immediate
+
+foreign import _requestImmediate :: Effect Unit -> Effect Int
+
+foreign import _cancelImmediate :: Int -> Effect Unit
+
+newtype ImmediateId = ImmediateId Int
+
+derive instance newtypeImmediateId :: Newtype ImmediateId _
+derive instance eqImmediateId :: Eq ImmediateId
+derive instance ordImmediateId :: Ord ImmediateId
+
+requestImmediate :: Effect Unit -> Effect ImmediateId
+requestImmediate = map ImmediateId <<< _requestImmediate
+
+cancelImmediate :: ImmediateId -> Effect Unit
+cancelImmediate = _cancelImmediate <<< unwrap
