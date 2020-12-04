@@ -7,27 +7,27 @@ import { eventListenersModule } from 'snabbdom/modules/eventlisteners'
 import { h as _h } from 'snabbdom/h'
 
 type VirtualNode<message> = {
-  sel: string
-  listener: any
-  dispatch?: Dispatch<message>
-  children?: Array<string | VirtualNode<message>>
-  data?: VirtualNodeSpec<message>
+    sel: string
+    listener: any
+    dispatch?: Dispatch<message>
+    children?: Array<string | VirtualNode<message>>
+    data?: VirtualNodeSpec<message>
 }
 
 type VirtualNodeProps = Record<string, any>
 type VirtualNodeAttrs = Record<string, string | number | boolean>
 type VirtualNodeStyle = Record<string, string> & {
-  delayed?: Record<string, string>
-  remove?: Record<string, string>
+    delayed?: Record<string, string>
+    remove?: Record<string, string>
 }
 type VirtualNodeEvent<message> = Record<string, (event: Event) => message>
 
 type VirtualNodeSpec<message> = {
-  key?: string | number | boolean
-  props?: VirtualNodeProps
-  attrs?: VirtualNodeAttrs
-  style?: VirtualNodeStyle
-  on?: VirtualNodeEvent<message>
+    key?: string | number | boolean
+    props?: VirtualNodeProps
+    attrs?: VirtualNodeAttrs
+    style?: VirtualNodeStyle
+    on?: VirtualNodeEvent<message>
 }
 
 // prettier-ignore
@@ -62,19 +62,11 @@ export const virtualNodeMap: VirtualNodeMap = f => virtualNode =>
 
 type Dispatch<message> = (message: message) => Effect<Unit>
 
-function bindEventListeners<message>(
-  dispatch: Dispatch<message>,
-  virtualNode: string | VirtualNode<message>,
-) {
-  uncurryVirtualNodeMap(message => dispatch(message)(), virtualNode)
+function bindEventListeners<message>(dispatch: Dispatch<message>, virtualNode: string | VirtualNode<message>) {
+    uncurryVirtualNodeMap(message => dispatch(message)(), virtualNode)
 }
 
-const _patch = init([
-  classModule,
-  propsModule,
-  styleModule,
-  eventListenersModule,
-])
+const _patch = init([classModule, propsModule, styleModule, eventListenersModule])
 
 // prettier-ignore
 interface Mount {
@@ -95,7 +87,7 @@ export const patch: Patch = dispatch => previousVirtualNode => nextVirtualNode =
   () => (bindEventListeners(dispatch, nextVirtualNode), _patch(<any>previousVirtualNode, <any>nextVirtualNode))
 
 interface Unmount {
-  <message>(virtualNode: VirtualNode<message>): Effect<Unit>
+    <message>(virtualNode: VirtualNode<message>): Effect<Unit>
 }
 
 // prettier-ignore

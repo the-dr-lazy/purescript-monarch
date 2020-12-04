@@ -1,18 +1,18 @@
 {
-  "include": ["src/**/*.ts"],
-  "compilerOptions": {
-    "target": "es5",
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "allowJs": true,
-    "noEmitHelpers": true,
-    "importHelpers": true,
-    "lib": ["esnext", "dom", "scripthost"],
-    "strict": true,
-    "skipLibCheck": true,
-    "resolveJsonModule": true,
-    "removeComments": true,
-    "rootDir": "src",
-    "rootDirs": ["src", "output"]
-  }
+    "include": ["src/**/*.ts"],
+    "compilerOptions": {
+        "target": "es5",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "allowJs": true,
+        "noEmitHelpers": true,
+        "importHelpers": true,
+        "lib": ["esnext", "dom", "scripthost"],
+        "strict": true,
+        "skipLibCheck": true,
+        "resolveJsonModule": true,
+        "removeComments": true,
+        "rootDir": "src",
+        "rootDirs": ["src", "output"]
+    }
 }
