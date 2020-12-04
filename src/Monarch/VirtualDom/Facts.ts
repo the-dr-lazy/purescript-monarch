@@ -93,45 +93,45 @@ function unsafe_applyProperties(domNode: { [key: string]: any }, properties: Org
 
 declare global {
     interface Node {
-        monarch_callbacks?: { [name: string]: Callback | undefined }
+        monarch_outputHandlerInterceptors?: { [name: string]: OutputHandlerInterceptor | undefined }
     }
 }
 
 function unsafe_applyOutputs(domNode: Node, outputs: OrganizedFacts[FactCategory.Output]): void {
-    const callbacks = (domNode.monarch_callbacks = domNode.monarch_callbacks || {})
+    const outputHandlerInterceptors = (domNode.monarch_outputHandlerInterceptors = domNode.monarch_outputHandlerInterceptors || {})
 
     for (const name in outputs) {
         var newHandler = outputs[name]
-        var oldCallback = callbacks[name]
+        var oldOutputHandlerInterceptor = outputHandlerInterceptors[name]
 
         if (!newHandler) {
-            domNode.removeEventListener(name, oldCallback!)
-            callbacks[name] = undefined
+            domNode.removeEventListener(name, oldOutputHandlerInterceptor!)
+            outputHandlerInterceptors[name] = undefined
 
             continue
         }
 
-        if (oldCallback) {
-            oldCallback.handler = newHandler
+        if (oldOutputHandlerInterceptor) {
+            oldOutputHandlerInterceptor.handler = newHandler
 
             continue
         }
 
-        oldCallback = mkCallback(newHandler, () => domNode.monarch_outputHandlerNode!)
-        domNode.addEventListener(name, oldCallback)
+        oldOutputHandlerInterceptor = mkOutputHandlerInterceptor(newHandler, () => domNode.monarch_outputHandlerNode!)
+        domNode.addEventListener(name, oldOutputHandlerInterceptor)
 
-        callbacks[name] = oldCallback
+        outputHandlerInterceptors[name] = oldOutputHandlerInterceptor
     }
 }
 
-interface Callback {
+interface OutputHandlerInterceptor {
     (event: Event): void
     handler<a>(event: Event): a
 }
 
-function mkCallback(handler: <a>(event: Event) => a, outputHandlerNode: () => OutputHandlerTree): Callback {
-    function callback(event: Event) {
-        let message = callback.handler(event)
+function mkOutputHandlerInterceptor(handler: <a>(event: Event) => a, outputHandlerNode: () => OutputHandlerTree): OutputHandlerInterceptor {
+    function interceptor(event: Event) {
+        let message = interceptor.handler(event)
 
         let currentOutputHandlerNode: OutputHandlerTree['parent'] = outputHandlerNode()
 
@@ -154,7 +154,7 @@ function mkCallback(handler: <a>(event: Event) => a, outputHandlerNode: () => Ou
         currentOutputHandlerNode(message)
     }
 
-    callback.handler = handler
+    interceptor.handler = handler
 
-    return callback
+    return interceptor
 }
