@@ -1,8 +1,8 @@
 module Monarch.Web.Window where
 
-import Prelude    
+import Prelude
 import Data.Newtype
-import Effect       
+import Effect
 
 foreign import setTimeout :: Int -> Effect Unit -> Effect Int
 
@@ -16,10 +16,10 @@ derive instance ordTimeoutId :: Ord TimeoutId
 
 requestTimeout :: Int -> Effect Unit -> Effect TimeoutId
 requestTimeout n = map TimeoutId <<< setTimeout n
-                 
+
 cancelTimeout :: TimeoutId -> Effect Unit
 cancelTimeout = clearTimeout <<< unwrap
-                              
+
 foreign import setInterval :: Int -> Effect Unit -> Effect Int
 
 foreign import clearInterval :: Int -> Effect Unit

@@ -98,15 +98,15 @@ raise output = Run.lift _command $ Raise output unit
 runCommand :: forall message output r
             . (message -> Effect Unit)
            -> (output -> Effect Unit)
-           -> Run (effect :: EFFECT, command :: COMMAND message output | r) 
+           -> Run (effect :: EFFECT, command :: COMMAND message output | r)
            ~> Run (effect :: EFFECT | r)
 runCommand dispatchMessage dispatchOutput = interpret (Run.on _command (handleCommand dispatchMessage dispatchOutput) Run.send)
 
 handleCommand :: forall message output r
-               . (message -> Effect Unit)
-              -> (output -> Effect Unit)
-              -> CommandF message output
-              ~> Run (effect :: EFFECT | r)
+              . (message -> Effect Unit)
+             -> (output -> Effect Unit)
+             -> CommandF message output
+             ~> Run (effect :: EFFECT | r)
 handleCommand dispatchMessage dispatchOutput = case _ of
   Dispatch message next -> Run.liftEffect $ dispatchMessage message *> pure next
   Raise    output  next -> Run.liftEffect $ dispatchOutput output   *> pure next

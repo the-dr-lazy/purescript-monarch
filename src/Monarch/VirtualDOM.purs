@@ -21,20 +21,20 @@ foreign import patch :: forall message
 
 foreign import unmount :: forall message
                         . VirtualNode message
-                        -> Effect Unit
+                       -> Effect Unit
 
 foreign import virtualNodeMap :: forall a b. (a -> b) -> VirtualNode a -> VirtualNode b
 
 instance functorVirtualNode :: Functor VirtualNode where
   map = virtualNodeMap
 
-foreign import h :: forall props message. String -> Record props -> Array (VirtualNode message) -> VirtualNode message 
+foreign import h :: forall props message. String -> Record props -> Array (VirtualNode message) -> VirtualNode message
 
-h_ :: forall message. String -> Array (VirtualNode message) -> VirtualNode message 
+h_ :: forall message. String -> Array (VirtualNode message) -> VirtualNode message
 h_ selector = h selector {}
 
-h' :: forall message. String -> VirtualNode message 
+h' :: forall message. String -> VirtualNode message
 h' selector = h_ selector mempty
 
 text :: forall message. String -> VirtualNode message
-text = unsafeCoerce 
+text = unsafeCoerce
