@@ -1,5 +1,5 @@
 /**
- * Output handler tree ADT
+ * Output handlers list ADT
  */
 export type OutputHandlersList = OutputHandlersList.Nil | OutputHandlersList.Cons
 
