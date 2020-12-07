@@ -39,7 +39,8 @@ import Monarch.Queue                                     as Queue
 import Monarch.Html          ( Html )
 import Monarch.Scheduler
 import Monarch.VirtualDom.VirtualDomTree ( VirtualDomTree )
-import Monarch.VirtualDom.OutputHandlerTree
+import Monarch.VirtualDom.OutputHandlersList (OutputHandlersList)
+import Monarch.VirtualDom.OutputHandlersList as OutputHandlersList
 import Monarch.VirtualDom.PatchTree
 import Monarch.VirtualDom.NS                             as NS
 import Monarch.VirtualDom                                as VirtualDom
@@ -72,7 +73,7 @@ mkDocument spec@{ view, container } = do
 
   let
     dispatchPatchTree = qPatchTree.dispatch
-    rootOutputHandlerNode = mkRootOutputHandlerNode dispatchMessage
+    outputHandlers = OutputHandlersList.nil dispatchMessage
     render = qVNode.dispatch <<< view
     commit = VirtualDom.applyPatchTree container
 
@@ -80,7 +81,7 @@ mkDocument spec@{ view, container } = do
     { platform
     , sRender: eModel # subscribe render
     , sWorkLoop: workLoop { container
-                          , rootOutputHandlerNode
+                          , outputHandlers
                           , dispatchPatchTree
                           , eVNode: qVNode.event
                           }
@@ -126,14 +127,14 @@ document_ = do
   void <<< document
 
 type WorkLoopSpec slots message
-  = { eVNode                :: Event (VirtualDomTree NS.HTML slots message)
-    , container             :: HTMLElement
-    , dispatchPatchTree     :: PatchTree -> Effect Unit
-    , rootOutputHandlerNode :: OutputHandlerTree
+  = { eVNode            :: Event (VirtualDomTree NS.HTML slots message)
+    , container         :: HTMLElement
+    , dispatchPatchTree :: PatchTree -> Effect Unit
+    , outputHandlers    :: OutputHandlersList
     }
 
 workLoop :: forall slots message. WorkLoopSpec slots message -> Effect (Unsubscribe)
-workLoop { container, dispatchPatchTree, rootOutputHandlerNode, eVNode } = do
+workLoop { container, dispatchPatchTree, outputHandlers, eVNode } = do
   qDiffWork        <- Queue.new
   commitedVNodeRef <- Ref.new Nothing
   scheduler        <- mkScheduler
@@ -141,7 +142,7 @@ workLoop { container, dispatchPatchTree, rootOutputHandlerNode, eVNode } = do
   let dispatchDiffWork = qDiffWork.dispatch
       mount vNode = do
         Ref.write (Just vNode) commitedVNodeRef
-        void <<< requestAnimationFrame $ VirtualDom.mount { container, rootOutputHandlerNode } vNode
+        void <<< requestAnimationFrame $ VirtualDom.mount { container, outputHandlers } vNode
 
   let finishDiffWork { rootVNode, rootPatchTree } = do
         Ref.write (Just rootVNode) commitedVNodeRef

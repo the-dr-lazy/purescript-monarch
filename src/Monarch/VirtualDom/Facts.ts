@@ -9,7 +9,7 @@
  */
 
 import { VirtualDomTree } from 'monarch/Monarch/VirtualDom/VirtualDomTree'
-import { OutputHandlerTree } from 'monarch/Monarch/VirtualDom/OutputHandlerTree'
+import { OutputHandlersList } from 'monarch/Monarch/VirtualDom/OutputHandlersList'
 
 const attributesKeyName = 'attributes'
 const outputKeyPrefix = 'on'
@@ -129,26 +129,26 @@ interface OutputHandlerInterceptor {
     handler<a>(event: Event): a
 }
 
-function mkOutputHandlerInterceptor(handler: <a>(event: Event) => a, outputHandlerNode: () => OutputHandlerTree): OutputHandlerInterceptor {
+function mkOutputHandlerInterceptor(handler: <a>(event: Event) => a, outputHandlerNode: () => OutputHandlersList): OutputHandlerInterceptor {
     function interceptor(event: Event) {
         let message = interceptor.handler(event)
 
-        let currentOutputHandlerNode: OutputHandlerTree['parent'] = outputHandlerNode()
+        let currentOutputHandlerNode: OutputHandlersList = outputHandlerNode()
 
-        while ('parent' in currentOutputHandlerNode) {
-            if ('f' in currentOutputHandlerNode) {
-                const { f } = currentOutputHandlerNode
+        while ('next' in currentOutputHandlerNode) {
+            if ('value' in currentOutputHandlerNode) {
+                const { value } = currentOutputHandlerNode
 
-                if (typeof f === 'function') {
-                    message = f(message)
+                if (typeof value === 'function') {
+                    message = value(message)
                 } else {
-                    for (let i = f.length; i--; ) {
-                        message = f[i](message)
+                    for (let i = value.length; i--;) {
+                        message = value[i](message)
                     }
                 }
             }
 
-            currentOutputHandlerNode = currentOutputHandlerNode.parent
+            currentOutputHandlerNode = currentOutputHandlerNode.next
         }
 
         currentOutputHandlerNode(message)
