@@ -11,24 +11,24 @@
 import 'setimmediate'
 import { VirtualDomTree, realize, diff, DownstreamNode } from 'monarch/Monarch/VirtualDom/VirtualDomTree'
 import { PatchTree, unsafe_uncurried_applyPatchTree } from 'monarch/Monarch/VirtualDom/PatchTree'
-import { OutputHandlerTree } from 'monarch/Monarch/VirtualDom/OutputHandlerTree'
+import { OutputHandlersList } from 'monarch/Monarch/VirtualDom/OutputHandlersList'
 
-function unsafe_uncurried_mount<a>(domNode: Node, rootOutputHandlerNode: OutputHandlerTree.Root, vNode: VirtualDomTree<a>): void {
+function unsafe_uncurried_mount<a>(domNode: Node, outputHandlers: OutputHandlersList.Nil, vNode: VirtualDomTree<a>): void {
     while (domNode.firstChild) {
         domNode.removeChild(domNode.lastChild!)
     }
 
-    domNode.appendChild(realize(vNode, rootOutputHandlerNode))
+    domNode.appendChild(realize(vNode, outputHandlers))
 }
 
 // prettier-ignore
 interface Mount {
-  (spec: { container: Node, rootOutputHandlerNode: OutputHandlerTree.Root }): <message>(vNode: VirtualDomTree<message>) => Effect<Unit>
+    (spec: { container: Node, outputHandlers: OutputHandlersList.Nil }): <message>(vNode: VirtualDomTree<message>) => Effect<Unit>
 }
 
 // prettier-ignore
-export const mount: Mount = ({ container, rootOutputHandlerNode }) => vNode =>
-  () => unsafe_uncurried_mount(container, rootOutputHandlerNode, vNode)
+export const mount: Mount = ({ container, outputHandlers }) => vNode =>
+    () => unsafe_uncurried_mount(container, outputHandlers, vNode)
 
 type DiffWorkQueue<a, b> = Array<{
     address: number[]
@@ -52,7 +52,7 @@ interface DiffWork<a, b> {
 
 // prettier-ignore
 interface MkDiffWork {
-  <a>(commitedVNode: VirtualDomTree<a>): <b>(vNode: VirtualDomTree<b>) => DiffWork<a, b>
+    <a>(commitedVNode: VirtualDomTree<a>): <b>(vNode: VirtualDomTree<b>) => DiffWork<a, b>
 }
 
 export const mkDiffWork: MkDiffWork = x => y => ({
@@ -146,38 +146,38 @@ interface DiffWorkEnvironment<a, b> {
 
 // prettier-ignore
 interface PerformDiffWork {
-  <a, b>(environment: DiffWorkEnvironment<a, b>): (work: DiffWork<a, b>) => Effect<Unit>
+    <a, b>(environment: DiffWorkEnvironment<a, b>): (work: DiffWork<a, b>) => Effect<Unit>
 }
 
 // prettier-ignore
-export const performDiffWork: PerformDiffWork = ({ scheduler, finishDiffWork, dispatchDiffWork}) => {
-  const environment: UnsafeDiffWorkEnvironment<any, any> = {
-    scheduler,
-    finishDiffWork(...args) {
-      return finishDiffWork(...args)()
-    },
-    dispatchDiffWork(...args) {
-      return dispatchDiffWork(...args)()
+export const performDiffWork: PerformDiffWork = ({ scheduler, finishDiffWork, dispatchDiffWork }) => {
+    const environment: UnsafeDiffWorkEnvironment<any, any> = {
+        scheduler,
+        finishDiffWork(...args) {
+            return finishDiffWork(...args)()
+        },
+        dispatchDiffWork(...args) {
+            return dispatchDiffWork(...args)()
+        }
     }
-  }
 
-  return work => () => unsafe_uncurried_performDiffWork(work, environment)
+    return work => () => unsafe_uncurried_performDiffWork(work, environment)
 }
 
 // prettier-ignore
 interface ApplyPatchTree {
-  (container: Node): (patchTree: PatchTree) => Effect<Unit>
+    (container: Node): (patchTree: PatchTree) => Effect<Unit>
 }
 
 // prettier-ignore
 export const applyPatchTree: ApplyPatchTree = container => patchTree =>
-  () => unsafe_uncurried_applyPatchTree(container, patchTree)
+    () => unsafe_uncurried_applyPatchTree(container, patchTree)
 
 // prettier-ignore
 interface Unmount {
-  <message>(domNode: Node): (vNode: VirtualDomTree<message>) => Effect<Unit>
+    <message>(domNode: Node): (vNode: VirtualDomTree<message>) => Effect<Unit>
 }
 
 // prettier-ignore
 export const unmount: Unmount = domNode => vNode =>
-  () => undefined // TODO: should be implemented
+    () => undefined // TODO: should be implemented

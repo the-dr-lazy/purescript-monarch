@@ -9,7 +9,7 @@
  */
 
 import { Patch } from 'monarch/Monarch/VirtualDom/Patch'
-import { OutputHandlerTree } from 'monarch/Monarch/VirtualDom/OutputHandlerTree'
+import { OutputHandlersList } from 'monarch/Monarch/VirtualDom/OutputHandlersList'
 import { unsafe_organizeFacts, unsafe_applyFacts, OrganizedFacts, Facts, FactCategory } from 'monarch/Monarch/VirtualDom/Facts'
 export type VirtualDomTree<message> = VirtualDomTree.Text | VirtualDomTree.Element<message>
 
@@ -83,42 +83,42 @@ export namespace VirtualDomTree {
     /**
      * TODO: tag Functor
      */
-    export interface Tagger {}
+    export interface Tagger { }
 
     // SUM TYPE: Async
 
     /**
      * TODO: subscribe to asynchronous virtual dom tree
      */
-    export interface Async {}
+    export interface Async { }
 
     // SUM TYPE: Suspense
 
     /**
      * TODO: catch async nodes fallback
      */
-    export interface Suspense {}
+    export interface Suspense { }
 
     // SUM TYPE: Thunk
 
     /**
      * TODO: evaluate the given thunk on reference change
      */
-    export interface Thunk {}
+    export interface Thunk { }
 
     // SUM TYPE: Fragment
 
     /**
      * TODO: render subtrees as children of parent node
      */
-    export interface Fragment {}
+    export interface Fragment { }
 
     // SUM TYPE: Offscreen
 
     /**
      * TODO: evaluate subtree on browsers' idle periods
      */
-    export interface Offscreen {}
+    export interface Offscreen { }
 
     // INTERNAL
 
@@ -134,38 +134,38 @@ export const text = VirtualDomTree.mkText
 
 // prettier-ignore
 interface FNode {
-  (tagName: TagName): (facts: Facts) => <message>(children: VirtualDomTree<message>[]) => VirtualDomTree<message>
+    (tagName: TagName): (facts: Facts) => <message>(children: VirtualDomTree<message>[]) => VirtualDomTree<message>
 }
 
 // prettier-ignore
 export const node: FNode = tagName => facts => children =>
-  VirtualDomTree.mkElement(tagName, facts, children)
+    VirtualDomTree.mkElement(tagName, facts, children)
 
 // prettier-ignore
 interface Node_ {
-  (tagName: TagName): <message>(children: VirtualDomTree<message>[]) => VirtualDomTree<message>
+    (tagName: TagName): <message>(children: VirtualDomTree<message>[]) => VirtualDomTree<message>
 }
 
 // prettier-ignore
 export const node_: Node_ = tagName => children =>
-  VirtualDomTree.mkElement(tagName, undefined, children)
+    VirtualDomTree.mkElement(tagName, undefined, children)
 
 // prettier-ignore
 interface Node__ {
-  <message>(tagName: TagName): VirtualDomTree<message>
+    <message>(tagName: TagName): VirtualDomTree<message>
 }
 
 // prettier-ignore
 export const node__: Node__ = tagName =>
-  VirtualDomTree.mkElement(tagName)
+    VirtualDomTree.mkElement(tagName)
 
 declare global {
     interface Node {
-        monarch_outputHandlerNode?: OutputHandlerTree
+        monarch_outputHandlerNode?: OutputHandlersList
     }
 }
 
-export function realize<message>(vNode: VirtualDomTree<message>, outputHandlerNode: OutputHandlerTree): Node {
+export function realize<message>(vNode: VirtualDomTree<message>, outputHandlerNode: OutputHandlersList): Node {
     switch (vNode.tag) {
         case VirtualDomTree.Text:
             return realizeVirtualDomText(vNode)

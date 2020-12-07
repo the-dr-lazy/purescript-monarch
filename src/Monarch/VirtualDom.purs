@@ -19,12 +19,12 @@ import Monarch.VirtualDom.NS (kind NS)
 import Monarch.VirtualDom.NS as NS
 import Monarch.VirtualDom.VirtualDomTree
 import Monarch.VirtualDom.PatchTree
-import Monarch.VirtualDom.OutputHandlerTree
+import Monarch.VirtualDom.OutputHandlersList
 import Monarch.Scheduler
 
 type MountSpec
-  = { container :: HTMLElement
-    , rootOutputHandlerNode :: OutputHandlerTree
+  = { container      :: HTMLElement
+    , outputHandlers :: OutputHandlersList
     }
 
 foreign import mount :: forall slots message. MountSpec -> VirtualDomTree NS.HTML slots message -> Effect Unit
