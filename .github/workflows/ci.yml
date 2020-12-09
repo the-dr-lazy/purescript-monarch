@@ -1,0 +1,38 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+    build:
+        run-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+
+            - uses: purescript-contrib/setup-purescript@main
+
+            - name: Cache NPM dependencies
+              uses: actions/cache@v2
+              with:
+                  key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+                  restore-keys: ${{ runner.os }}-node-
+                  path: ~/.npm
+
+            - name: Install NPM dependencies
+              run: npm ci
+
+            - name: Cache PureScript dependencies
+              uses: actions/cache@v2
+              with:
+                  key: ${{ runner.os }}-spago-${{ hashFiles('**/*.dhall') }}
+                  path: |
+                      .spago
+                      output
+
+            - name: Install & build PureScript dependencies
+              run: spago build --deps-only
+
+            - name: Build TypeScript
+              run: npx tsc -p tsconfig.json
+
+            - name: Build PureScript
+            - run: spago build
