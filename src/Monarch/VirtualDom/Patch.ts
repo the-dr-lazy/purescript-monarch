@@ -151,7 +151,7 @@ export function unsafe_applyPatch(domNode: Node, patch: Patch): void {
 }
 
 function unsafe_applyTextPatch(textNode: Text, { text }: Patch.Text): void {
-    textNode.replaceData(0, text.length, text)
+    textNode.replaceData(0, textNode.length, text)
 }
 
 function unsafe_applyRedrawPatch(oldDomNode: Node, { vNode }: Patch.Redraw): void {
