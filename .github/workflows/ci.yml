@@ -35,4 +35,4 @@ jobs:
               run: npx tsc -p tsconfig.json
 
             - name: Build PureScript
-            - run: spago build
+              run: spago build
