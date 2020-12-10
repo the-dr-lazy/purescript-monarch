@@ -16,7 +16,7 @@ variables:
     project: Monarch
     year: '2020'
     maintainer_name: Mohammad Hasani
-    maintainer_email: thebrodmann@protonmail.com
+    maintainer_email: the-dr-lazy@pm.me
     maintainer_comment: the-dr-lazy.github.io
 
 license-headers:

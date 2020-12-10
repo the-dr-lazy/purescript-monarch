@@ -1,6 +1,6 @@
 {-|
 Module     : Monarch.Behavior
-Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <thebrodmann@protonmail.com>
+Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <the-dr-lazy@pm.me>
 Copyright  : (c) 2020 Monarch
 License    : MPL 2.0
 
