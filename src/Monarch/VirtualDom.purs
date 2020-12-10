@@ -15,8 +15,6 @@ import Prelude
 import Effect (Effect)
 import Type.Row                         ( type (+) )
 import Web.HTML                         ( HTMLElement )
-import Monarch.VirtualDom.NS (kind NS)
-import Monarch.VirtualDom.NS as NS
 import Monarch.VirtualDom.VirtualDomTree
 import Monarch.VirtualDom.PatchTree
 import Monarch.VirtualDom.OutputHandlersList
@@ -27,14 +25,14 @@ type MountSpec
     , outputHandlers :: OutputHandlersList
     }
 
-foreign import mount :: forall slots message. MountSpec -> VirtualDomTree NS.HTML slots message -> Effect Unit
+foreign import mount :: forall slots message. MountSpec -> VirtualDomTree slots message -> Effect Unit
 
 foreign import data DiffWork :: Type
                     
-foreign import mkDiffWork :: forall ns slots a b. VirtualDomTree ns slots a -> VirtualDomTree ns slots b -> DiffWork
+foreign import mkDiffWork :: forall slots a b. VirtualDomTree slots a -> VirtualDomTree slots b -> DiffWork
 
 type FinishDiffWorkSpec slots message r
-  = { rootVNode :: VirtualDomTree NS.HTML slots message
+  = { rootVNode :: VirtualDomTree slots message
     , rootPatchTree :: PatchTree
     | r
     }
@@ -49,6 +47,4 @@ foreign import performDiffWork :: forall slots message r. DiffWorkEnvironment sl
 
 foreign import applyPatchTree :: HTMLElement -> PatchTree -> Effect Unit
 
-foreign import unmount :: forall slots message. HTMLElement -> VirtualDomTree NS.HTML slots message -> Effect Unit
-
-                          
+foreign import unmount :: forall slots message. HTMLElement -> VirtualDomTree slots message -> Effect Unit
