@@ -11,7 +11,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 module Monarch.Html
   ( module Monarch.VirtualDom.VirtualDomTree.Prelude
-  , Html , Html'
+  , Html
   , div, div_, div'
   , button, button_, button'
   )
@@ -26,7 +26,6 @@ import Monarch.Type.Row                                    as Row
 import Monarch.Html.Facts.Attributes
 import Monarch.Html.Facts.Outputs
 import Monarch.Html.Facts.Properties
-import Monarch.VirtualDom.NS as NS
 import Monarch.VirtualDom.VirtualDomTree
 import Monarch.VirtualDom.VirtualDomTree as VirtualDomTree
 import Monarch.VirtualDom.VirtualDomTree.Prelude
@@ -34,17 +33,9 @@ import Monarch.VirtualDom.Facts.Hooks
 
 -- Data Type
 
-type Html' = VirtualDomTree NS.HTML
-
-type Html = Html' ()
+type Html = VirtualDomTree ()
 
 -- Elements
-
-type Node r slots message = VirtualDomTree.Node NS.HTML r slots message
-
-type Node_ slots message = VirtualDomTree.Node_ NS.HTML slots message
-
-type Leaf r slots message = VirtualDomTree.Leaf NS.HTML r slots message
 
 type HtmlDivR attributes hooks message = R HtmlDivElementProperties (HtmlDivElementOutputs message) attributes hooks
 
@@ -58,7 +49,7 @@ div = node "div"
 div_ :: forall slots message. Node_ slots message
 div_ = node_ "div"
 
-div' :: forall message. Html' () message
+div' :: forall message. Html message
 div' = node' "div"
 
 type HtmlButtonR attributes hooks message = R HtmlButtonElementProperties (HtmlButtonElementOutputs message) attributes hooks

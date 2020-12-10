@@ -11,7 +11,11 @@
 import { Patch } from 'monarch/Monarch/VirtualDom/Patch'
 import { OutputHandlersList } from 'monarch/Monarch/VirtualDom/OutputHandlersList'
 import { unsafe_organizeFacts, unsafe_applyFacts, OrganizedFacts, Facts, FactCategory } from 'monarch/Monarch/VirtualDom/Facts'
-export type VirtualDomTree<message> = VirtualDomTree.Text | VirtualDomTree.Element<message>
+
+/**
+ * Virtual DOM tree ADT
+ */
+export type VirtualDomTree<message> = VirtualDomTree.Text | VirtualDomTree.ElementNS<message>
 
 export namespace VirtualDomTree {
     /**
@@ -19,7 +23,7 @@ export namespace VirtualDomTree {
      */
     const enum Tag {
         Text,
-        Element,
+        ElementNS,
     }
 
     // SUM TYPE: Text
@@ -43,39 +47,33 @@ export namespace VirtualDomTree {
         return { tag: Text, text }
     }
 
-    // SUM TYPE: Element
+    // SUM TYPE: ElementNS
 
     /**
-     * `Element` tag
+     * `ElementNS` tag
      *
      * Use it for pattern matching
      */
-    export const Element = Tag.Element
+    export const ElementNS = Tag.ElementNS
     /**
-     * `Element` type constructor
+     * `ElementNS` type constructor
      */
-    export interface Element<message> extends Tagged<typeof Element>, Parent<message> {
+    export interface ElementNS<message> extends Tagged<typeof ElementNS>, Parent<message> {
         ns?: NS
         tagName: TagName
         facts?: Facts
         organizedFacts?: OrganizedFacts
     }
     /**
-     * Smart constructor for `Element` type with namespace
+     * Smart constructor for `ElementNS` type with namespace
      */
     export function mkElementNS<message>(
-        ns: NS,
+        ns: NS | undefined,
         tagName: TagName,
         facts?: Facts,
         children?: ReadonlyArray<VirtualDomTree<message>>,
-    ): Element<message> {
-        return { tag: Element, ns, tagName, facts, children }
-    }
-    /**
-     * Smart constructor for `Element` type without namespace
-     */
-    export function mkElement<message>(tagName: TagName, facts?: Facts, children?: ReadonlyArray<VirtualDomTree<message>>): Element<message> {
-        return { tag: Element, tagName, facts, children }
+    ): ElementNS<message> {
+        return { tag: ElementNS, ns, tagName, facts, children }
     }
 
     // SUM TYPE: Tagger
@@ -83,81 +81,81 @@ export namespace VirtualDomTree {
     /**
      * TODO: tag Functor
      */
-    export interface Tagger { }
+    export interface Tagger {}
 
     // SUM TYPE: Async
 
     /**
      * TODO: subscribe to asynchronous virtual dom tree
      */
-    export interface Async { }
+    export interface Async {}
 
     // SUM TYPE: Suspense
 
     /**
      * TODO: catch async nodes fallback
      */
-    export interface Suspense { }
+    export interface Suspense {}
 
     // SUM TYPE: Thunk
 
     /**
      * TODO: evaluate the given thunk on reference change
      */
-    export interface Thunk { }
+    export interface Thunk {}
 
     // SUM TYPE: Fragment
 
     /**
      * TODO: render subtrees as children of parent node
      */
-    export interface Fragment { }
+    export interface Fragment {}
 
     // SUM TYPE: Offscreen
 
     /**
      * TODO: evaluate subtree on browsers' idle periods
      */
-    export interface Offscreen { }
+    export interface Offscreen {}
 
     // INTERNAL
 
     interface Parent<message> {
         children?: ReadonlyArray<VirtualDomTree<message>>
     }
-    type NS = 'http://www.w3.org/1999/xhtml' | 'http://www.w3.org/2000/svg' | 'http://www.w3.org/1998/Math/MathML'
 }
 
 type TagName = keyof HTMLElementTagNameMap
+type NS = 'http://www.w3.org/1999/xhtml' | 'http://www.w3.org/2000/svg' | 'http://www.w3.org/1998/Math/MathML'
 
 export const text = VirtualDomTree.mkText
 
 // prettier-ignore
-interface FNode {
-    (tagName: TagName): (facts: Facts) => <message>(children: VirtualDomTree<message>[]) => VirtualDomTree<message>
+interface ElementNS {
+    (ns: NS): (tagName: TagName) => (facts: Facts) => <message>(children: VirtualDomTree<message>[]) => VirtualDomTree<message>
 }
 
 // prettier-ignore
-export const node: FNode = tagName => facts => children =>
-    VirtualDomTree.mkElement(tagName, facts, children)
+export const elementNS: ElementNS = ns => tagName => facts => children =>
+    VirtualDomTree.mkElementNS(ns, tagName, facts, children)
 
 // prettier-ignore
-interface Node_ {
-    (tagName: TagName): <message>(children: VirtualDomTree<message>[]) => VirtualDomTree<message>
+interface ElementNS_ {
+    (ns?: NS): (tagName: TagName) => <message>(children: VirtualDomTree<message>[]) => VirtualDomTree<message>
 }
 
 // prettier-ignore
-export const node_: Node_ = tagName => children =>
-    VirtualDomTree.mkElement(tagName, undefined, children)
+export const elementNS_: ElementNS_ = ns => tagName => children =>
+    VirtualDomTree.mkElementNS(ns, tagName, undefined, children)
 
 // prettier-ignore
-interface Node__ {
-    <message>(tagName: TagName): VirtualDomTree<message>
+interface ElementNS__ {
+    (ns?: NS): <message>(tagName: TagName) => VirtualDomTree<message>
 }
 
 // prettier-ignore
-export const node__: Node__ = tagName =>
-    VirtualDomTree.mkElement(tagName)
+export const elementNS__: ElementNS__ = ns => tagName =>
+    VirtualDomTree.mkElementNS(ns, tagName)
 
 declare global {
     interface Node {
@@ -171,7 +169,7 @@ export function realize<message>(vNode: VirtualDomTree<message>, outputHandlerNo
             return realizeVirtualDomText(vNode)
     }
 
-    const domNode = realizeVirtualDomElement(vNode)
+    const domNode = realizeVirtualDomElementNS(vNode)
 
     for (const child of vNode.children || []) {
         domNode.appendChild(realize(child, outputHandlerNode))
@@ -190,7 +188,7 @@ export function realizeVirtualDomText({ text }: VirtualDomTree.Text): Text {
     return document.createTextNode(text)
 }
 
-export function realizeVirtualDomElement<a>({ ns, tagName }: VirtualDomTree.Element<a>): Element {
+export function realizeVirtualDomElementNS<a>({ ns, tagName }: VirtualDomTree.ElementNS<a>): Element {
     return ns ? document.createElementNS(ns, tagName) : document.createElement(tagName)
 }
 
@@ -219,8 +217,8 @@ export function diff<a, b>(x: VirtualDomTree<a>, y: VirtualDomTree<b>): Diff<a, 
     switch (x.tag) {
         case VirtualDomTree.Text:
             return unsafe_diffText(x, <VirtualDomTree.Text>y, patches)
-        case VirtualDomTree.Element:
-            return unsafe_diffElement(x, <VirtualDomTree.Element<b>>y, patches)
+        case VirtualDomTree.ElementNS:
+            return unsafe_diffElementNS(x, <VirtualDomTree.ElementNS<b>>y, patches)
     }
 }
 
@@ -232,7 +230,7 @@ function unsafe_diffText<a, b>(x: VirtualDomTree.Text, y: VirtualDomTree.Text, p
     return { patches }
 }
 
-function unsafe_diffElement<a, b>(x: VirtualDomTree.Element<a>, y: VirtualDomTree.Element<b>, patches: Patch[]): Diff<a, b> {
+function unsafe_diffElementNS<a, b>(x: VirtualDomTree.ElementNS<a>, y: VirtualDomTree.ElementNS<b>, patches: Patch[]): Diff<a, b> {
     if (x.ns !== y.ns || x.tagName !== y.tagName) {
         patches.push(Patch.mkRedraw(y))
         return { patches }

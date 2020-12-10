@@ -11,7 +11,12 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 module Monarch.VirtualDom.NS where
 
-foreign import kind NS
+import Prelude
+import Undefined
 
-foreign import data HTML :: NS
-foreign import data SVG  :: NS
+data NS = HTML | SVG
+
+instance showNS :: Show NS where
+  show HTML = undefined
+  show SVG = "http://www.w3.org/2000/svg"
+

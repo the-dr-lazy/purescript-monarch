@@ -10,50 +10,86 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -}
 
 module Monarch.VirtualDom.VirtualDomTree
-  ( VirtualDomTree, VirtualDomTree'
+  ( VirtualDomTree
   , Node, Node_
   , Leaf
   , R
   , text
+  , nodeNS, nodeNS_, nodeNS'
   , node, node_, node'
   )
 where
 
+import Prelude
+import Undefined
 import Type.Row                         ( type (+) )
-import Monarch.VirtualDom.NS (kind NS)
+import Monarch.VirtualDom.NS
 import Monarch.VirtualDom.NS as NS
 
-foreign import data VirtualDomTree :: NS -> # Type -> Type -> Type
-
-type VirtualDomTree' (ns :: NS) = VirtualDomTree ns ()
+foreign import data VirtualDomTree :: # Type -> Type -> Type
 
 -- Hyperscript
 
-type Node (ns      :: NS)
-          (r       :: # Type)
+type Node (r       :: # Type)
           (slots   :: # Type)
           (message :: Type)
-  = { | r } -> Array (VirtualDomTree ns slots message) -> VirtualDomTree ns slots message
+  = { | r } -> Array (VirtualDomTree slots message) -> VirtualDomTree slots message
 
-type Node_ (ns      :: NS)
-           (slots   :: # Type)
+type Node_ (slots   :: # Type)
            (message :: Type)
-  = Array (VirtualDomTree ns slots message) -> VirtualDomTree ns slots message
+  = Array (VirtualDomTree slots message) -> VirtualDomTree slots message
 
-type Leaf (ns      :: NS)
-          (r       :: # Type)
+type Leaf (r       :: # Type)
           (slots   :: # Type)
           (message :: Type)
-  = { | r } -> VirtualDomTree ns slots message
+  = { | r } -> VirtualDomTree slots message
 
-foreign import text :: forall ns message. String -> VirtualDomTree' ns message
+foreign import text :: forall message. String -> VirtualDomTree () message
 
-foreign import node   :: forall r ns ns' slots message. String -> { | r } -> Array (VirtualDomTree ns slots message) -> VirtualDomTree ns' slots message
-foreign import node_  :: forall ns   ns' slots message. String ->            Array (VirtualDomTree ns slots message) -> VirtualDomTree ns' slots message
-foreign import node__ :: forall      ns' slots message. String ->                                                       VirtualDomTree ns' slots message
+foreign import elementNS   :: forall r slots message. String -> String -> { | r } -> Array (VirtualDomTree slots message) -> VirtualDomTree slots message
+foreign import elementNS_  :: forall   slots message. String -> String            -> Array (VirtualDomTree slots message) -> VirtualDomTree slots message
+foreign import elementNS__ :: forall   slots message. String -> String                                                    -> VirtualDomTree slots message
 
-node' = node__
-              
+-- node' = node__
+nodeNS :: forall r slots message
+        . NS
+       -> String
+       -> { | r }
+       -> Array (VirtualDomTree slots message)
+       -> VirtualDomTree slots message
+nodeNS = elementNS <<< show
+
+nodeNS_ :: forall r slots message
+        . NS
+       -> String
+       -> Array (VirtualDomTree slots message)
+       -> VirtualDomTree slots message
+nodeNS_ = elementNS_ <<< show
+
+nodeNS' :: forall slots message
+        . NS
+       -> String
+       -> VirtualDomTree slots message
+nodeNS' = elementNS__ <<< show
+
+node :: forall r slots message
+      . String
+     -> { | r }
+     -> Array (VirtualDomTree slots message)
+     -> VirtualDomTree slots message
+node = elementNS undefined
+
+node_ :: forall slots message
+      . String
+     -> Array (VirtualDomTree slots message)
+     -> VirtualDomTree slots message
+node_ = elementNS_ undefined
+
+
+node' :: forall slots message
+      . String
+     -> VirtualDomTree slots message
+node' = elementNS__ undefined
 
 type R (properties :: # Type -> # Type)
        (outputs    :: # Type -> # Type)

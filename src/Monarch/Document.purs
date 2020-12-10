@@ -42,7 +42,6 @@ import Monarch.VirtualDom.VirtualDomTree ( VirtualDomTree )
 import Monarch.VirtualDom.OutputHandlersList (OutputHandlersList)
 import Monarch.VirtualDom.OutputHandlersList as OutputHandlersList
 import Monarch.VirtualDom.PatchTree
-import Monarch.VirtualDom.NS                             as NS
 import Monarch.VirtualDom                                as VirtualDom
 import Monarch.Web.Window    ( requestAnimationFrame )
 import Monarch.Monad.Maybe   ( whenJustM )
@@ -127,7 +126,7 @@ document_ = do
   void <<< document
 
 type WorkLoopSpec slots message
-  = { eVNode            :: Event (VirtualDomTree NS.HTML slots message)
+  = { eVNode            :: Event (VirtualDomTree slots message)
     , container         :: HTMLElement
     , dispatchPatchTree :: PatchTree -> Effect Unit
     , outputHandlers    :: OutputHandlersList
