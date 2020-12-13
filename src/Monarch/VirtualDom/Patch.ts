@@ -155,7 +155,7 @@ function unsafe_applyTextPatch(textNode: Text, { text }: Patch.Text): void {
 }
 
 function unsafe_applyRedrawPatch(oldDomNode: Node, { vNode }: Patch.Redraw): void {
-    const newDomNode = realize(vNode, oldDomNode.monarch_outputHandlerNode!)
+    const newDomNode = realize(vNode, oldDomNode.monarch_outputHandlers!)
 
     oldDomNode.parentNode!.replaceChild(newDomNode, oldDomNode)
 }
@@ -171,7 +171,7 @@ function unsafe_applyAppendPatch(domNode: Node, { children, from }: Patch.Append
     const fragment = ix === children.length - 1 ? domNode : document.createDocumentFragment()
 
     for (; ix < children.length; ix++) {
-        fragment.appendChild(realize(children[ix], domNode.monarch_outputHandlerNode!))
+        fragment.appendChild(realize(children[ix], domNode.monarch_outputHandlers!))
     }
 
     if (fragment !== domNode) {

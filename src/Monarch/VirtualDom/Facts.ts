@@ -117,7 +117,7 @@ function unsafe_applyOutputs(domNode: Node, outputs: OrganizedFacts[FactCategory
             continue
         }
 
-        oldOutputHandlerInterceptor = mkOutputHandlerInterceptor(newHandler, () => domNode.monarch_outputHandlerNode!)
+        oldOutputHandlerInterceptor = mkOutputHandlerInterceptor(newHandler, () => domNode.monarch_outputHandlers!)
         domNode.addEventListener(name, oldOutputHandlerInterceptor)
 
         outputHandlerInterceptors[name] = oldOutputHandlerInterceptor
@@ -129,11 +129,11 @@ interface OutputHandlerInterceptor {
     handler<a>(event: Event): a
 }
 
-function mkOutputHandlerInterceptor(handler: <a>(event: Event) => a, outputHandlerNode: () => OutputHandlersList): OutputHandlerInterceptor {
+function mkOutputHandlerInterceptor(handler: <a>(event: Event) => a, outputHandlers: () => OutputHandlersList): OutputHandlerInterceptor {
     function interceptor(event: Event) {
         let message = interceptor.handler(event)
 
-        let currentOutputHandlerNode: OutputHandlersList = outputHandlerNode()
+        let currentOutputHandlerNode: OutputHandlersList = outputHandlers()
 
         while ('next' in currentOutputHandlerNode) {
             if ('value' in currentOutputHandlerNode) {
