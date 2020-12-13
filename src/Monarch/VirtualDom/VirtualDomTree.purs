@@ -28,6 +28,11 @@ import Monarch.VirtualDom.NS as NS
 
 foreign import data VirtualDomTree :: # Type -> Type -> Type
 
+foreign import fmapVirtualDomTree :: forall slots a b. (a -> b) -> VirtualDomTree slots a -> VirtualDomTree slots b
+
+instance functorVirtualDomTree :: Functor (VirtualDomTree slots) where
+  map = fmapVirtualDomTree
+
 -- Hyperscript
 
 type Node (r       :: # Type)

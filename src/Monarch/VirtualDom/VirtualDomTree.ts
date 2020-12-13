@@ -15,7 +15,7 @@ import { unsafe_organizeFacts, unsafe_applyFacts, OrganizedFacts, Facts, FactCat
 /**
  * Virtual DOM tree ADT
  */
-export type VirtualDomTree<message> = VirtualDomTree.Text | VirtualDomTree.ElementNS<message>
+export type VirtualDomTree<message> = VirtualDomTree.Text | VirtualDomTree.ElementNS<message> | VirtualDomTree.Tagger<any, message>
 
 export namespace VirtualDomTree {
     /**
@@ -24,6 +24,7 @@ export namespace VirtualDomTree {
     const enum Tag {
         Text,
         ElementNS,
+        Tagger,
     }
 
     // SUM TYPE: Text
@@ -78,10 +79,17 @@ export namespace VirtualDomTree {
 
     // SUM TYPE: Tagger
 
+    export const Tagger = Tag.Tagger
     /**
-     * TODO: tag Functor
+     * `Tagger` type constructor
      */
-    export interface Tagger {}
+    export interface Tagger<a, b> extends Tagged<typeof Tagger> {
+        f: OutputHandlersList.Cons['value']
+        vNode: VirtualDomTree<a>
+    }
+    export function mkTagger<a, b>(f: (a: a) => b, vNode: VirtualDomTree<a>): Tagger<a, b> {
+        return { tag: Tagger, f, vNode }
+    }
 
     // SUM TYPE: Async
 
@@ -128,6 +136,14 @@ export namespace VirtualDomTree {
 type TagName = keyof HTMLElementTagNameMap
 type NS = 'http://www.w3.org/1999/xhtml' | 'http://www.w3.org/2000/svg' | 'http://www.w3.org/1998/Math/MathML'
 
+// prettier-ignore
+interface FMapVirtualDomTree {
+    <a, b>(f: (a: a) => b): (vNode: VirtualDomTree<a>) => VirtualDomTree<b>
+}
+
+// prettier-ignore
+export const fmapVirtualDomTree: FMapVirtualDomTree = f => vNode => VirtualDomTree.mkTagger(f, vNode)
+
 export const text = VirtualDomTree.mkText
 
 // prettier-ignore
@@ -167,6 +183,8 @@ export function realize<message>(vNode: VirtualDomTree<message>, outputHandlers:
     switch (vNode.tag) {
         case VirtualDomTree.Text:
             return realizeVirtualDomText(vNode)
+        case VirtualDomTree.Tagger:
+            return realizeVirtualDomTagger(vNode, outputHandlers)
     }
 
     const domNode = realizeVirtualDomElementNS(vNode)
@@ -188,8 +206,29 @@ export function realizeVirtualDomText({ text }: VirtualDomTree.Text): Text {
     return document.createTextNode(text)
 }
 
+export function realizeVirtualDomTagger<a, b>(tagger: VirtualDomTree.Tagger<a, b>, outputHandlers: OutputHandlersList): Node {
+    unsafe_flattenVirtualDomTaggers(tagger)
+
+    return realize(tagger.vNode, { value: tagger.f, next: outputHandlers })
+}
+
 export function realizeVirtualDomElementNS<a>({ ns, tagName }: VirtualDomTree.ElementNS<a>): Element {
     return ns ? document.createElementNS(ns, tagName) : document.createElement(tagName)
+}
+
+function unsafe_flattenVirtualDomTaggers<a, b>(tagger: VirtualDomTree.Tagger<a, b>) {
+    let fs: OutputHandlersList.Cons['value'] = tagger.f
+    let subVNode: VirtualDomTree<a> = tagger.vNode
+
+    while (subVNode.tag === VirtualDomTree.Tagger) {
+        typeof fs === 'function' && (fs = [fs])
+        typeof subVNode.f === 'function' ? fs.push(subVNode.f) : fs.concat(subVNode.f)
+
+        subVNode = subVNode.vNode
+    }
+
+    tagger.f = fs
+    tagger.vNode = subVNode
 }
 
 export type DownstreamNode<a, b> = {
@@ -219,6 +258,8 @@ export function diff<a, b>(x: VirtualDomTree<a>, y: VirtualDomTree<b>): Diff<a, 
             return unsafe_diffText(x, <VirtualDomTree.Text>y, patches)
         case VirtualDomTree.ElementNS:
             return unsafe_diffElementNS(x, <VirtualDomTree.ElementNS<b>>y, patches)
+        case VirtualDomTree.Tagger:
+            return unsafe_diffTagger(x, <VirtualDomTree.Tagger<any, any>>y, patches)
     }
 }
 
@@ -228,6 +269,32 @@ function unsafe_diffText<a, b>(x: VirtualDomTree.Text, y: VirtualDomTree.Text, p
     patches.push(Patch.mkText(y.text))
 
     return { patches }
+}
+
+function pairwiseRefEq<a>(xs: readonly a[], ys: readonly a[]): boolean {
+    for (var i = 0; i < xs.length; i++) {
+        if (xs[i] !== ys[i]) return false
+    }
+
+    return true
+}
+
+function unsafe_diffTagger<a, b, c, d>(x: VirtualDomTree.Tagger<a, b>, y: VirtualDomTree.Tagger<c, d>, patches: Patch[]): Diff<b, d> {
+    unsafe_flattenVirtualDomTaggers(y)
+
+    const nested = typeof x.f !== 'function' || typeof y.f !== 'function'
+
+    if (nested && x.f.length !== y.f.length) {
+        patches.push(Patch.mkRedraw(y))
+
+        return { patches }
+    }
+
+    if (nested ? !pairwiseRefEq(<Function[]>x.f, <Function[]>y.f) : x.f !== y.f) {
+        patches.push(Patch.mkTagger(y.f))
+    }
+
+    return { patches, downstreamNodes: [{ x: x.vNode, y: y.vNode }] }
 }
 
 function unsafe_diffElementNS<a, b>(x: VirtualDomTree.ElementNS<a>, y: VirtualDomTree.ElementNS<b>, patches: Patch[]): Diff<a, b> {

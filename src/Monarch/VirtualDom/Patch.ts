@@ -10,7 +10,9 @@
 
 import { VirtualDomTree, realize } from 'monarch/Monarch/VirtualDom/VirtualDomTree'
 import { OrganizedFacts, unsafe_applyFacts } from 'monarch/Monarch/VirtualDom/Facts'
-export type Patch = Patch.Redraw | Patch.Text | Patch.Facts | Patch.RemoveFromEnd | Patch.Append
+import { OutputHandlersList } from 'monarch/Monarch/VirtualDom/OutputHandlersList'
+
+export type Patch = Patch.Redraw | Patch.Text | Patch.Facts | Patch.RemoveFromEnd | Patch.Append | Patch.Tagger
 
 export namespace Patch {
     /**
@@ -22,6 +24,7 @@ export namespace Patch {
         Facts,
         RemoveFromEnd,
         Append,
+        Tagger
     }
 
     // SUM TYPE: Redraw
@@ -129,6 +132,27 @@ export namespace Patch {
     export function mkAppend<message>(children: readonly VirtualDomTree<message>[], from = 0): Append {
         return { tag: Append, children, from }
     }
+
+    // SUM TYPE: Tagger
+
+    /**
+     * `Tagger` tag
+     *
+     * Use it for pattern matching.
+     */
+    export const Tagger = Tag.Tagger
+    /**
+     * `Tagger` type constructor
+     */
+    export interface Tagger extends Tagged<typeof Tagger> {
+        fs: Function | Function[]
+    }
+    /**
+     * Smart data constructor for `Tagger` type
+     */
+    export function mkTagger(fs: Function | Function[]): Tagger {
+        return { tag: Tagger, fs }
+    }
 }
 
 export function unsafe_applyPatch(domNode: Node, patch: Patch): void {
@@ -147,6 +171,9 @@ export function unsafe_applyPatch(domNode: Node, patch: Patch): void {
 
         case Patch.Append:
             return unsafe_applyAppendPatch(domNode, patch)
+
+        case Patch.Tagger:
+            return unsafe_applyTaggerPatch(domNode, patch)
     }
 }
 
@@ -177,4 +204,8 @@ function unsafe_applyAppendPatch(domNode: Node, { children, from }: Patch.Append
     if (fragment !== domNode) {
         domNode.appendChild(fragment)
     }
+}
+
+function unsafe_applyTaggerPatch(domNode: Node, { fs }: Patch.Tagger): void {
+    (<OutputHandlersList.Cons>domNode.monarch_outputHandlers).value = fs
 }
