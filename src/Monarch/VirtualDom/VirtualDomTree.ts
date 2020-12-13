@@ -159,11 +159,11 @@ export const elementNS__: ElementNS__ = ns => tagName =>
 
 declare global {
     interface Node {
-        monarch_outputHandlerNode?: OutputHandlersList
+        monarch_outputHandlers?: OutputHandlersList
     }
 }
 
-export function realize<message>(vNode: VirtualDomTree<message>, outputHandlerNode: OutputHandlersList): Node {
+export function realize<message>(vNode: VirtualDomTree<message>, outputHandlers: OutputHandlersList): Node {
     switch (vNode.tag) {
         case VirtualDomTree.Text:
             return realizeVirtualDomText(vNode)
@@ -172,14 +172,14 @@ export function realize<message>(vNode: VirtualDomTree<message>, outputHandlerNo
     const domNode = realizeVirtualDomElementNS(vNode)
 
     for (const child of vNode.children || []) {
-        domNode.appendChild(realize(child, outputHandlerNode))
+        domNode.appendChild(realize(child, outputHandlers))
     }
 
     vNode.facts && unsafe_organizeFacts(vNode)
 
     vNode.organizedFacts && unsafe_applyFacts(domNode, vNode.organizedFacts)
 
-    domNode.monarch_outputHandlerNode = outputHandlerNode
+    domNode.monarch_outputHandlers = outputHandlers
 
     return domNode
 }
