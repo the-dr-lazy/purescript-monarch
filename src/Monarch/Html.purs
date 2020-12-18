@@ -17,19 +17,12 @@ module Monarch.Html
   )
 where
 
-import Prelude
-import Effect                           ( Effect )
-import Type.Row                         ( type (+) )
-import Type.Row                                            as Row
-import Web.HTML                         ( HTMLElement )
-import Monarch.Type.Row                                    as Row
 import Monarch.Html.Facts.Attributes
 import Monarch.Html.Facts.Outputs
 import Monarch.Html.Facts.Properties
 import Monarch.VirtualDom.VirtualDomTree
 import Monarch.VirtualDom.VirtualDomTree as VirtualDomTree
 import Monarch.VirtualDom.VirtualDomTree.Prelude
-import Monarch.VirtualDom.Facts.Hooks
 
 -- Data Type
 
@@ -37,31 +30,19 @@ type Html = VirtualDomTree ()
 
 -- Elements
 
-type HtmlDivR attributes hooks message = R HtmlDivElementProperties (HtmlDivElementOutputs message) attributes hooks
-
-div :: forall r _r attributes hooks slots message
-     . Row.Union r _r (HtmlDivR attributes hooks message)
-    => Row.OptionalRecordCons r "attrs" (HtmlDivElementAttributes ()) attributes
-    => Row.OptionalRecordCons r "hooks" (Hooks message) hooks
-    => Node r slots message
+div :: Node HtmlDivElementProperties HtmlDivElementOutputs HtmlDivElementAttributes
 div = node "div"
 
-div_ :: forall slots message. Node_ slots message
+div_ :: Node_
 div_ = node_ "div"
 
 div' :: forall message. Html message
 div' = node' "div"
 
-type HtmlButtonR attributes hooks message = R HtmlButtonElementProperties (HtmlButtonElementOutputs message) attributes hooks
-
-button :: forall r _r attributes hooks slots message
-        . Row.Union r _r (HtmlButtonR attributes hooks message)
-       => Row.OptionalRecordCons r "attrs" (HtmlButtonElementAttributes ()) attributes
-       => Row.OptionalRecordCons r "hooks" (Hooks message) hooks
-       => Node r slots message
+button :: Node HtmlButtonElementProperties HtmlButtonElementOutputs HtmlButtonElementAttributes
 button = node "button"
 
-button_ :: forall slots message. Node_ slots message
+button_ :: Node_
 button_ = node_ "button"
 
 button' :: forall message. Html message
