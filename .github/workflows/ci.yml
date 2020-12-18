@@ -15,8 +15,8 @@ jobs:
             - uses: actions/checkout@v2
 
             - run: |
-                  curl -o /usr/bin/headroom https://github.com/vaclavsvejcar/headroom/releases/download/v0.3.2.0/headroom-0.3.2.0-Linux-ghc-8.8.4
-                  chmod +x /usr/bin/headroom
+                  sudo curl -o /usr/bin/headroom https://github.com/vaclavsvejcar/headroom/releases/download/v0.3.2.0/headroom-0.3.2.0-Linux-ghc-8.8.4
+                  sudo chmod +x /usr/bin/headroom
 
             - name: Cache Headroom binary
               uses: actions/cache@v2
