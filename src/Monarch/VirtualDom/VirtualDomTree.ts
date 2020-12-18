@@ -62,6 +62,7 @@ export namespace VirtualDomTree {
     export interface ElementNS<message> extends Tagged<typeof ElementNS>, Parent<message> {
         ns?: NS
         tagName: TagName
+        key?: string
         facts?: Facts
         organizedFacts?: OrganizedFacts
     }
@@ -71,10 +72,11 @@ export namespace VirtualDomTree {
     export function mkElementNS<message>(
         ns: NS | undefined,
         tagName: TagName,
+        key: string | undefined,
         facts?: Facts,
         children?: ReadonlyArray<VirtualDomTree<message>>,
     ): ElementNS<message> {
-        return { tag: ElementNS, ns, tagName, facts, children }
+        return { tag: ElementNS, ns, key, tagName, facts, children }
     }
 
     // SUM TYPE: Tagger
@@ -148,12 +150,12 @@ export const text = VirtualDomTree.mkText
 
 // prettier-ignore
 interface ElementNS {
-    (ns: NS): (tagName: TagName) => (facts: Facts) => <message>(children: VirtualDomTree<message>[]) => VirtualDomTree<message>
+    (ns: NS): (tagName: TagName) => (key: string) => (facts: Facts) => <message>(children: VirtualDomTree<message>[]) => VirtualDomTree<message>
 }
 
 // prettier-ignore
-export const elementNS: ElementNS = ns => tagName => facts => children =>
-    VirtualDomTree.mkElementNS(ns, tagName, facts, children)
+export const elementNS: ElementNS = ns => tagName => key => facts => children =>
+    VirtualDomTree.mkElementNS(ns, tagName, key, facts, children)
 
 // prettier-ignore
 interface ElementNS_ {
@@ -162,7 +164,7 @@ interface ElementNS_ {
 
 // prettier-ignore
 export const elementNS_: ElementNS_ = ns => tagName => children =>
-    VirtualDomTree.mkElementNS(ns, tagName, undefined, children)
+    VirtualDomTree.mkElementNS(ns, tagName, undefined, undefined, children)
 
 // prettier-ignore
 interface ElementNS__ {
@@ -171,7 +173,7 @@ interface ElementNS__ {
 
 // prettier-ignore
 export const elementNS__: ElementNS__ = ns => tagName =>
-    VirtualDomTree.mkElementNS(ns, tagName)
+    VirtualDomTree.mkElementNS(ns, tagName, undefined)
 
 declare global {
     interface Node {
@@ -315,6 +317,10 @@ function unsafe_diffElementNS<a, b>(x: VirtualDomTree.ElementNS<a>, y: VirtualDo
     const xChildrenLength = x.children?.length || 0
     const yChildrenLength = y.children?.length || 0
 
+    if (yChildrenLength > 0 && xChildrenLength > 0 && y.children![0].tag === VirtualDomTree.ElementNS && y.children![0].key) {
+        diffKeyedChildren(x, y)
+    }
+
     if (xChildrenLength > yChildrenLength) {
         patches.push(Patch.mkRemoveFromEnd(xChildrenLength - yChildrenLength))
     } else if (xChildrenLength < yChildrenLength) {
@@ -330,6 +336,42 @@ function unsafe_diffElementNS<a, b>(x: VirtualDomTree.ElementNS<a>, y: VirtualDo
     }
 
     return { patches, downstreamNodes }
+}
+
+function diffKeyedChildren<a, b>(xParent: VirtualDomTree.ElementNS<a>, yParent: VirtualDomTree.ElementNS<b>) {
+    const xChildren = xParent.children!
+    const yChildren = yParent.children!
+    const xChildrenLength = xChildren.length
+    const yChildrenLength = yChildren.length
+
+    const downstreamNodes: DownstreamNode<a, b>[] = []
+
+    let xIndex = 0
+    let yIndex = 0
+
+    while (xIndex < xChildrenLength && yIndex < yChildrenLength) {
+        const x = xChildren[xIndex] as VirtualDomTree.ElementNS<a>
+        const y = yChildren[yIndex] as VirtualDomTree.ElementNS<b>
+        const xKey = x.key
+        const yKey = y.key
+
+        if (xKey === yKey) {
+            downstreamNodes.push({ x, y })
+            xIndex++
+            yIndex++
+        }
+
+        const xNext = xChildren[xIndex + 1] as VirtualDomTree.ElementNS<a>
+        const yNext = yChildren[yIndex + 1] as VirtualDomTree.ElementNS<b>
+
+        const oldMatch = xNext ? yKey === xNext.key : false
+        const newMatch = yNext ? xKey === yNext.key : false
+
+        if (newMatch && oldMatch) {
+            downstreamNodes.push({ x, y })
+
+        }
+    }
 }
 
 type SumWithSubTypes<T extends {}> = T | T[keyof T]
@@ -376,3 +418,5 @@ function diffFacts<a extends SumWithSubTypes<OrganizedFacts>>(x: a | undefined, 
 
     return diff!
 }
+
+export const unsafeGet = (label: string) => (rec: any) => rec[label]

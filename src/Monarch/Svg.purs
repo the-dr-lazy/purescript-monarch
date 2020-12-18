@@ -25,7 +25,7 @@ import Monarch.Svg.Facts.Outputs
 
 -- Data Type
 
-type Svg = VirtualDomTree ()
+type Svg = VirtualDomTree NotKeyed ()
 
 -- Elements
 

@@ -26,7 +26,7 @@ import Monarch.VirtualDom.VirtualDomTree.Prelude
 
 -- Data Type
 
-type Html = VirtualDomTree ()
+type Html = VirtualDomTree NotKeyed ()
 
 -- Elements
 
