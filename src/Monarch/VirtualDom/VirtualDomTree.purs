@@ -13,7 +13,6 @@ module Monarch.VirtualDom.VirtualDomTree
   ( VirtualDomTree
   , Node, Node_
   , Leaf
-  , R
   , text
   , nodeNS, nodeNS_, nodeNS'
   , node, node_, node'
@@ -22,9 +21,12 @@ where
 
 import Prelude
 import Undefined
-import Type.Row                         ( type (+) )
+import Type.Row                                            as Row
+import Monarch.VirtualDom.Facts
+import Monarch.VirtualDom.Facts.Hooks
 import Monarch.VirtualDom.NS
 import Monarch.VirtualDom.NS as NS
+import Monarch.Type.Row                                    as Row
 
 foreign import data VirtualDomTree :: # Type -> Type -> Type
 
@@ -35,19 +37,29 @@ instance functorVirtualDomTree :: Functor (VirtualDomTree slots) where
 
 -- Hyperscript
 
-type Node (r       :: # Type)
-          (slots   :: # Type)
-          (message :: Type)
-  = { | r } -> Array (VirtualDomTree slots message) -> VirtualDomTree slots message
+type Node (mkProperties :: # Type -> # Type)
+          (mkOutputs    :: Type -> # Type -> # Type)
+          (mkAttributes :: # Type -> # Type)
+  = forall r _r attributes hooks slots message
+  . Row.Union r _r (Facts mkProperties (mkOutputs message) attributes hooks)
+ => Row.OptionalRecordCons r "attrs" (mkAttributes ()) attributes
+ => Row.OptionalRecordCons r "hooks" (Hooks message) hooks
+ => { | r }
+ -> Array (VirtualDomTree slots message)
+ -> VirtualDomTree slots message
 
-type Node_ (slots   :: # Type)
-           (message :: Type)
-  = Array (VirtualDomTree slots message) -> VirtualDomTree slots message
+type Node_
+  = forall slots message. Array (VirtualDomTree slots message) -> VirtualDomTree slots message
 
-type Leaf (r       :: # Type)
-          (slots   :: # Type)
-          (message :: Type)
-  = { | r } -> VirtualDomTree slots message
+type Leaf (mkProperties :: # Type -> # Type)
+          (mkOutputs    :: Type -> # Type -> # Type)
+          (mkAttributes :: # Type -> # Type)
+  = forall r _r attributes hooks slots message
+  . Row.Union r _r (Facts mkProperties (mkOutputs message) attributes hooks)
+ => Row.OptionalRecordCons r "attrs" (mkAttributes ()) attributes
+ => Row.OptionalRecordCons r "hooks" (Hooks message) hooks
+ => { | r }
+ -> VirtualDomTree slots message
 
 foreign import text :: forall message. String -> VirtualDomTree () message
 
@@ -95,13 +107,3 @@ node' :: forall slots message
       . String
      -> VirtualDomTree slots message
 node' = elementNS__ undefined
-
-type R (properties :: # Type -> # Type)
-       (outputs    :: # Type -> # Type)
-       (attributes :: # Type)
-       (hooks      :: # Type)
-  = properties
-  + outputs
-  + ( attributes :: { | attributes }
-    , hooks      :: { | hooks }
-    )

@@ -16,11 +16,8 @@ module Monarch.Svg
   )
 where
 
-import Type.Row as Row
-import Monarch.Type.Row as Row
 import Monarch.VirtualDom.VirtualDomTree
 import Monarch.VirtualDom.NS as NS
-import Monarch.VirtualDom.Facts.Hooks
 import Monarch.VirtualDom.VirtualDomTree.Prelude
 import Monarch.Svg.Facts.Attributes
 import Monarch.Svg.Facts.Properties
@@ -32,16 +29,10 @@ type Svg = VirtualDomTree ()
 
 -- Elements
 
-type SvgSvgR attributes hooks message = R SvgSvgElementProperties (SvgSvgElementOutputs message) attributes hooks
-
-svg :: forall r _r attributes hooks slots message
-     . Row.Union r _r (SvgSvgR attributes hooks message)
-    => Row.OptionalRecordCons r "attrs" (SvgSvgElementAttributes ()) attributes
-    => Row.OptionalRecordCons r "hooks" (Hooks message) hooks
-    => Node r slots message
+svg :: Node SvgSvgElementProperties SvgSvgElementOutputs SvgSvgElementAttributes
 svg = nodeNS NS.SVG "svg"
 
-svg_ :: forall slots message. Node_ slots message
+svg_ :: Node_
 svg_ = nodeNS_ NS.SVG "svg"
 
 svg' :: forall message. Svg message
