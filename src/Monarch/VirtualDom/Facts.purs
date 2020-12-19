@@ -17,8 +17,10 @@ type Facts (properties :: # Type -> # Type)
            (outputs    :: # Type -> # Type)
            (attributes :: # Type)
            (hooks      :: # Type)
+           (key        :: Type)
   = properties
   + outputs
   + ( attributes :: { | attributes }
     , hooks      :: { | hooks }
+    , key        :: key
     )
