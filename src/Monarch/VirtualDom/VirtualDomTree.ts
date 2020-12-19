@@ -182,8 +182,17 @@ interface ElementNS {
 }
 
 // prettier-ignore
-export const elementNS: ElementNS = ns => tagName => facts => children =>
-    VirtualDomTree.mkElementNS(ns, tagName, facts, children)
+interface KeyedElementNS {
+    (ns: NS): (tagName: TagName) => (facts: Facts) => <message>(children: VirtualDomTree<message>[]) => VirtualDomTree<message>
+}
+
+// prettier-ignore
+export const elementNS: ElementNS | KeyedElementNS = ns => tagName => facts => children => {
+    if (children.length > 0 && (children[0].tag === VirtualDomTree.ElementNS || children[0].tag === VirtualDomTree.KeyedElementNS) && children[0].facts && children[0].facts.key) {
+        return VirtualDomTree.mkKeyedElementNS(ns, tagName, facts, children)
+    }
+    return VirtualDomTree.mkElementNS(ns, tagName, facts, children)
+}
 
 // prettier-ignore
 interface ElementNS_ {
@@ -202,18 +211,6 @@ interface ElementNS__ {
 // prettier-ignore
 export const elementNS__: ElementNS__ = ns => tagName =>
     VirtualDomTree.mkElementNS(ns, tagName)
-
-// prettier-ignore
-interface KeyedElementNS {
-    (ns: NS): (tagName: TagName) => (facts: Facts) => <message>(children: VirtualDomTree<message>[]) => VirtualDomTree<message>
-}
-
-// prettier-ignore
-export const keyedElementNS: KeyedElementNS = ns => tagName => facts => children => {
-    console.log({tagName,facts,  children})
-    return VirtualDomTree.mkKeyedElementNS(ns, tagName, facts, children)
-}
-
 
 declare global {
     interface Node {
