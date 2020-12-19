@@ -29,7 +29,7 @@ foreign import mount :: forall key slots message. MountSpec -> VirtualDomTree ke
 
 foreign import data DiffWork :: Type
 
-foreign import mkDiffWork :: forall key _key slots a b. VirtualDomTree key slots a -> VirtualDomTree _key slots b -> DiffWork
+foreign import mkDiffWork :: forall key key' slots a b. VirtualDomTree key slots a -> VirtualDomTree key' slots b -> DiffWork
 
 type FinishDiffWorkSpec key slots message r
   = { rootVNode :: VirtualDomTree key slots message

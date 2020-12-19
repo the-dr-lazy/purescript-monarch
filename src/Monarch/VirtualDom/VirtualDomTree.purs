@@ -45,13 +45,13 @@ instance functorVirtualDomTree :: Functor (VirtualDomTree key slots) where
 type Node (mkProperties :: # Type -> # Type)
           (mkOutputs    :: Type -> # Type -> # Type)
           (mkAttributes :: # Type -> # Type)
-  = forall r _r k key _key attributes hooks slots message
-  . Row.Union r _r (Facts mkProperties (mkOutputs message) attributes hooks k)
+  = forall r _r keyType key key' attributes hooks slots message
+  . Row.Union r _r (Facts mkProperties (mkOutputs message) attributes hooks keyType)
  => Row.OptionalRecordCons r "attrs" (mkAttributes ()) attributes
  => Row.OptionalRecordCons r "hooks" (Hooks message) hooks
  => ExtractKeyType r key
  => { | r }
- -> Array (VirtualDomTree _key slots message)
+ -> Array (VirtualDomTree key' slots message)
  -> VirtualDomTree key slots message
 
 type Node_
@@ -60,8 +60,8 @@ type Node_
 type Leaf (mkProperties :: # Type -> # Type)
           (mkOutputs    :: Type -> # Type -> # Type)
           (mkAttributes :: # Type -> # Type)
-  = forall r _r k attributes hooks key slots message
-  . Row.Union r _r (Facts mkProperties (mkOutputs message) attributes hooks k)
+  = forall r _r keyType attributes hooks key slots message
+  . Row.Union r _r (Facts mkProperties (mkOutputs message) attributes hooks keyType)
  => Row.OptionalRecordCons r "attrs" (mkAttributes ()) attributes
  => Row.OptionalRecordCons r "hooks" (Hooks message) hooks
  => ExtractKeyType r key
@@ -70,8 +70,8 @@ type Leaf (mkProperties :: # Type -> # Type)
 
 foreign import text :: forall message. String -> VirtualDomTree Nothing () message
 
-foreign import elementNS   :: forall r key _key slots message. String -> String -> { | r } -> Array (VirtualDomTree _key slots message) -> VirtualDomTree key slots message
-foreign import elementNS_  :: forall       _key slots message. String -> String            -> Array (VirtualDomTree _key slots message) -> VirtualDomTree Nothing slots message
+foreign import elementNS   :: forall r key key' slots message. String -> String -> { | r } -> Array (VirtualDomTree key' slots message) -> VirtualDomTree key slots message
+foreign import elementNS_  :: forall       key' slots message. String -> String            -> Array (VirtualDomTree key' slots message) -> VirtualDomTree Nothing slots message
 foreign import elementNS__ :: forall            slots message. String -> String                                                         -> VirtualDomTree Nothing slots message
 
 class ExtractKeyType (row :: # Type) (key :: Maybe) | row -> key
@@ -85,20 +85,20 @@ instance nilExtractKeyType :: ExtractKeyType' RowList.Nil Nothing
 instance consExtractKeyType :: ExtractKeyType' (RowList.Cons "key" a _tail) (Just a)
 else instance fallbackExtractKeyType :: (ExtractKeyType' tail key) => ExtractKeyType' (RowList.Cons _name _t tail) key
 
-nodeNS :: forall r key _key slots message
+nodeNS :: forall r key key' slots message
        . ExtractKeyType r key
       => NS
       -> String
       -> { | r }
-      -> Array (VirtualDomTree _key slots message)
+      -> Array (VirtualDomTree key' slots message)
       -> VirtualDomTree key slots message
 nodeNS = elementNS <<< show
 
-node :: forall r key _key slots message
+node :: forall r key key' slots message
      . ExtractKeyType r key
     => String
     -> { | r }
-    -> Array (VirtualDomTree _key slots message)
+    -> Array (VirtualDomTree key' slots message)
     -> VirtualDomTree key slots message
 node = elementNS undefined
 

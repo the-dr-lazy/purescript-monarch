@@ -188,9 +188,10 @@ interface KeyedElementNS {
 
 // prettier-ignore
 export const elementNS: ElementNS | KeyedElementNS = ns => tagName => facts => children => {
-    if (children.length > 0 && (children[0].tag === VirtualDomTree.ElementNS || children[0].tag === VirtualDomTree.KeyedElementNS) && children[0].facts && children[0].facts.key) {
+    if ((children[0].tag === VirtualDomTree.ElementNS || children[0].tag === VirtualDomTree.KeyedElementNS) && children[0].facts?.key) {
         return VirtualDomTree.mkKeyedElementNS(ns, tagName, facts, children)
     }
+
     return VirtualDomTree.mkElementNS(ns, tagName, facts, children)
 }
 
