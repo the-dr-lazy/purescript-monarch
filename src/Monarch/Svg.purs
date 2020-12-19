@@ -22,10 +22,11 @@ import Monarch.VirtualDom.VirtualDomTree.Prelude
 import Monarch.Svg.Facts.Attributes
 import Monarch.Svg.Facts.Properties
 import Monarch.Svg.Facts.Outputs
+import Monarch.Type.Maybe
 
 -- Data Type
 
-type Svg = VirtualDomTree NotKeyed ()
+type Svg = VirtualDomTree Nothing ()
 
 -- Elements
 

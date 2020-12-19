@@ -23,10 +23,12 @@ import Monarch.Html.Facts.Properties
 import Monarch.VirtualDom.VirtualDomTree
 import Monarch.VirtualDom.VirtualDomTree as VirtualDomTree
 import Monarch.VirtualDom.VirtualDomTree.Prelude
+import Monarch.VirtualDom.Facts.Hooks
+import Monarch.Type.Maybe
 
 -- Data Type
 
-type Html = VirtualDomTree NotKeyed ()
+type Html = VirtualDomTree Nothing ()
 
 -- Elements
 

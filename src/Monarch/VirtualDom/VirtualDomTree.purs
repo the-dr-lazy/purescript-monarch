@@ -13,16 +13,8 @@ module Monarch.VirtualDom.VirtualDomTree
   ( VirtualDomTree
   , Node, Node_
   , Leaf
-<<<<<<< HEAD
-=======
-  , R
-  , kind IsKeyed
-  , class IsKeyedNode
-  , class IsKeyedNode'
-  , NotKeyed
-  , Keyed
-  , Key
->>>>>>> f16a28b... feat: add keyed node to VirtualDomTree
+  , class ExtractKeyType
+  , class ExtractKeyType'
   , text
   , nodeNS, nodeNS_, nodeNS'
   , node, node_, node'
@@ -31,33 +23,19 @@ where
 
 import Prelude
 import Undefined
-<<<<<<< HEAD
 import Type.Row                                            as Row
 import Monarch.VirtualDom.Facts
 import Monarch.VirtualDom.Facts.Hooks
-=======
-import Type.Row                         ( type (+) )
-import Type.Row as Row
-import Type.RowList (kind RowList, class RowToList)
-import Type.RowList as RowList
->>>>>>> f16a28b... feat: add keyed node to VirtualDomTree
 import Monarch.VirtualDom.NS
 import Monarch.VirtualDom.NS as NS
 import Monarch.Type.Row                                    as Row
+import Monarch.Type.Maybe
 
-foreign import unsafeGet :: forall r a. String -> Record r -> a
+foreign import data VirtualDomTree :: Maybe -> # Type -> Type -> Type
 
-foreign import kind IsKeyed
+foreign import fmapVirtualDomTree :: forall key slots a b. (a -> b) -> VirtualDomTree key slots a -> VirtualDomTree key slots b
 
-foreign import data Keyed :: IsKeyed
-
-foreign import data NotKeyed :: IsKeyed
-
-foreign import data VirtualDomTree :: IsKeyed -> # Type -> Type -> Type
-
-foreign import fmapVirtualDomTree :: forall isKeyed slots a b. (a -> b) -> VirtualDomTree isKeyed slots a -> VirtualDomTree isKeyed slots b
-
-instance functorVirtualDomTree :: Functor (VirtualDomTree isKeyed slots) where
+instance functorVirtualDomTree :: Functor (VirtualDomTree key slots) where
   map = fmapVirtualDomTree
 
 -- Hyperscript
@@ -86,88 +64,66 @@ type Leaf (mkProperties :: # Type -> # Type)
  => { | r }
  -> VirtualDomTree slots message
 
-foreign import text :: forall message. String -> VirtualDomTree NotKeyed () message
+foreign import elementNS :: forall r key _key slots message.
+                                 String -> String -> { | r }
+                              -> Array (VirtualDomTree _key slots message)
+                              -> VirtualDomTree key slots message
+foreign import elementNS_  :: forall key slots message. String -> String -> Array (VirtualDomTree key slots message) -> VirtualDomTree Nothing slots message
+foreign import elementNS__ :: forall slots message.     String -> String -> VirtualDomTree Nothing slots message
 
-foreign import elementNS   :: forall r isKeyed _isKeyed slots message.
-                                 String -> String -> String -> { | r }
-                              -> Array (VirtualDomTree _isKeyed slots message)
-                              -> VirtualDomTree isKeyed slots message
-foreign import elementNS_  :: forall isKeyed slots message. String -> String -> Array (VirtualDomTree isKeyed slots message) -> VirtualDomTree NotKeyed slots message
-foreign import elementNS__ :: forall slots message.         String -> String -> VirtualDomTree NotKeyed slots message
+-- foreign import keyedElementNS :: forall r key _key slots message.
+--                                  String -> String -> { | r }
+--                               -> Array (VirtualDomTree _key slots message)
+--                               -> VirtualDomTree key slots message
 
-class IsKeyedNode (row :: # Type) (isKeyed :: IsKeyed) | row -> isKeyed
+class ExtractKeyType (row :: # Type) (key :: Maybe) | row -> key
 
-instance rowListIsKeyedNode :: (RowToList row list, IsKeyedNode' list isKeyed) => IsKeyedNode row isKeyed
+instance rowListExtractKeyType :: (RowToList row list, ExtractKeyType' list key) => ExtractKeyType row key
 
-class IsKeyedNode' (row :: RowList) (isKeyed :: IsKeyed) | row -> isKeyed
+class ExtractKeyType' (row :: RowList) (key :: Maybe) | row -> key
 
-instance nilIsKeyedNode :: IsKeyedNode' RowList.Nil NotKeyed
+instance nilExtractKeyType :: ExtractKeyType' RowList.Nil Nothing
 
-instance consIsKeyedNode :: IsKeyedNode' (RowList.Cons "key" String _tail) Keyed
-else instance fallbackCdonsIsKeyedNode :: (IsKeyedNode' tail isKeyed) => IsKeyedNode' (RowList.Cons _name _t tail) isKeyed
+instance consExtractKeyType :: ExtractKeyType' (RowList.Cons "key" a _tail) (Just a)
+else instance fallbackExtractKeyType :: (ExtractKeyType' tail key) => ExtractKeyType' (RowList.Cons _name _t tail) key
 
--- node' = node__
-nodeNS :: forall r isKeyed _isKeyed slots message
-      . (IsKeyedNode r isKeyed)
-      => NS
+nodeNS :: forall r key _key slots message
+      . (ExtractKeyType r key) =>
+          NS
       -> String
       -> { | r }
-      -> Array (VirtualDomTree _isKeyed slots message)
-      -> VirtualDomTree isKeyed slots message
-nodeNS ns tagName facts  = elementNS (show ns) tagName key facts
-  where
-    key = unsafeGet "key" facts
+      -> Array (VirtualDomTree _key slots message)
+      -> VirtualDomTree key slots message
+nodeNS = elementNS <<< show
 
-node :: forall r isKeyed _isKeyed slots message
-      . (IsKeyedNode r isKeyed)
-    => String
+node :: forall r key _key slots message
+    .  (ExtractKeyType r key) =>
+        String
     -> { | r }
-    -> Array (VirtualDomTree _isKeyed slots message)
-    -> VirtualDomTree isKeyed slots message
-node tagName facts = elementNS undefined tagName key facts
-  where
-    key = unsafeGet "key" facts
+    -> Array (VirtualDomTree _key slots message)
+    -> VirtualDomTree key slots message
+node = elementNS undefined
 
-nodeNS_ :: forall isKeyed slots message
+nodeNS_ :: forall key slots message
         . NS
       -> String
-      -> Array (VirtualDomTree isKeyed slots message)
-      -> VirtualDomTree NotKeyed slots message
+      -> Array (VirtualDomTree key slots message)
+      -> VirtualDomTree Nothing slots message
 nodeNS_ = elementNS_ <<< show
 
 nodeNS' :: forall slots message
         . NS
       -> String
-      -> VirtualDomTree NotKeyed slots message
+      -> VirtualDomTree Nothing slots message
 nodeNS' = elementNS__ <<< show
 
-node_ :: forall isKeyed slots message
+node_ :: forall key slots message
       . String
-    -> Array (VirtualDomTree isKeyed slots message)
-    -> VirtualDomTree NotKeyed slots message
+    -> Array (VirtualDomTree key slots message)
+    -> VirtualDomTree Nothing slots message
 node_ = elementNS_ undefined
 
 node' :: forall slots message
       . String
-    -> VirtualDomTree NotKeyed slots message
+    -> VirtualDomTree Nothing slots message
 node' = elementNS__ undefined
-<<<<<<< HEAD
-=======
-
-type R (properties :: # Type -> # Type)
-       (outputs    :: # Type -> # Type)
-       (attributes :: # Type)
-       (hooks      :: # Type)
-  = properties
-  + outputs
-  + Key
-  + ( attributes :: { | attributes }
-    , hooks      :: { | hooks }
-    )
-
-type Key (r :: # Type)
-  = ( key :: String
-    | r
-    )
-
->>>>>>> f16a28b... feat: add keyed node to VirtualDomTree

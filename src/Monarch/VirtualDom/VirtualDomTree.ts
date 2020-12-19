@@ -15,7 +15,7 @@ import { unsafe_organizeFacts, unsafe_applyFacts, OrganizedFacts, Facts, FactCat
 /**
  * Virtual DOM tree ADT
  */
-export type VirtualDomTree<message> = VirtualDomTree.Text | VirtualDomTree.ElementNS<message> | VirtualDomTree.Tagger<any, message>
+export type VirtualDomTree<message> = VirtualDomTree.Text | VirtualDomTree.ElementNS<message> | VirtualDomTree.KeyedElementNS<message> | VirtualDomTree.Tagger<any, message>
 
 export namespace VirtualDomTree {
     /**
@@ -24,6 +24,7 @@ export namespace VirtualDomTree {
     const enum Tag {
         Text,
         ElementNS,
+        KeyedElementNS,
         Tagger,
     }
 
@@ -62,7 +63,6 @@ export namespace VirtualDomTree {
     export interface ElementNS<message> extends Tagged<typeof ElementNS>, Parent<message> {
         ns?: NS
         tagName: TagName
-        key?: string
         facts?: Facts
         organizedFacts?: OrganizedFacts
     }
@@ -72,11 +72,39 @@ export namespace VirtualDomTree {
     export function mkElementNS<message>(
         ns: NS | undefined,
         tagName: TagName,
-        key: string | undefined,
         facts?: Facts,
         children?: ReadonlyArray<VirtualDomTree<message>>,
     ): ElementNS<message> {
-        return { tag: ElementNS, ns, key, tagName, facts, children }
+        return { tag: ElementNS, ns, tagName, facts, children }
+    }
+
+    // SUM TYPE: KeyedElementNS
+
+    /**
+     * `KeyedElementNS` tag
+     *
+     * Use it for pattern matching
+     */
+    export const KeyedElementNS = Tag.KeyedElementNS
+    /**
+     * `KeyedElementNS` type constructor
+     */
+    export interface KeyedElementNS<message> extends Tagged<typeof KeyedElementNS>, Parent<message> {
+        ns?: NS
+        tagName: TagName
+        facts?: Facts
+        organizedFacts?: OrganizedFacts
+    }
+    /**
+     * Smart constructor for `KeyedElementNS` type with namespace
+     */
+    export function mkKeyedElementNS<message>(
+        ns: NS | undefined,
+        tagName: TagName,
+        facts?: Facts,
+        children?: ReadonlyArray<VirtualDomTree<message>>,
+    ): KeyedElementNS<message> {
+        return { tag: KeyedElementNS, ns, tagName, facts, children }
     }
 
     // SUM TYPE: Tagger
@@ -150,12 +178,12 @@ export const text = VirtualDomTree.mkText
 
 // prettier-ignore
 interface ElementNS {
-    (ns: NS): (tagName: TagName) => (key: string) => (facts: Facts) => <message>(children: VirtualDomTree<message>[]) => VirtualDomTree<message>
+    (ns: NS): (tagName: TagName) => (facts: Facts) => <message>(children: VirtualDomTree<message>[]) => VirtualDomTree<message>
 }
 
 // prettier-ignore
-export const elementNS: ElementNS = ns => tagName => key => facts => children =>
-    VirtualDomTree.mkElementNS(ns, tagName, key, facts, children)
+export const elementNS: ElementNS = ns => tagName => facts => children =>
+    VirtualDomTree.mkElementNS(ns, tagName, facts, children)
 
 // prettier-ignore
 interface ElementNS_ {
@@ -164,7 +192,7 @@ interface ElementNS_ {
 
 // prettier-ignore
 export const elementNS_: ElementNS_ = ns => tagName => children =>
-    VirtualDomTree.mkElementNS(ns, tagName, undefined, undefined, children)
+    VirtualDomTree.mkElementNS(ns, tagName, undefined, children)
 
 // prettier-ignore
 interface ElementNS__ {
@@ -173,7 +201,19 @@ interface ElementNS__ {
 
 // prettier-ignore
 export const elementNS__: ElementNS__ = ns => tagName =>
-    VirtualDomTree.mkElementNS(ns, tagName, undefined)
+    VirtualDomTree.mkElementNS(ns, tagName)
+
+// prettier-ignore
+interface KeyedElementNS {
+    (ns: NS): (tagName: TagName) => (facts: Facts) => <message>(children: VirtualDomTree<message>[]) => VirtualDomTree<message>
+}
+
+// prettier-ignore
+export const keyedElementNS: KeyedElementNS = ns => tagName => facts => children => {
+    console.log({tagName,facts,  children})
+    return VirtualDomTree.mkKeyedElementNS(ns, tagName, facts, children)
+}
+
 
 declare global {
     interface Node {
@@ -214,7 +254,7 @@ export function realizeVirtualDomTagger<a, b>(tagger: VirtualDomTree.Tagger<a, b
     return realize(tagger.vNode, { value: tagger.f, next: outputHandlers })
 }
 
-export function realizeVirtualDomElementNS<a>({ ns, tagName }: VirtualDomTree.ElementNS<a>): Element {
+export function realizeVirtualDomElementNS<a>({ ns, tagName }: VirtualDomTree.ElementNS<a> | VirtualDomTree.KeyedElementNS<a>): Element {
     return ns ? document.createElementNS(ns, tagName) : document.createElement(tagName)
 }
 
@@ -260,6 +300,8 @@ export function diff<a, b>(x: VirtualDomTree<a>, y: VirtualDomTree<b>): Diff<a, 
             return unsafe_diffText(x, <VirtualDomTree.Text>y, patches)
         case VirtualDomTree.ElementNS:
             return unsafe_diffElementNS(x, <VirtualDomTree.ElementNS<b>>y, patches)
+        case VirtualDomTree.KeyedElementNS:
+            return unsafe_diffKeyedElementNS(x, <VirtualDomTree.KeyedElementNS<b>>y, patches)
         case VirtualDomTree.Tagger:
             return unsafe_diffTagger(x, <VirtualDomTree.Tagger<any, any>>y, patches)
     }
@@ -317,10 +359,6 @@ function unsafe_diffElementNS<a, b>(x: VirtualDomTree.ElementNS<a>, y: VirtualDo
     const xChildrenLength = x.children?.length || 0
     const yChildrenLength = y.children?.length || 0
 
-    if (yChildrenLength > 0 && xChildrenLength > 0 && y.children![0].tag === VirtualDomTree.ElementNS && y.children![0].key) {
-        diffKeyedChildren(x, y)
-    }
-
     if (xChildrenLength > yChildrenLength) {
         patches.push(Patch.mkRemoveFromEnd(xChildrenLength - yChildrenLength))
     } else if (xChildrenLength < yChildrenLength) {
@@ -338,40 +376,44 @@ function unsafe_diffElementNS<a, b>(x: VirtualDomTree.ElementNS<a>, y: VirtualDo
     return { patches, downstreamNodes }
 }
 
-function diffKeyedChildren<a, b>(xParent: VirtualDomTree.ElementNS<a>, yParent: VirtualDomTree.ElementNS<b>) {
-    const xChildren = xParent.children!
-    const yChildren = yParent.children!
-    const xChildrenLength = xChildren.length
-    const yChildrenLength = yChildren.length
+function unsafe_diffKeyedElementNS<a, b>(x: VirtualDomTree.KeyedElementNS<a>, y: VirtualDomTree.KeyedElementNS<b>, patches: Patch[]): Diff<a, b> {
+    return { patches }
+}
 
-    const downstreamNodes: DownstreamNode<a, b>[] = []
+function diffKeyedChildren<a, b>(xParent: VirtualDomTree.KeyedElementNS<a>, yParent: VirtualDomTree.KeyedElementNS<b>) {
+    // const xChildren = xParent.children!
+    // const yChildren = yParent.children!
+    // const xChildrenLength = xChildren.length
+    // const yChildrenLength = yChildren.length
 
-    let xIndex = 0
-    let yIndex = 0
+    // const downstreamNodes: DownstreamNode<a, b>[] = []
 
-    while (xIndex < xChildrenLength && yIndex < yChildrenLength) {
-        const x = xChildren[xIndex] as VirtualDomTree.ElementNS<a>
-        const y = yChildren[yIndex] as VirtualDomTree.ElementNS<b>
-        const xKey = x.key
-        const yKey = y.key
+    // let xIndex = 0
+    // let yIndex = 0
 
-        if (xKey === yKey) {
-            downstreamNodes.push({ x, y })
-            xIndex++
-            yIndex++
-        }
+    // while (xIndex < xChildrenLength && yIndex < yChildrenLength) {
+    //     const x = xChildren[xIndex] as VirtualDomTree.ElementNS<a>
+    //     const y = yChildren[yIndex] as VirtualDomTree.ElementNS<b>
+    //     const xKey = x.key
+    //     const yKey = y.key
 
-        const xNext = xChildren[xIndex + 1] as VirtualDomTree.ElementNS<a>
-        const yNext = yChildren[yIndex + 1] as VirtualDomTree.ElementNS<b>
+    //     if (xKey === yKey) {
+    //         downstreamNodes.push({ x, y })
+    //         xIndex++
+    //         yIndex++
+    //     }
 
-        const oldMatch = xNext ? yKey === xNext.key : false
-        const newMatch = yNext ? xKey === yNext.key : false
+    //     const xNext = xChildren[xIndex + 1] as VirtualDomTree.ElementNS<a>
+    //     const yNext = yChildren[yIndex + 1] as VirtualDomTree.ElementNS<b>
 
-        if (newMatch && oldMatch) {
-            downstreamNodes.push({ x, y })
+    //     const oldMatch = xNext ? yKey === xNext.key : false
+    //     const newMatch = yNext ? xKey === yNext.key : false
 
-        }
-    }
+    //     if (newMatch && oldMatch) {
+    //         downstreamNodes.push({ x, y })
+
+    //     }
+    // }
 }
 
 type SumWithSubTypes<T extends {}> = T | T[keyof T]
@@ -418,5 +460,3 @@ function diffFacts<a extends SumWithSubTypes<OrganizedFacts>>(x: a | undefined, 
 
     return diff!
 }
-
-export const unsafeGet = (label: string) => (rec: any) => rec[label]

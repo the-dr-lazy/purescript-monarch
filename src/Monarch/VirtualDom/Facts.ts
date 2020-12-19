@@ -33,7 +33,7 @@ export enum FactCategory {
     Output,
 }
 
-export function unsafe_organizeFacts(element: VirtualDomTree.ElementNS<any>): void {
+export function unsafe_organizeFacts(element: VirtualDomTree.ElementNS<any> | VirtualDomTree.KeyedElementNS<any>): void {
     const organizedFacts: OrganizedFacts = {}
 
     const { facts } = element
