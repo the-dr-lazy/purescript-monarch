@@ -19,7 +19,7 @@ export type VirtualDomTree<message> =
     | VirtualDomTree.Text
     | VirtualDomTree.ElementNS<message>
     | VirtualDomTree.KeyedElementNS<message>
-    | VirtualDomTree.Keyed<message>
+    | VirtualDomTree.Keyed<VirtualDomTree<message>>
     | VirtualDomTree.Tagger<any, message>
 
 export namespace VirtualDomTree {
@@ -72,17 +72,6 @@ export namespace VirtualDomTree {
         facts?: Facts
         organizedFacts?: OrganizedFacts
     }
-    /**
-     * Smart constructor for `ElementNS` type with namespace
-     */
-    export function mkElementNS<message>(
-        ns: NS | undefined,
-        tagName: TagName,
-        facts?: Facts,
-        children?: ReadonlyArray<VirtualDomTree<message>>,
-    ): ElementNS<message> {
-        return { tag: ElementNS, ns, tagName, facts, children }
-    }
 
     // SUM TYPE: KeyedElementNS
 
@@ -96,18 +85,7 @@ export namespace VirtualDomTree {
      * `KeyedElementNS` type constructor
      */
     export interface KeyedElementNS<message> extends Omit<ElementNS<message>, 'tag' | 'children'>, Tagged<typeof KeyedElementNS> {
-        children?: ReadonlyArray<VirtualDomTree.Keyed<message>>
-    }
-    /**
-     * Smart constructor for `KeyedElementNS` type with namespace
-     */
-    export function mkKeyedElementNS<message>(
-        ns: NS | undefined,
-        tagName: TagName,
-        facts?: Facts,
-        children?: ReadonlyArray<VirtualDomTree.Keyed<message>>,
-    ): KeyedElementNS<message> {
-        return { tag: KeyedElementNS, ns, tagName, facts, children }
+        children?: ReadonlyArray<VirtualDomTree.Keyed<VirtualDomTree<message>>>
     }
 
     // SUM TYPE: Keyed
@@ -121,14 +99,14 @@ export namespace VirtualDomTree {
     /**
      * `Keyed` type constructor
      */
-    export interface Keyed<message> extends Tagged<typeof Keyed> {
+    export interface Keyed<vNode extends VirtualDomTree<any>> extends Tagged<typeof Keyed> {
         key: any
-        vNode: VirtualDomTree<message>
+        vNode: vNode
     }
     /**
      * Smart constructor for `Keyed` type with namespace
      */
-    export function mkKeyed<message>(key: any, vNode: VirtualDomTree<message>): Keyed<message> {
+    export function mkKeyed<vNode extends VirtualDomTree<any>>(key: any, vNode: vNode): Keyed<vNode> {
         return { tag: Keyed, key, vNode }
     }
 
@@ -146,46 +124,85 @@ export namespace VirtualDomTree {
         return { tag: Tagger, f, vNode }
     }
 
+    /**
+     * Smart constructor for `ElementNS` and `KeyedElementNS` types
+     */
+    export function mkElementNS<message>(
+        ns: NS | undefined,
+        tagName: TagName,
+        facts?: Facts,
+        children?: ReadonlyArray<VirtualDomTree.Keyed<VirtualDomTree<message>>>,
+    ): SumWithKeyed<VirtualDomTree.KeyedElementNS<message>>
+    export function mkElementNS<message>(
+        ns: NS | undefined,
+        tagName: TagName,
+        facts?: Facts,
+        children?: ReadonlyArray<VirtualDomTree<message>>,
+    ): SumWithKeyed<VirtualDomTree.ElementNS<message>>
+    export function mkElementNS<message>(
+        ns: NS | undefined,
+        tagName: TagName,
+        facts?: Facts,
+        children?: ReadonlyArray<VirtualDomTree<message>>,
+    ) {
+        const tag = children && children[0]?.tag === VirtualDomTree.Keyed ? VirtualDomTree.KeyedElementNS : VirtualDomTree.ElementNS
+        let vNode: VirtualDomTree<message> = {
+            tag,
+            ns,
+            tagName,
+            facts,
+            children: <any>children,
+        }
+
+        if (facts && keyPropertyName in facts) {
+            vNode = VirtualDomTree.mkKeyed(facts[keyPropertyName], vNode)
+        }
+
+        return vNode
+    }
+
     // SUM TYPE: Async
 
     /**
      * TODO: subscribe to asynchronous virtual dom tree
      */
-    export interface Async { }
+    export interface Async {}
 
     // SUM TYPE: Suspense
 
     /**
      * TODO: catch async nodes fallback
      */
-    export interface Suspense { }
+    export interface Suspense {}
 
     // SUM TYPE: Thunk
 
     /**
      * TODO: evaluate the given thunk on reference change
      */
-    export interface Thunk { }
+    export interface Thunk {}
 
     // SUM TYPE: Fragment
 
     /**
      * TODO: render subtrees as children of parent node
      */
-    export interface Fragment { }
+    export interface Fragment {}
 
     // SUM TYPE: Offscreen
 
     /**
      * TODO: evaluate subtree on browsers' idle periods
      */
-    export interface Offscreen { }
+    export interface Offscreen {}
 
     // INTERNAL
 
     interface Parent<message> {
         children?: ReadonlyArray<VirtualDomTree<message>>
     }
+
+    type SumWithKeyed<vNode extends VirtualDomTree<any>> = vNode | VirtualDomTree.Keyed<vNode>
 }
 
 type TagName = keyof HTMLElementTagNameMap
@@ -215,27 +232,8 @@ interface ElementNS {
 }
 
 // prettier-ignore
-export const elementNS: ElementNS = ns => tagName => facts => children => {
-    const tag = children[0]?.tag === VirtualDomTree.Keyed ? VirtualDomTree.KeyedElementNS : VirtualDomTree.ElementNS
-    let vNode: VirtualDomTree<any> = {
-        tag, ns, tagName, facts,
-        children: <any>children,
-    }
-
-    if (keyPropertyName in facts) {
-        vNode = VirtualDomTree.mkKeyed(facts[keyPropertyName], vNode)
-    }
-
-    return vNode
-}
-
-// prettier-ignore
-interface Keyed {
-    (key: any): <message>(vNode: VirtualDomTree<message>) => VirtualDomTree<message>
-}
-
-// prettier-ignore
-export const keyed: Keyed = key => vNode => VirtualDomTree.mkKeyed(key, vNode)
+export const elementNS: ElementNS = ns => tagName => facts => children =>
+    VirtualDomTree.mkElementNS(ns, tagName, facts, children)
 
 // prettier-ignore
 interface ElementNS_ {
@@ -254,6 +252,14 @@ interface ElementNS__ {
 // prettier-ignore
 export const elementNS__: ElementNS__ = ns => tagName =>
     VirtualDomTree.mkElementNS(ns, tagName)
+
+// prettier-ignore
+interface Keyed {
+    (key: any): <message>(vNode: VirtualDomTree<message>) => VirtualDomTree<message>
+}
+
+// prettier-ignore
+export const keyed: Keyed = key => vNode => VirtualDomTree.mkKeyed(key, vNode)
 
 declare global {
     interface Node {
@@ -346,6 +352,8 @@ export function diff<a, b>(x: VirtualDomTree<a>, y: VirtualDomTree<b>): Diff<a, 
             return unsafe_diffKeyedElementNS(x, <VirtualDomTree.KeyedElementNS<b>>y, patches)
         case VirtualDomTree.Tagger:
             return unsafe_diffTagger(x, <VirtualDomTree.Tagger<any, any>>y, patches)
+        case VirtualDomTree.Keyed:
+            return diff(x.vNode, (<VirtualDomTree.Keyed<VirtualDomTree<b>>>y).vNode)
     }
 }
 
