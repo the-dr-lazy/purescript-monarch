@@ -14,4 +14,4 @@ module Monarch.VirtualDom.VirtualDomTree.Prelude
   )
 where
 
-import Monarch.VirtualDom.VirtualDomTree (text)
+import Monarch.VirtualDom.VirtualDomTree (text, keyed)

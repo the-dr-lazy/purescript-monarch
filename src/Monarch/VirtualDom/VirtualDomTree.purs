@@ -16,6 +16,7 @@ module Monarch.VirtualDom.VirtualDomTree
   , class ExtractKeyType
   , class ExtractKeyType'
   , text
+  , keyed
   , nodeNS, nodeNS_, nodeNS'
   , node, node_, node'
   )
@@ -73,6 +74,8 @@ foreign import text :: forall message. String -> VirtualDomTree Nothing () messa
 foreign import elementNS   :: forall r key key' slots message. String -> String -> { | r } -> Array (VirtualDomTree key' slots message) -> VirtualDomTree key slots message
 foreign import elementNS_  :: forall       key' slots message. String -> String            -> Array (VirtualDomTree key' slots message) -> VirtualDomTree Nothing slots message
 foreign import elementNS__ :: forall            slots message. String -> String                                                         -> VirtualDomTree Nothing slots message
+
+foreign import keyed :: forall key slots message. key -> VirtualDomTree Nothing slots message -> VirtualDomTree (Just key) slots message
 
 class ExtractKeyType (row :: # Type) (key :: Maybe) | row -> key
 

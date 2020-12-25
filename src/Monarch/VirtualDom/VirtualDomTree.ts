@@ -10,12 +10,17 @@
 
 import { Patch } from 'monarch/Monarch/VirtualDom/Patch'
 import { OutputHandlersList } from 'monarch/Monarch/VirtualDom/OutputHandlersList'
-import { unsafe_organizeFacts, unsafe_applyFacts, OrganizedFacts, Facts, FactCategory } from 'monarch/Monarch/VirtualDom/Facts'
+import { unsafe_organizeFacts, unsafe_applyFacts, OrganizedFacts, Facts, FactCategory, keyPropertyName } from 'monarch/Monarch/VirtualDom/Facts'
 
 /**
  * Virtual DOM tree ADT
  */
-export type VirtualDomTree<message> = VirtualDomTree.Text | VirtualDomTree.ElementNS<message> | VirtualDomTree.KeyedElementNS<message> | VirtualDomTree.Tagger<any, message>
+export type VirtualDomTree<message> =
+    | VirtualDomTree.Text
+    | VirtualDomTree.ElementNS<message>
+    | VirtualDomTree.KeyedElementNS<message>
+    | VirtualDomTree.Keyed<message>
+    | VirtualDomTree.Tagger<any, message>
 
 export namespace VirtualDomTree {
     /**
@@ -25,6 +30,7 @@ export namespace VirtualDomTree {
         Text,
         ElementNS,
         KeyedElementNS,
+        Keyed,
         Tagger,
     }
 
@@ -89,7 +95,9 @@ export namespace VirtualDomTree {
     /**
      * `KeyedElementNS` type constructor
      */
-    export interface KeyedElementNS<message> extends Omit<ElementNS<message>, 'tag'>, Tagged<typeof KeyedElementNS> { }
+    export interface KeyedElementNS<message> extends Omit<ElementNS<message>, 'tag' | 'children'>, Tagged<typeof KeyedElementNS> {
+        children?: ReadonlyArray<VirtualDomTree.Keyed<message>>
+    }
     /**
      * Smart constructor for `KeyedElementNS` type with namespace
      */
@@ -97,9 +105,31 @@ export namespace VirtualDomTree {
         ns: NS | undefined,
         tagName: TagName,
         facts?: Facts,
-        children?: ReadonlyArray<VirtualDomTree<message>>,
+        children?: ReadonlyArray<VirtualDomTree.Keyed<message>>,
     ): KeyedElementNS<message> {
         return { tag: KeyedElementNS, ns, tagName, facts, children }
+    }
+
+    // SUM TYPE: Keyed
+
+    /**
+     * `Keyed` tag
+     *
+     * Use it for pattern matching
+     */
+    export const Keyed = Tag.Keyed
+    /**
+     * `Keyed` type constructor
+     */
+    export interface Keyed<message> extends Tagged<typeof Keyed> {
+        key: any
+        vNode: VirtualDomTree<message>
+    }
+    /**
+     * Smart constructor for `Keyed` type with namespace
+     */
+    export function mkKeyed<message>(key: any, vNode: VirtualDomTree<message>): Keyed<message> {
+        return { tag: Keyed, key, vNode }
     }
 
     // SUM TYPE: Tagger
@@ -167,7 +197,15 @@ interface FMapVirtualDomTree {
 }
 
 // prettier-ignore
-export const fmapVirtualDomTree: FMapVirtualDomTree = f => vNode => VirtualDomTree.mkTagger(f, vNode)
+export const fmapVirtualDomTree: FMapVirtualDomTree = f => vNode => {
+    let tagger: VirtualDomTree<any> = VirtualDomTree.mkTagger(f, vNode.tag === VirtualDomTree.Keyed ? vNode.vNode : vNode)
+
+    if (vNode.tag === VirtualDomTree.Keyed) {
+        tagger = VirtualDomTree.mkKeyed(vNode.key, tagger)
+    }
+
+    return tagger
+}
 
 export const text = VirtualDomTree.mkText
 
@@ -177,18 +215,27 @@ interface ElementNS {
 }
 
 // prettier-ignore
-interface KeyedElementNS {
-    (ns: NS): (tagName: TagName) => (facts: Facts) => <message>(children: VirtualDomTree<message>[]) => VirtualDomTree<message>
+export const elementNS: ElementNS = ns => tagName => facts => children => {
+    const tag = children[0]?.tag === VirtualDomTree.Keyed ? VirtualDomTree.KeyedElementNS : VirtualDomTree.ElementNS
+    let vNode: VirtualDomTree<any> = {
+        tag, ns, tagName, facts,
+        children: <any>children,
+    }
+
+    if (keyPropertyName in facts) {
+        vNode = VirtualDomTree.mkKeyed(facts[keyPropertyName], vNode)
+    }
+
+    return vNode
 }
 
 // prettier-ignore
-export const elementNS: ElementNS | KeyedElementNS = ns => tagName => facts => children => {
-    if (children.length > 0 && (children[0].tag === VirtualDomTree.ElementNS || children[0].tag === VirtualDomTree.KeyedElementNS) && children[0].facts?.key) {
-        return VirtualDomTree.mkKeyedElementNS(ns, tagName, facts, children)
-    }
-
-    return VirtualDomTree.mkElementNS(ns, tagName, facts, children)
+interface Keyed {
+    (key: any): <message>(vNode: VirtualDomTree<message>) => VirtualDomTree<message>
 }
+
+// prettier-ignore
+export const keyed: Keyed = key => vNode => VirtualDomTree.mkKeyed(key, vNode)
 
 // prettier-ignore
 interface ElementNS_ {
@@ -220,6 +267,8 @@ export function realize<message>(vNode: VirtualDomTree<message>, outputHandlers:
             return realizeVirtualDomText(vNode)
         case VirtualDomTree.Tagger:
             return realizeVirtualDomTagger(vNode, outputHandlers)
+        case VirtualDomTree.Keyed:
+            return realize(vNode.vNode, outputHandlers)
     }
 
     const domNode = realizeVirtualDomElementNS(vNode)
