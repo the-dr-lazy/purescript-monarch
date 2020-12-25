@@ -89,12 +89,7 @@ export namespace VirtualDomTree {
     /**
      * `KeyedElementNS` type constructor
      */
-    export interface KeyedElementNS<message> extends Tagged<typeof KeyedElementNS>, Parent<message> {
-        ns?: NS
-        tagName: TagName
-        facts?: Facts
-        organizedFacts?: OrganizedFacts
-    }
+    export interface KeyedElementNS<message> extends Omit<ElementNS<message>, 'tag'>, Tagged<typeof KeyedElementNS> { }
     /**
      * Smart constructor for `KeyedElementNS` type with namespace
      */
@@ -126,35 +121,35 @@ export namespace VirtualDomTree {
     /**
      * TODO: subscribe to asynchronous virtual dom tree
      */
-    export interface Async {}
+    export interface Async { }
 
     // SUM TYPE: Suspense
 
     /**
      * TODO: catch async nodes fallback
      */
-    export interface Suspense {}
+    export interface Suspense { }
 
     // SUM TYPE: Thunk
 
     /**
      * TODO: evaluate the given thunk on reference change
      */
-    export interface Thunk {}
+    export interface Thunk { }
 
     // SUM TYPE: Fragment
 
     /**
      * TODO: render subtrees as children of parent node
      */
-    export interface Fragment {}
+    export interface Fragment { }
 
     // SUM TYPE: Offscreen
 
     /**
      * TODO: evaluate subtree on browsers' idle periods
      */
-    export interface Offscreen {}
+    export interface Offscreen { }
 
     // INTERNAL
 
@@ -372,6 +367,14 @@ function unsafe_diffElementNS<a, b>(x: VirtualDomTree.ElementNS<a>, y: VirtualDo
     }
 
     return { patches, downstreamNodes }
+}
+
+function unsafe_diffElementNSChildren<a, b>(x: VirtualDomTree.ElementNS<a>, y: VirtualDomTree.ElementNS<b>, patches: Patch[]): Diff<a, b> {
+
+}
+
+function unsafe_diffKeyedElementNSChildren<>() {
+
 }
 
 function unsafe_diffKeyedElementNS<a, b>(x: VirtualDomTree.KeyedElementNS<a>, y: VirtualDomTree.KeyedElementNS<b>, patches: Patch[]): Diff<a, b> {
