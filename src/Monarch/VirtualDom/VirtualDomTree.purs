@@ -37,8 +37,9 @@ instance functorVirtualDomTree :: Functor (VirtualDomTree slots) where
 
 -- Hyperscript
 
-type Node :: (Row Type -> Row Type) -> (Type -> Row Type -> Row Type) -> (Row Type -> Row Type) -> Type
-type Node mkProperties mkOutputs mkAttributes
+type Node (mkProperties :: Row Type -> Row Type)
+          (mkOutputs    :: Type -> Row Type -> Row Type)
+          (mkAttributes :: Row Type -> Row Type)
   = forall r _r attributes hooks slots message
   . Row.Union r _r (Facts mkProperties (mkOutputs message) attributes hooks)
  => Row.OptionalRecordCons r "attrs" (mkAttributes ()) attributes
@@ -50,8 +51,9 @@ type Node mkProperties mkOutputs mkAttributes
 type Node_
   = forall slots message. Array (VirtualDomTree slots message) -> VirtualDomTree slots message
 
-type Leaf :: (Row Type -> Row Type) -> (Type -> Row Type -> Row Type) -> (Row Type -> Row Type) -> Type
-type Leaf mkProperties mkOutputs mkAttributes
+type Leaf (mkProperties :: Row Type -> Row Type)
+          (mkOutputs    :: Type -> Row Type -> Row Type)
+          (mkAttributes :: Row Type -> Row Type)
   = forall r _r attributes hooks slots message
   . Row.Union r _r (Facts mkProperties (mkOutputs message) attributes hooks)
  => Row.OptionalRecordCons r "attrs" (mkAttributes ()) attributes
