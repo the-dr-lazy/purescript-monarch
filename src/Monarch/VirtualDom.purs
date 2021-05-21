@@ -28,7 +28,7 @@ type MountSpec
 foreign import mount :: forall slots message. MountSpec -> VirtualDomTree slots message -> Effect Unit
 
 foreign import data DiffWork :: Type
-                    
+
 foreign import mkDiffWork :: forall slots a b. VirtualDomTree slots a -> VirtualDomTree slots b -> DiffWork
 
 type FinishDiffWorkSpec slots message r

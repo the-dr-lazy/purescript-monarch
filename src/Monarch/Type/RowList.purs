@@ -11,12 +11,13 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 module Monarch.Type.RowList where
 
-import Type.RowList (kind RowList)
-import Type.RowList as RowList
 import Type.Row as Row
+import Type.RowList as RowList
+import Type.RowList (RowList)
 
 -- | `RowList` version of `OptionalRecordCons` typeclass
-class OptionalRecordCons (row :: RowList) (name :: Symbol) (s :: # Type) (t :: # Type)
+class OptionalRecordCons :: RowList Type -> Symbol -> Row Type -> Row Type -> Constraint
+class OptionalRecordCons row name s t
 
 instance nilOptionalRecordCons :: OptionalRecordCons RowList.Nil _name _s _t
 -- | Constraint target field (`name`) when it exists on given `row`

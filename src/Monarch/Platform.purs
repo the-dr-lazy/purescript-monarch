@@ -14,7 +14,7 @@ module Monarch.Platform
   , Platform
   , Command
   , Upstream
-  , Effects
+  , BASIC
   , COMMAND
   , CommandF
   , mkPlatform
@@ -25,11 +25,10 @@ module Monarch.Platform
 where
 
 import Prelude
-
 import Type.Row                                            as Row
+import Type.Proxy
+import Type.Row (type (+))
 import Run                    ( Run
-                              , FProxy
-                              , SProxy (..)
                               , EFFECT
                               , AFF
                               , runBaseAff'
@@ -59,7 +58,7 @@ type Spec input model message output effects a r
     , init         :: input -> model
     , update       :: message -> model -> model
     , command      :: message -> model -> Run effects a
-    , interpreter  :: Run effects a -> Run (Effects message output ()) Unit
+    , interpreter  :: Run effects a -> Run (BASIC message output ()) Unit
     , subscription :: Upstream input model message -> Event message
     | r
     )
@@ -87,37 +86,36 @@ data CommandF message output a
 
 derive instance functorCommandF :: Functor (CommandF message output)
 
-_command = SProxy :: SProxy "command"
+_command = Proxy :: Proxy "command"
 
-type COMMAND message output = FProxy (CommandF message output)
+type COMMAND message output r = (command :: CommandF message output | r)
 
-type Effects message output r
-  = ( effect  :: EFFECT
-    , aff     :: AFF
-    , command :: COMMAND message output
-    | r
-    )
+type BASIC message output r
+  = EFFECT
+  + AFF
+  + COMMAND message output
+  + r
 
-type Command effects message output a = Run (Effects message output effects) a
+type Command effects message output = Run (BASIC message output effects)
 
-dispatch :: forall message output r. message -> Run (command :: COMMAND message output | r) Unit
+dispatch :: forall message output r. message -> Run (COMMAND message output + r) Unit
 dispatch message = Run.lift _command $ Dispatch message unit
 
-raise :: forall message output r. output -> Run (command :: COMMAND message output | r) Unit
+raise :: forall message output r. output -> Run (COMMAND message output + r) Unit
 raise output = Run.lift _command $ Raise output unit
 
 runCommand :: forall message output r
             . (message -> Effect Unit)
            -> (output -> Effect Unit)
-           -> Run (effect :: EFFECT, command :: COMMAND message output | r)
-           ~> Run (effect :: EFFECT | r)
+           -> Run (COMMAND message output + EFFECT + r)
+           ~> Run (EFFECT + r)
 runCommand dispatchMessage dispatchOutput = interpret (Run.on _command (handleCommand dispatchMessage dispatchOutput) Run.send)
 
 handleCommand :: forall message output r
               . (message -> Effect Unit)
              -> (output -> Effect Unit)
              -> CommandF message output
-             ~> Run (effect :: EFFECT | r)
+             ~> Run (EFFECT + r)
 handleCommand dispatchMessage dispatchOutput = case _ of
   Dispatch message next -> Run.liftEffect $ dispatchMessage message *> pure next
   Raise    output  next -> Run.liftEffect $ dispatchOutput output   *> pure next

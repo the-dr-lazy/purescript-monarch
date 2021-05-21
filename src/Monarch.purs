@@ -16,4 +16,4 @@ module Monarch
 where
 
 import Monarch.Document
-import Monarch.Platform ( Effects, Command, Upstream, dispatch, raise )
+import Monarch.Platform ( BASIC, Command, Upstream, dispatch, raise )

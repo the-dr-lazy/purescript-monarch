@@ -11,4 +11,4 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 module Monarch.VirtualDom.PatchTree (PatchTree) where
 
-foreign import data PatchTree :: Type 
+foreign import data PatchTree :: Type

@@ -4,14 +4,16 @@ You can edit this file as you like.
 -}
 { name = "my-project"
 , dependencies =
-  [ "console"
+  [ "aff"
+  , "console"
   , "effect"
-  , "aff"
-  , "run"
-  , "web-html"
-  , "web-dom"
   , "monarch"
+  , "prelude"
   , "psci-support"
+  , "run"
+  , "typelevel-prelude"
+  , "web-dom"
+  , "web-html"
   ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]

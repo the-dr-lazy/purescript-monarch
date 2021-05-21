@@ -28,7 +28,7 @@ import Monarch.VirtualDom.NS
 import Monarch.VirtualDom.NS as NS
 import Monarch.Type.Row                                    as Row
 
-foreign import data VirtualDomTree :: # Type -> Type -> Type
+foreign import data VirtualDomTree :: Row Type -> Type -> Type
 
 foreign import fmapVirtualDomTree :: forall slots a b. (a -> b) -> VirtualDomTree slots a -> VirtualDomTree slots b
 
@@ -37,9 +37,8 @@ instance functorVirtualDomTree :: Functor (VirtualDomTree slots) where
 
 -- Hyperscript
 
-type Node (mkProperties :: # Type -> # Type)
-          (mkOutputs    :: Type -> # Type -> # Type)
-          (mkAttributes :: # Type -> # Type)
+type Node :: (Row Type -> Row Type) -> (Type -> Row Type -> Row Type) -> (Row Type -> Row Type) -> Type
+type Node mkProperties mkOutputs mkAttributes
   = forall r _r attributes hooks slots message
   . Row.Union r _r (Facts mkProperties (mkOutputs message) attributes hooks)
  => Row.OptionalRecordCons r "attrs" (mkAttributes ()) attributes
@@ -51,9 +50,8 @@ type Node (mkProperties :: # Type -> # Type)
 type Node_
   = forall slots message. Array (VirtualDomTree slots message) -> VirtualDomTree slots message
 
-type Leaf (mkProperties :: # Type -> # Type)
-          (mkOutputs    :: Type -> # Type -> # Type)
-          (mkAttributes :: # Type -> # Type)
+type Leaf :: (Row Type -> Row Type) -> (Type -> Row Type -> Row Type) -> (Row Type -> Row Type) -> Type
+type Leaf mkProperties mkOutputs mkAttributes
   = forall r _r attributes hooks slots message
   . Row.Union r _r (Facts mkProperties (mkOutputs message) attributes hooks)
  => Row.OptionalRecordCons r "attrs" (mkAttributes ()) attributes
@@ -76,7 +74,7 @@ nodeNS :: forall r slots message
        -> VirtualDomTree slots message
 nodeNS = elementNS <<< show
 
-nodeNS_ :: forall r slots message
+nodeNS_ :: forall slots message
         . NS
        -> String
        -> Array (VirtualDomTree slots message)
