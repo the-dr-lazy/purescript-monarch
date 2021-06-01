@@ -2,7 +2,6 @@
     "name": "example-1",
     "version": "1.0.0",
     "description": "",
-    "main": "index.js",
     "directories": {
         "test": "test"
     },
@@ -11,8 +10,11 @@
     },
     "author": "",
     "license": "ISC",
+    "dependencies": {
+        "monarch": ".."
+    },
     "devDependencies": {
-        "parcel": "^1.12.4"
+        "parcel": "next"
     },
     "alias": {
         "monarch": "../src"

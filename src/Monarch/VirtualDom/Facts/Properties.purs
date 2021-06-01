@@ -1,7 +1,7 @@
 {-|
 Module     : Monarch.VirtualDom.Facts.Properties
 Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <the-dr-lazy@pm.me>
-Copyright  : (c) 2020 Monarch
+Copyright  : (c) 2020-2021 Monarch
 License    : MPL 2.0
 
 This Source Code Form is subject to the terms of the Mozilla Public
@@ -12,9 +12,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 module Monarch.VirtualDom.Facts.Properties where
 
 import Monarch.VirtualDom.Facts.Attributes    ( ClassName )
-import Type.Row                         ( type (+) )
+import Type.Row                               ( type (+) )
 
-type NodeProperties (r :: # Type) = r
+type NodeProperties r = (| r)
 
 type ElementProperties r
   = NodeProperties

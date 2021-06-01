@@ -1,7 +1,7 @@
 {-|
 Module     : Monarch.Type.Row
 Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <the-dr-lazy@pm.me>
-Copyright  : (c) 2020 Monarch
+Copyright  : (c) 2020-2021 Monarch
 License    : MPL 2.0
 
 This Source Code Form is subject to the terms of the Mozilla Public
@@ -15,6 +15,6 @@ import Type.RowList (class RowToList)
 import Monarch.Type.RowList as RowList
 
 -- | Adds an optional record constraint with type `s` for field `name` to the given `row` type
-class OptionalRecordCons (row :: # Type) (name :: Symbol) (s :: # Type) (t :: # Type)
+class OptionalRecordCons (row :: Row Type) (name :: Symbol) (s :: Row Type) (t :: Row Type)
 
 instance rowListOptionalRecordCons :: (RowToList row list, RowList.OptionalRecordCons list name s t) => OptionalRecordCons row name s t

@@ -1,7 +1,7 @@
 {-|
 Module     : Monarch.VirtualDom.VirtualDomTree
 Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <the-dr-lazy@pm.me>
-Copyright  : (c) 2020 Monarch
+Copyright  : (c) 2020-2021 Monarch
 License    : MPL 2.0
 
 This Source Code Form is subject to the terms of the Mozilla Public
@@ -34,7 +34,7 @@ import Monarch.VirtualDom.NS as NS
 import Monarch.Type.Row                                    as Row
 import Monarch.Type.Maybe
 
-foreign import data VirtualDomTree :: Maybe -> # Type -> Type -> Type
+foreign import data VirtualDomTree :: Maybe -> Row Type -> Type -> Type
 
 foreign import fmapVirtualDomTree :: forall key slots a b. (a -> b) -> VirtualDomTree key slots a -> VirtualDomTree key slots b
 
@@ -43,9 +43,9 @@ instance functorVirtualDomTree :: Functor (VirtualDomTree key slots) where
 
 -- Hyperscript
 
-type Node (mkProperties :: # Type -> # Type)
-          (mkOutputs    :: Type -> # Type -> # Type)
-          (mkAttributes :: # Type -> # Type)
+type Node (mkProperties :: Row Type -> Row Type)
+          (mkOutputs    :: Type -> Row Type -> Row Type)
+          (mkAttributes :: Row Type -> Row Type)
   = forall r _r keyType key key' attributes hooks slots message
   . Row.Union r _r (Facts mkProperties (mkOutputs message) attributes hooks keyType)
  => Row.OptionalRecordCons r "attrs" (mkAttributes ()) attributes
@@ -58,10 +58,10 @@ type Node (mkProperties :: # Type -> # Type)
 type Node_
   = forall key slots message. Array (VirtualDomTree key slots message) -> VirtualDomTree Nothing slots message
 
-type Leaf (mkProperties :: # Type -> # Type)
-          (mkOutputs    :: Type -> # Type -> # Type)
-          (mkAttributes :: # Type -> # Type)
-  = forall r _r keyType attributes hooks key slots message
+type Leaf (mkProperties :: Row Type -> Row Type)
+          (mkOutputs    :: Type -> Row Type -> Row Type)
+          (mkAttributes :: Row Type -> Row Type)
+  = forall r _r keyType key attributes hooks slots message
   . Row.Union r _r (Facts mkProperties (mkOutputs message) attributes hooks keyType)
  => Row.OptionalRecordCons r "attrs" (mkAttributes ()) attributes
  => Row.OptionalRecordCons r "hooks" (Hooks message) hooks
