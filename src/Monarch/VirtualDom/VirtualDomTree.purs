@@ -77,11 +77,11 @@ foreign import elementNS__ :: forall            slots message. String -> String 
 
 foreign import keyed :: forall key slots message. key -> VirtualDomTree Nothing slots message -> VirtualDomTree (Just key) slots message
 
-class ExtractKeyType (row :: # Type) (key :: Maybe) | row -> key
+class ExtractKeyType (row :: Row Type) (key :: Maybe) | row -> key
 
 instance rowListExtractKeyType :: (RowToList row list, ExtractKeyType' list key) => ExtractKeyType row key
 
-class ExtractKeyType' (row :: RowList) (key :: Maybe) | row -> key
+class ExtractKeyType' (row :: RowList Type) (key :: Maybe) | row -> key
 
 instance nilExtractKeyType :: ExtractKeyType' RowList.Nil Nothing
 
