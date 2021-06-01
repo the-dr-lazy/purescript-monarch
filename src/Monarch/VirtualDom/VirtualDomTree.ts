@@ -11,6 +11,8 @@
 import { Patch } from 'monarch/Monarch/VirtualDom/Patch'
 import { OutputHandlersList } from 'monarch/Monarch/VirtualDom/OutputHandlersList'
 import { unsafe_organizeFacts, unsafe_applyFacts, OrganizedFacts, Facts, FactCategory, keyPropertyName } from 'monarch/Monarch/VirtualDom/Facts'
+import { ReorderHistory, resolveKeyConfliction } from 'monarch/Monarch/VirtualDom/ReorderHistory'
+import { ChildNodeByKeyMap } from 'monarch/Monarch/VirtualDom/ChildNodeByKeyMap'
 
 /**
  * Virtual DOM tree ADT
@@ -166,35 +168,35 @@ export namespace VirtualDomTree {
     /**
      * TODO: subscribe to asynchronous virtual dom tree
      */
-    export interface Async {}
+    export interface Async { }
 
     // SUM TYPE: Suspense
 
     /**
      * TODO: catch async nodes fallback
      */
-    export interface Suspense {}
+    export interface Suspense { }
 
     // SUM TYPE: Thunk
 
     /**
      * TODO: evaluate the given thunk on reference change
      */
-    export interface Thunk {}
+    export interface Thunk { }
 
     // SUM TYPE: Fragment
 
     /**
      * TODO: render subtrees as children of parent node
      */
-    export interface Fragment {}
+    export interface Fragment { }
 
     // SUM TYPE: Offscreen
 
     /**
      * TODO: evaluate subtree on browsers' idle periods
      */
-    export interface Offscreen {}
+    export interface Offscreen { }
 
     // INTERNAL
 
@@ -263,14 +265,16 @@ export const keyed: Keyed = key => vNode => VirtualDomTree.mkKeyed(key, vNode)
 
 declare global {
     interface Node {
-        monarch_outputHandlers?: OutputHandlersList
+        monarch_outputHandlers: OutputHandlersList
     }
 }
 
 export function realize<message>(vNode: VirtualDomTree<message>, outputHandlers: OutputHandlersList): Node {
     switch (vNode.tag) {
         case VirtualDomTree.Text:
-            return realizeVirtualDomText(vNode)
+            const text = realizeVirtualDomText(vNode)
+            text.monarch_outputHandlers = outputHandlers
+            return text
         case VirtualDomTree.Tagger:
             return realizeVirtualDomTagger(vNode, outputHandlers)
         case VirtualDomTree.Keyed:
@@ -279,12 +283,14 @@ export function realize<message>(vNode: VirtualDomTree<message>, outputHandlers:
 
     const domNode = realizeVirtualDomElementNS(vNode)
 
-    for (const child of vNode.children || []) {
-        domNode.appendChild(realize(child, outputHandlers))
+    for (let child of vNode.children ?? []) {
+        const childNode = realize(child, outputHandlers)
+
+        // TODO: use document fragment to reduce DOM changes.
+        domNode.appendChild(childNode)
     }
 
     vNode.facts && unsafe_organizeFacts(vNode)
-
     vNode.organizedFacts && unsafe_applyFacts(domNode, vNode.organizedFacts)
 
     domNode.monarch_outputHandlers = outputHandlers
@@ -324,7 +330,9 @@ function unsafe_flattenVirtualDomTaggers<a, b>(tagger: VirtualDomTree.Tagger<a, 
 export type DownstreamNode<a, b> = {
     x: VirtualDomTree<a>
     y: VirtualDomTree<b>
+    ix?: number
 }
+
 export type Diff<a, b> = {
     patches: Patch[]
     downstreamNodes?: DownstreamNode<a, b>[]
@@ -349,7 +357,7 @@ export function diff<a, b>(x: VirtualDomTree<a>, y: VirtualDomTree<b>): Diff<a, 
         case VirtualDomTree.ElementNS:
             return unsafe_diffElementNS(x, <VirtualDomTree.ElementNS<b>>y, patches)
         case VirtualDomTree.KeyedElementNS:
-            return unsafe_diffKeyedElementNS(x, <VirtualDomTree.KeyedElementNS<b>>y, patches)
+            return unsafe_diffElementNS(x, <VirtualDomTree.KeyedElementNS<b>>y, patches)
         case VirtualDomTree.Tagger:
             return unsafe_diffTagger(x, <VirtualDomTree.Tagger<any, any>>y, patches)
         case VirtualDomTree.Keyed:
@@ -391,7 +399,12 @@ function unsafe_diffTagger<a, b, c, d>(x: VirtualDomTree.Tagger<a, b>, y: Virtua
     return { patches, downstreamNodes: [{ x: x.vNode, y: y.vNode }] }
 }
 
-function unsafe_diffElementNS<a, b>(x: VirtualDomTree.ElementNS<a>, y: VirtualDomTree.ElementNS<b>, patches: Patch[]): Diff<a, b> {
+function unsafe_diffElementNS<
+    a,
+    x extends VirtualDomTree.ElementNS<a> | VirtualDomTree.KeyedElementNS<a>,
+    b,
+    y extends x extends VirtualDomTree.ElementNS<a> ? VirtualDomTree.ElementNS<b> : VirtualDomTree.KeyedElementNS<b>
+>(x: x, y: y, patches: Patch[]): Diff<a, b> {
     if (x.ns !== y.ns || x.tagName !== y.tagName) {
         patches.push(Patch.mkRedraw(y))
         return { patches }
@@ -406,72 +419,203 @@ function unsafe_diffElementNS<a, b>(x: VirtualDomTree.ElementNS<a>, y: VirtualDo
         diff && patches.push(Patch.mkFacts(diff))
     }
 
-    const xChildrenLength = x.children?.length || 0
-    const yChildrenLength = y.children?.length || 0
+    const unsafe_diffChildren: Function = x.tag === VirtualDomTree.ElementNS ? unsafe_diffElementNSChildren : unsafe_diffKeyedElementNSChildren
 
-    if (xChildrenLength > yChildrenLength) {
-        patches.push(Patch.mkRemoveFromEnd(xChildrenLength - yChildrenLength))
-    } else if (xChildrenLength < yChildrenLength) {
-        patches.push(Patch.mkAppend(y.children!, xChildrenLength))
-    }
-
-    const minChildrenLength = Math.min(xChildrenLength, yChildrenLength)
-
-    const downstreamNodes: DownstreamNode<a, b>[] = []
-
-    for (let i = 0; i < minChildrenLength; i++) {
-        downstreamNodes.push({ x: x.children![i], y: y.children![i] })
-    }
+    const downstreamNodes = unsafe_diffChildren(x.children, y.children, patches)
 
     return { patches, downstreamNodes }
 }
 
-function unsafe_diffElementNSChildren<a, b>(x: VirtualDomTree.ElementNS<a>, y: VirtualDomTree.ElementNS<b>, patches: Patch[]): Diff<a, b> {
+function unsafe_diffElementNSChildren<a, b>(
+    xs: ReadonlyArray<VirtualDomTree<a>> | undefined,
+    ys: ReadonlyArray<VirtualDomTree<b>> | undefined,
+    patches: Patch[],
+): DownstreamNode<a, b>[] {
+    const xsLength = xs?.length ?? 0
+    const ysLength = ys?.length ?? 0
 
+    if (xsLength > ysLength) {
+        patches.push(Patch.mkRemoveFromEnd(xsLength - ysLength))
+    } else if (xsLength < ysLength) {
+        patches.push(Patch.mkAppend(ys!, xsLength))
+    }
+
+    const minChildrenLength = Math.min(xsLength, ysLength)
+
+    const downstreamNodes: DownstreamNode<a, b>[] = []
+
+    for (let ix = 0; ix < minChildrenLength; ix++) {
+        downstreamNodes.push({ x: xs![ix], y: ys![ix], ix })
+    }
+
+    return downstreamNodes
 }
 
-function unsafe_diffKeyedElementNSChildren<>() {
+function unsafe_diffKeyedElementNSChildren<a, b>(
+    xs: ReadonlyArray<VirtualDomTree.Keyed<VirtualDomTree<a>>> | undefined,
+    ys: ReadonlyArray<VirtualDomTree.Keyed<VirtualDomTree<b>>> | undefined,
+    patches: Patch[],
+): DownstreamNode<a, b>[] {
+    const history: ReorderHistory<a, b> = ReorderHistory.mk()
 
-}
+    const xsLength = xs?.length ?? 0
+    const ysLength = ys?.length ?? 0
 
-function unsafe_diffKeyedElementNS<a, b>(x: VirtualDomTree.KeyedElementNS<a>, y: VirtualDomTree.KeyedElementNS<b>, patches: Patch[]): Diff<a, b> {
-    return { patches }
-}
+    let xIx = 0
+    let yIx = 0
 
-function diffKeyedChildren<a, b>(xParent: VirtualDomTree.KeyedElementNS<a>, yParent: VirtualDomTree.KeyedElementNS<b>) {
-    // const xChildren = xParent.children!
-    // const yChildren = yParent.children!
-    // const xChildrenLength = xChildren.length
-    // const yChildrenLength = yChildren.length
+    const downstreamNodes: DownstreamNode<a, b>[] = []
 
-    // const downstreamNodes: DownstreamNode<a, b>[] = []
+    while (xIx < xsLength && yIx < ysLength) {
+        console.log('XXX')
+        const x = xs![xIx]
+        const y = ys![yIx]
 
-    // let xIndex = 0
-    // let yIndex = 0
+        const xKey = x.key
+        const yKey = y.key
 
-    // while (xIndex < xChildrenLength && yIndex < yChildrenLength) {
-    //     const x = xChildren[xIndex] as VirtualDomTree.ElementNS<a>
-    //     const y = yChildren[yIndex] as VirtualDomTree.ElementNS<b>
-    //     const xKey = x.key
-    //     const yKey = y.key
+        /**
+         * x->y
+         * ----
+         * A  A
+         * -  -
+         *
+         * Cross match.
+         */
+        if (xKey == yKey) {
+            downstreamNodes.push({ x, y, ix: yIx })
 
-    //     if (xKey === yKey) {
-    //         downstreamNodes.push({ x, y })
-    //         xIndex++
-    //         yIndex++
-    //     }
+            xIx += 1
+            yIx += 1
 
-    //     const xNext = xChildren[xIndex + 1] as VirtualDomTree.ElementNS<a>
-    //     const yNext = yChildren[yIndex + 1] as VirtualDomTree.ElementNS<b>
+            continue
+        }
 
-    //     const oldMatch = xNext ? yKey === xNext.key : false
-    //     const newMatch = yNext ? xKey === yNext.key : false
+        const nextX = xs![xIx + 1]
+        const nextY = ys![yIx + 1]
 
-    //     if (newMatch && oldMatch) {
-    //         downstreamNodes.push({ x, y })
+        const nextXKey = nextX?.key
+        const nextYKey = nextY?.key
 
-    //     }
-    // }
+        const upsideObliqueMatch = nextXKey === yKey
+        const downsideObliqueMatch = nextYKey === xKey
+
+        /**
+         * x->y
+         * ----
+         * A  B
+         * B  A
+         *
+         * Children has been swaped.
+         *
+         * - Push `A` to the downstream diffs.
+         * - Move `B` before the `A`.
+         */
+        if (upsideObliqueMatch && downsideObliqueMatch) {
+            downstreamNodes.push({ x, y: nextY, ix: yIx + 1 })
+
+            ReorderHistory.unsafe_move(yKey, nextX, xIx + 1, y, yIx, downstreamNodes, history)
+
+            xIx += 2
+            yIx += 2
+
+            continue
+        }
+
+        /**
+         * x->y
+         * ----
+         * A  B
+         * C  A
+         *
+         * Downside oblique match.
+         *
+         * - Push the `A` to the downstream diffs.
+         * - Candidate `B` for insertion as its in the new virtual DOM tree.
+         */
+        if (downsideObliqueMatch) {
+            downstreamNodes.push({ x, y: nextY, ix: yIx + 1 })
+
+            ReorderHistory.unsafe_insert(yKey, y, yIx, downstreamNodes, history)
+
+            xIx += 1
+            yIx += 2
+
+            continue
+        }
+
+        /**
+         * x->y
+         * ----
+         * A  B
+         * B  C
+         *
+         * Upside oblique match.
+         *
+         * - Push the `B` to the downstream diffs.
+         * - Candidate `A` for removing as its in the old virtual DOM tree.
+         */
+        if (upsideObliqueMatch) {
+            downstreamNodes.push({ x: nextX, y, ix: yIx })
+
+            ReorderHistory.unsafe_remove(xKey, x, xIx, downstreamNodes, history)
+
+            xIx += 2
+            yIx += 1
+
+            continue
+        }
+
+        /**
+         * x->y
+         * ----
+         * A  B
+         * C  C
+         *
+         * Next horizontal match.
+         *
+         * - Push the `C` to the downstream diffs.
+         * - Candidate `A` for removing as its in the old virtual DOM tree.
+         * - Candidate `B` for insertion as its in the new virtual DOM tree.
+         */
+        if (nextX && nextXKey === nextYKey) {
+            downstreamNodes.push({ x: nextX, y: nextY, ix: yIx + 1 })
+
+            ReorderHistory.unsafe_remove(xKey, x, xIx, downstreamNodes, history)
+            ReorderHistory.unsafe_insert(yKey, y, yIx, downstreamNodes, history)
+
+            xIx += 2
+            yIx += 2
+
+            continue
+        }
+
+        break;
+    }
+
+    // Consume rest of old children and candidate them for removing.
+    while (xIx < xsLength) {
+        const x = xs![xIx]
+        const xKey = x.key
+
+        ReorderHistory.unsafe_remove(xKey, x, xIx, downstreamNodes, history)
+
+        xIx += 1
+    }
+
+    // Consume rest of new children and candidate them for inserting.
+    while (yIx < ysLength) {
+        const y = ys![yIx]
+        const yKey = y.key
+
+        ReorderHistory.unsafe_insert(yKey, y, yIx, downstreamNodes, history, true)
+
+        yIx += 1
+    }
+
+    patches.push(Patch.mkReorder(history))
+
+    return downstreamNodes
 }
 
 type SumWithSubTypes<T extends {}> = T | T[keyof T]
@@ -484,7 +628,7 @@ function diffFacts<a extends SumWithSubTypes<OrganizedFacts>>(x: a | undefined, 
             const subDiff = diffFacts(x![xKey], y && y![xKey])
 
             if (subDiff) {
-                diff = diff! || {}
+                diff = diff! ?? {}
                 diff![xKey] = subDiff
             }
 
@@ -492,7 +636,7 @@ function diffFacts<a extends SumWithSubTypes<OrganizedFacts>>(x: a | undefined, 
         }
 
         if (!(y && xKey in y)) {
-            diff = diff! || {}
+            diff = diff! ?? {}
             diff![xKey] = <any>undefined
 
             continue
@@ -505,14 +649,14 @@ function diffFacts<a extends SumWithSubTypes<OrganizedFacts>>(x: a | undefined, 
             continue
         }
 
-        diff = diff! || {}
+        diff = diff! ?? {}
         diff![xKey] = yValue
     }
 
     for (const yKey in y) {
         if (x && yKey in x) continue
 
-        diff = diff! || {}
+        diff = diff! ?? {}
         diff![yKey] = y![yKey]
     }
 
