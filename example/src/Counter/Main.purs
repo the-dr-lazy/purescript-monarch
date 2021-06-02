@@ -1,7 +1,7 @@
 {-|
 Module     : Counter.Main
 Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <the-dr-lazy@pm.me>
-Copyright  : (c) 2020 Monarch
+Copyright  : (c) 2020-2021 Monarch
 License    : MPL 2.0
 
 This Source Code Form is subject to the terms of the Mozilla Public
@@ -12,8 +12,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 module Counter.Main (main) where
 
 import Prelude
-
-import Type.Row              ( type (+) )
 import Run                   ( Run, EFFECT )
 import Effect                ( Effect )
 import Effect.Aff            ( launchAff_ )
@@ -24,7 +22,6 @@ import Monarch.Html
 import Monarch.Event         ( Event
                              , eNever
                              )
-import Counter.API           ( runAPI )
 import Counter.API                               as API
 
 type Input = Unit
@@ -45,7 +42,7 @@ update = case _ of
   UserClickedDecreaseButton -> (_ - 1)
 
 view :: Model -> Html Message
-view model = 
+view model =
   div_ [ button { onClick: const UserClickedDecreaseButton } [ text "-" ]
        , text $ show model
        , button { onClick: const UserClickedIncreaseButton } [ text "+" ]
@@ -53,13 +50,13 @@ view model =
 
 command :: Message
         -> Model
-        -> Command (API.Effects ()) Message Output Unit
+        -> Command (API.COUNTER ()) Message Output Unit
 command message _ = case message of
-  UserClickedIncreaseButton -> API.increase 
-  UserClickedDecreaseButton -> API.decrease 
+  UserClickedIncreaseButton -> API.increase
+  UserClickedDecreaseButton -> API.decrease
 
-interpreter :: Command (API.Effects ()) Message Output Unit -> Command () Message Output Unit
-interpreter = runAPI
+interpreter :: Command (API.COUNTER ()) Message Output Unit -> Command () Message Output Unit
+interpreter = API.run
 
 subscription :: Upstream Input Model Message -> Event Message
 subscription = const eNever

@@ -1,7 +1,7 @@
 {-|
 Module     : Monarch.Type.RowList
 Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <the-dr-lazy@pm.me>
-Copyright  : (c) 2020 Monarch
+Copyright  : (c) 2020-2021 Monarch
 License    : MPL 2.0
 
 This Source Code Form is subject to the terms of the Mozilla Public
@@ -11,12 +11,12 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 module Monarch.Type.RowList where
 
-import Type.RowList (kind RowList)
-import Type.RowList as RowList
 import Type.Row as Row
+import Type.RowList as RowList
+import Type.RowList (RowList)
 
 -- | `RowList` version of `OptionalRecordCons` typeclass
-class OptionalRecordCons (row :: RowList) (name :: Symbol) (s :: # Type) (t :: # Type)
+class OptionalRecordCons (row :: RowList Type) (name :: Symbol) (s :: Row Type) (t :: Row Type)
 
 instance nilOptionalRecordCons :: OptionalRecordCons RowList.Nil _name _s _t
 -- | Constraint target field (`name`) when it exists on given `row`
