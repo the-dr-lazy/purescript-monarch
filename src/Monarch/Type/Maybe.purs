@@ -9,10 +9,14 @@ License, version 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -}
 
-module Monarch.Type.Maybe where
+module Monarch.Type.Maybe
+  ( module Data.Maybe
+  , Nothing
+  , Just
+  )
+where
 
-foreign import kind Maybe
+import Data.Maybe (Maybe)
 
-foreign import data Nothing :: Maybe
-
-foreign import data Just :: Type -> Maybe
+foreign import data Nothing :: forall a. Maybe a
+foreign import data Just    :: forall a. a -> Maybe a

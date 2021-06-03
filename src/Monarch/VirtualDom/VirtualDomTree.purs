@@ -34,7 +34,7 @@ import Monarch.VirtualDom.NS as NS
 import Monarch.Type.Row                                    as Row
 import Monarch.Type.Maybe
 
-foreign import data VirtualDomTree :: Maybe -> Row Type -> Type -> Type
+foreign import data VirtualDomTree :: Maybe Type -> Row Type -> Type -> Type
 
 foreign import fmapVirtualDomTree :: forall key slots a b. (a -> b) -> VirtualDomTree key slots a -> VirtualDomTree key slots b
 
@@ -77,11 +77,11 @@ foreign import elementNS__ :: forall            slots message. String -> String 
 
 foreign import keyed :: forall key slots message. key -> VirtualDomTree Nothing slots message -> VirtualDomTree (Just key) slots message
 
-class ExtractKeyType (row :: Row Type) (key :: Maybe) | row -> key
+class ExtractKeyType (row :: Row Type) (key :: Maybe Type) | row -> key
 
 instance rowListExtractKeyType :: (RowToList row list, ExtractKeyType' list key) => ExtractKeyType row key
 
-class ExtractKeyType' (row :: RowList Type) (key :: Maybe) | row -> key
+class ExtractKeyType' (row :: RowList Type) (key :: Maybe Type) | row -> key
 
 instance nilExtractKeyType :: ExtractKeyType' RowList.Nil Nothing
 
