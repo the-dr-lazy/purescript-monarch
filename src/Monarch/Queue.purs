@@ -18,8 +18,10 @@ import Data.Array       ( snoc
                         )                 as Array
 import Effect
 import Effect.Ref                         as Ref
-import Monarch.Event    ( Event (..) )
+import Monarch.Event    ( Event (..), subscribe )
 import Unsafe.Reference ( unsafeRefEq )
+import Monarch.Monad.Maybe (whenJust)
+import Data.Maybe
 
 type Queue a
   = { event :: Event a
@@ -38,3 +40,16 @@ new = do
       pure $ delete next
     dispatch x = Ref.read nexts >>= traverse_ (_ $ x)
   pure { event, dispatch }
+
+shareReplayLast :: forall a . Event a -> Effect (Event a)
+shareReplayLast source = do
+  lastValueRef <- Ref.new Nothing
+  sink <- new
+  unsubscribeSource <- source # subscribe \x -> do
+    sink.dispatch x
+    Ref.write (Just x) lastValueRef
+  pure $ Event \next -> do
+    Ref.read lastValueRef >>= whenJust next
+    unsubscribeSink <- sink.event # subscribe next
+    -- FIXME: unsubscribe from the source event
+    pure $ unsubscribeSink

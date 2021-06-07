@@ -51,6 +51,7 @@ import Monarch.Event          ( Event
                               , distinctUntilRefChanged
                               )
 import Monarch.Queue                                       as Queue
+import Monarch.Queue          ( shareReplayLast )
 import Unsafe.Coerce          ( unsafeCoerce )
 
 type Spec input model message output effects a r
@@ -124,22 +125,22 @@ mkPlatform :: forall input model message output effects a r
             . { | Spec input model message output effects a r }
            -> Effect (Platform input model message output)
 mkPlatform { input, init, update, command, interpreter, subscription } = do
-  qInput   <- Queue.new
-  qMessage <- Queue.new
-  qOutput  <- Queue.new
+  { event: eInput,   dispatch: dispatchInput   } <- Queue.new
+  { event: eMessage, dispatch: dispatchMessage } <- Queue.new
+  { event: eOutput,  dispatch: dispatchOutput  } <- Queue.new
+
+  let initialModel = init input
+
+  eModel <- eMessage
+    # scan update initialModel
+    # distinctUntilRefChanged
+    # shareReplayLast
+
   let
-    initialModel    = init input
-    eInput          = qInput.event
-    eMessage        = qMessage.event
-    eOutput         = qOutput.event
-    eModel          = eMessage # scan update initialModel
-                               # distinctUntilRefChanged
-    bModel          = step initialModel eModel
-    dispatchInput   = qInput.dispatch
-    dispatchMessage = qMessage.dispatch
-    dispatchOutput  = qOutput.dispatch
-    run             = launchAff_ <<< runBaseAff' <<< runCommand dispatchMessage dispatchOutput <<< interpreter
-    upstream        = { eInput, bModel, eModel, eMessage }
+    bModel   = step initialModel eModel
+    run      = launchAff_ <<< runBaseAff' <<< runCommand dispatchMessage dispatchOutput <<< interpreter
+    upstream = { eInput, bModel, eModel, eMessage }
+
   pure
     { bModel
     , eModel
