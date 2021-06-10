@@ -125,14 +125,14 @@ document_ :: forall input model message output effects a r
 document_ = do
   void <<< document
 
-type WorkLoopSpec slots message
-  = { eVNode            :: Event (VirtualDomTree slots message)
+type WorkLoopSpec key slots message
+  = { eVNode            :: Event (VirtualDomTree key slots message)
     , container         :: HTMLElement
     , dispatchPatchTree :: PatchTree -> Effect Unit
     , outputHandlers    :: OutputHandlersList
     }
 
-workLoop :: forall slots message. WorkLoopSpec slots message -> Effect (Unsubscribe)
+workLoop :: forall key slots message. WorkLoopSpec key slots message -> Effect (Unsubscribe)
 workLoop { container, dispatchPatchTree, outputHandlers, eVNode } = do
   qDiffWork        <- Queue.new
   commitedVNodeRef <- Ref.new Nothing

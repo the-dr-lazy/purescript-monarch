@@ -12,10 +12,12 @@ import { VirtualDomTree } from 'monarch/Monarch/VirtualDom/VirtualDomTree'
 import { OutputHandlersList } from 'monarch/Monarch/VirtualDom/OutputHandlersList'
 
 const attributesKeyName = 'attributes'
+export const keyPropertyName = 'key'
 const outputKeyPrefix = 'on'
 
 export interface Facts {
     [key: string]: unknown
+    [keyPropertyName]?: unknown
     [attributesKeyName]?: { [key: string]: string }
 }
 
@@ -33,7 +35,7 @@ export enum FactCategory {
     Output,
 }
 
-export function unsafe_organizeFacts(element: VirtualDomTree.ElementNS<any>): void {
+export function unsafe_organizeFacts(element: VirtualDomTree.ElementNS<any> | VirtualDomTree.KeyedElementNS<any>): void {
     const organizedFacts: OrganizedFacts = {}
 
     const { facts } = element
@@ -44,6 +46,8 @@ export function unsafe_organizeFacts(element: VirtualDomTree.ElementNS<any>): vo
 
             continue
         }
+
+        if (key === keyPropertyName) continue
 
         if (key.startsWith(outputKeyPrefix)) {
             const outputName = key.substr(outputKeyPrefix.length).toLowerCase()

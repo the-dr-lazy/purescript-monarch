@@ -4,6 +4,7 @@
         "target": "es5",
         "module": "commonjs",
         "moduleResolution": "node",
+        "downlevelIteration": true,
         "allowJs": true,
         "noEmitHelpers": true,
         "importHelpers": true,

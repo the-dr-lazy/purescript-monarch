@@ -1,5 +1,5 @@
 {-|
-Module     : Monarch.VirtualDom.VirtualDomTree.Prelude
+Module     : Monarch.Type.Maybe
 Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <the-dr-lazy@pm.me>
 Copyright  : (c) 2020-2021 Monarch
 License    : MPL 2.0
@@ -9,9 +9,14 @@ License, version 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -}
 
-module Monarch.VirtualDom.VirtualDomTree.Prelude
-  ( module Monarch.VirtualDom.VirtualDomTree
+module Monarch.Type.Maybe
+  ( module Data.Maybe
+  , Nothing
+  , Just
   )
 where
 
-import Monarch.VirtualDom.VirtualDomTree (text, keyed)
+import Data.Maybe (Maybe)
+
+foreign import data Nothing :: forall a. Maybe a
+foreign import data Just    :: forall a. a -> Maybe a

@@ -38,9 +38,8 @@ type DiffWorkQueue<a, b> = Array<{
 
 interface DiffWorkState<a, b> {
     rootVNode: VirtualDomTree<b>
-    rootPatchTree?: PatchTree
+    rootPatchTree?: PatchTree.Root
     firstUpstreamPatchTree?: PatchTree
-    ix: number
     address: PatchTree.Address
     queue: DiffWorkQueue<a, b>
 }
@@ -56,10 +55,9 @@ interface MkDiffWork {
 }
 
 export const mkDiffWork: MkDiffWork = x => y => ({
-    node: { x, y },
+    node: { x, y, ix: 0 },
     state: {
         rootVNode: y,
-        ix: -1,
         address: [],
         queue: [],
     },
@@ -76,6 +74,9 @@ interface UnsafeDiffWorkEnvironment<a, b> {
     scheduler: Scheduler
 }
 
+/**
+ * ToDo: document this function.
+ */
 function unsafe_uncurried_performDiffWork<a, b>(
     work: DiffWork<a, b>,
     { scheduler, finishDiffWork, dispatchDiffWork }: UnsafeDiffWorkEnvironment<a, b>,
@@ -87,29 +88,34 @@ function unsafe_uncurried_performDiffWork<a, b>(
     scheduler.promoteDeadline()
 
     while (node && !scheduler.shouldYieldToBrowser()) {
+
         const { patches, downstreamNodes } = diff(node.x, node.y)
 
         let patchTree
 
-        if (state.firstUpstreamPatchTree && patches.length !== 0) {
+        if (state.firstUpstreamPatchTree && node.ix !== undefined && patches.length !== 0) {
             state.firstUpstreamPatchTree.children = state.firstUpstreamPatchTree.children || []
 
-            patchTree = { address: [...state.address, state.ix], patches }
+            patchTree = { address: [...state.address, node.ix], patches }
 
             state.firstUpstreamPatchTree.children.push(patchTree)
         } else if (state.firstUpstreamPatchTree) {
+            if (node.ix === undefined && patches.length !== 0) {
+                Array.prototype.push.apply(state.firstUpstreamPatchTree.patches, patches)
+            }
+
             patchTree = state.firstUpstreamPatchTree
         } else {
             state.rootPatchTree = {
-                children: [{ address: [0], patches }],
+                children: [{ address: [0], patches: patches.length !== 0 ? patches : undefined }],
             }
 
             patchTree = state.firstUpstreamPatchTree = state.rootPatchTree.children![0]
         }
 
-        if (downstreamNodes && downstreamNodes.length > 0) {
+        if (downstreamNodes && downstreamNodes.length !== 0) {
             state.queue.push({
-                address: patches.length !== 0 || state.ix === -1 ? [] : [...state.address, state.ix],
+                address: patches.length !== 0 || node.ix === undefined ? [] : [...state.address, node.ix],
                 patchTree,
                 downstreamNodes,
             })
@@ -119,14 +125,11 @@ function unsafe_uncurried_performDiffWork<a, b>(
 
         if (node === undefined) {
             state.queue.shift()
+            state.firstUpstreamPatchTree = state.queue[0]?.patchTree
+            state.address = state.queue[0]?.address
+
             node = state.queue[0]?.downstreamNodes.shift()
-
-            state.ix = -1
         }
-
-        state.firstUpstreamPatchTree = state.queue[0]?.patchTree
-        state.address = state.queue[0]?.address
-        state.ix += 1
     }
 
     if (node) {

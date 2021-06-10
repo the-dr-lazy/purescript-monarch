@@ -25,26 +25,26 @@ type MountSpec
     , outputHandlers :: OutputHandlersList
     }
 
-foreign import mount :: forall slots message. MountSpec -> VirtualDomTree slots message -> Effect Unit
+foreign import mount :: forall key slots message. MountSpec -> VirtualDomTree key slots message -> Effect Unit
 
 foreign import data DiffWork :: Type
 
-foreign import mkDiffWork :: forall slots a b. VirtualDomTree slots a -> VirtualDomTree slots b -> DiffWork
+foreign import mkDiffWork :: forall key key' slots a b. VirtualDomTree key slots a -> VirtualDomTree key' slots b -> DiffWork
 
-type FinishDiffWorkSpec slots message r
-  = { rootVNode :: VirtualDomTree slots message
+type FinishDiffWorkSpec key slots message r
+  = { rootVNode :: VirtualDomTree key slots message
     , rootPatchTree :: PatchTree
     | r
     }
 
-type DiffWorkEnvironment slots message r =
+type DiffWorkEnvironment key slots message r =
   { dispatchDiffWork :: DiffWork -> Effect Unit
-  , finishDiffWork   :: FinishDiffWorkSpec slots message r -> Effect Unit
+  , finishDiffWork   :: FinishDiffWorkSpec key slots message r -> Effect Unit
   , scheduler        :: Scheduler
   }
 
-foreign import performDiffWork :: forall slots message r. DiffWorkEnvironment slots message r -> DiffWork -> Effect Unit
+foreign import performDiffWork :: forall key slots message r. DiffWorkEnvironment key slots message r -> DiffWork -> Effect Unit
 
 foreign import applyPatchTree :: HTMLElement -> PatchTree -> Effect Unit
 
-foreign import unmount :: forall slots message. HTMLElement -> VirtualDomTree slots message -> Effect Unit
+foreign import unmount :: forall key slots message. HTMLElement -> VirtualDomTree key slots message -> Effect Unit

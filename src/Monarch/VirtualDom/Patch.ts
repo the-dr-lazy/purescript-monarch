@@ -11,8 +11,20 @@
 import { VirtualDomTree, realize } from 'monarch/Monarch/VirtualDom/VirtualDomTree'
 import { OrganizedFacts, unsafe_applyFacts } from 'monarch/Monarch/VirtualDom/Facts'
 import { OutputHandlersList } from 'monarch/Monarch/VirtualDom/OutputHandlersList'
+import { ReorderHistory } from 'monarch/Monarch/VirtualDom/ReorderHistory'
+import { ChildNodeByKeyMap } from './ChildNodeByKeyMap'
 
-export type Patch = Patch.Redraw | Patch.Text | Patch.Facts | Patch.RemoveFromEnd | Patch.Append | Patch.Tagger
+/**
+ * Patch ADT
+ */
+export type Patch
+    = Patch.Redraw
+    | Patch.Text
+    | Patch.Facts
+    | Patch.RemoveFromEnd
+    | Patch.Append
+    | Patch.Tagger
+    | Patch.Reorder
 
 export namespace Patch {
     /**
@@ -24,7 +36,8 @@ export namespace Patch {
         Facts,
         RemoveFromEnd,
         Append,
-        Tagger
+        Tagger,
+        Reorder
     }
 
     // SUM TYPE: Redraw
@@ -153,6 +166,29 @@ export namespace Patch {
     export function mkTagger(fs: Function | Function[]): Tagger {
         return { tag: Tagger, fs }
     }
+
+
+    // SUM TYPE: Reorder
+
+    /**
+     * `Reorder` tag
+     *
+     * Use it for pattern matching.
+     */
+    export const Reorder = Tag.Reorder
+    /**
+     * `Reorder` type constructor
+     */
+    export interface Reorder extends Tagged<typeof Reorder> {
+        history: ReorderHistory<unknown, unknown>
+    }
+    /**
+     * Smart data constructor for `Reorder` type
+     */
+    export function mkReorder<a, b>(history: ReorderHistory<a, b>): Reorder {
+        return { tag: Reorder, history }
+    }
+
 }
 
 export function unsafe_applyPatch(domNode: Node, patch: Patch): void {
@@ -174,6 +210,9 @@ export function unsafe_applyPatch(domNode: Node, patch: Patch): void {
 
         case Patch.Tagger:
             return unsafe_applyTaggerPatch(domNode, patch)
+
+        case Patch.Reorder:
+            return unsafe_applyReorderPatch(domNode, patch)
     }
 }
 
@@ -208,4 +247,64 @@ function unsafe_applyAppendPatch(domNode: Node, { children, from }: Patch.Append
 
 function unsafe_applyTaggerPatch(domNode: Node, { fs }: Patch.Tagger): void {
     (<OutputHandlersList.Cons>domNode.monarch_outputHandlers).value = fs
+}
+
+function unsafe_applyReorderPatch(domNode: Node, { history: { commitByKey, endInsertKeys } }: Patch.Reorder): void {
+    const childNodeByKey: ChildNodeByKeyMap = new Map()
+
+    for (let [key, commit] of commitByKey) {
+        if (commit.tag === ReorderHistory.Commit.Insert) continue
+
+        const ix = commit.tag === ReorderHistory.Commit.Move ? commit.fromIx : commit.ix
+
+        childNodeByKey.set(key, domNode.childNodes[ix])
+    }
+
+    const fragment: Node | undefined = (() => {
+        switch (endInsertKeys.size) {
+            case 0: return undefined
+            case 1:
+                const key = endInsertKeys.values().next().value
+                const commit = <ReorderHistory.Commit.Insert<any> | ReorderHistory.Commit.Move>commitByKey.get(key)!
+                const node = ReorderHistory.Commit.push(key, commit, childNodeByKey, domNode.monarch_outputHandlers!)
+                return node
+            default:
+                const fragment = document.createDocumentFragment()
+
+                for (let key of endInsertKeys) {
+                    const commit = <ReorderHistory.Commit.Insert<any> | ReorderHistory.Commit.Move>commitByKey.get(key)!
+                    const node = ReorderHistory.Commit.push(key, commit, childNodeByKey, domNode.monarch_outputHandlers!)
+
+                    fragment!.appendChild(node)
+                }
+
+                return fragment
+        }
+    })()
+
+    const removedKeys = []
+
+    for (let [key, commit] of commitByKey) {
+        if (commit.tag === ReorderHistory.Commit.Remove) {
+            removedKeys.push(key)
+
+            continue
+        }
+
+        if (endInsertKeys.has(key)) continue
+
+        const node = ReorderHistory.Commit.push(key, commit, childNodeByKey, domNode.monarch_outputHandlers!)
+        const ix = commit.tag === ReorderHistory.Commit.Move ? commit.toIx : commit.ix
+
+        domNode.insertBefore(node, domNode.childNodes[ix])
+    }
+
+    for (let ix = 0; ix < removedKeys.length; ix++) {
+        const key = removedKeys[ix]
+        const node = childNodeByKey.get(key)!
+
+        domNode.removeChild(node)
+    }
+
+    fragment && domNode.appendChild(fragment)
 }
