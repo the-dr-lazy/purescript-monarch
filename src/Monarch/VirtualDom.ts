@@ -74,6 +74,9 @@ interface UnsafeDiffWorkEnvironment<a, b> {
     scheduler: Scheduler
 }
 
+/**
+ * ToDo: document this function.
+ */
 function unsafe_uncurried_performDiffWork<a, b>(
     work: DiffWork<a, b>,
     { scheduler, finishDiffWork, dispatchDiffWork }: UnsafeDiffWorkEnvironment<a, b>,
