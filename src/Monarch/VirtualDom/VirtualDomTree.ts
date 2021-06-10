@@ -467,7 +467,6 @@ function unsafe_diffKeyedElementNSChildren<a, b>(
     const downstreamNodes: DownstreamNode<a, b>[] = []
 
     while (xIx < xsLength && yIx < ysLength) {
-        console.log('XXX')
         const x = xs![xIx]
         const y = ys![yIx]
 
