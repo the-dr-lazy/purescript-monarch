@@ -1,11 +1,12 @@
 import * as ADT from './Event/ADT'
-import { Scheduler } from './Scehduler'
+import { Time, Scheduler } from './Scheduler'
 
 /**
  * Disjoint union tags for `Event` type
  */
 export const enum Tag {
     Empty,
+    Filter,
     Map,
     MapTo,
     Never,
@@ -17,15 +18,16 @@ export const enum Tag {
  */
 export type Event<a>
     = ADT.Empty
+    | ADT.Filter<a>
     | ADT.Map<any, a>
     | ADT.MapTo<a>
     | ADT.Never
     | ADT.Producer<a>
 
 export interface Sink<a> {
-    next(a: a): void
-    error(error: undefined): void
-    end(): void
+    next(t: Time, a: a): void
+    error(t: Time, error: undefined): void
+    end(t: Time): void
 }
 
 export interface Eventish<a> {

@@ -16,7 +16,7 @@ export interface Map<a, b> extends Tagged<Tag.Map>, Eventish<b> {
 function subscribe<a, b>(this: Map<a, b>, sink: Sink<b>, scheduler: Scheduler): void {
     return uncurried_subscribe(scheduler, this.source, {
         ...sink,
-        next: a => sink.next(this.f(a)),
+        next: (t, a) => sink.next(t, this.f(a)),
     })
 }
 
