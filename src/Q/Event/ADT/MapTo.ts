@@ -23,8 +23,22 @@ function subscribe<b>(this: MapTo<b>, sink: Sink<b>, scheduler: Scheduler): void
  * `MapTo` smart data constructor
  */
 export function mk<a, b>(value: b, source: Event<a>): Event<b> {
+    // Note [Plus Annihilation Axiom]
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // f <$> empty = empty
     if (source.tag === Tag.Empty || source.tag === Tag.Never) return source
 
+    // Note [Functor Composition Axiom]
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // map f . map g = map (f . g)
+    //
+    // This is an inlined derivation of the functor composition
+    // axiom for two special cases:
+    // map (const x) . map f = map (const x . f)
+    //                       = map (const x)
+    //
+    // map (const x) . map (const y) = map (const x . const y)
+    //                               = map (const x)
     while (source.tag === Tag.MapTo || source.tag === Tag.Map) {
         source = source.source
     }
