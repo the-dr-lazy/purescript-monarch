@@ -63,7 +63,6 @@ export function mk<a, b>(f: (a: a) => b, source: Event<a>): Event<b> {
 
         // ToDo: explain the axiom
         case Tag.Filter: return EventFilterMap.mk(source.p, f, source.source)
-
     }
 
     return { tag: Tag.Map, source, f, subscribe }
