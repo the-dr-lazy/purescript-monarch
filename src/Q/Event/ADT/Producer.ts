@@ -1,9 +1,9 @@
-import { Tag, Eventish } from '../../Event';
+import { Tag, Subscribable } from '../../Event'
 
 /**
  * `Producer` type constructor
  */
-export interface Producer<a> extends Tagged<Tag.Producer>, Eventish<a> { }
+export interface Producer<a> extends Tagged<Tag.Producer>, Subscribable<a> {}
 
 /**
  * `Producer` smart data constructor

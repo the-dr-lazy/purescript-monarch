@@ -1,5 +1,5 @@
 import { Tag, Sink } from '../../Event';
-import { Scheduler } from '../../Scehduler';
+import { Scheduler } from '../../Scheduler';
 
 /**
  * `Empty` type constructor

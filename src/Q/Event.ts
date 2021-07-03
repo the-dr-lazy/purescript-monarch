@@ -26,18 +26,14 @@ export type Event<a>
     | ADT.Never
     | ADT.Producer<a>
 
+export type Wirable<a> = Exclude<Event<a>, ADT.Empty | ADT.Never>
+
+export interface Subscribable<a> {
+    subscribe(scheduler: Scheduler, sink: Sink<a>): void
+}
+
 export interface Sink<a> {
     next(t: Time, a: a): void
     error(t: Time, error: undefined): void
     end(t: Time): void
-}
-
-export interface Eventish<a> {
-    subscribe(sink: Sink<a>, scheduler: Scheduler): void
-}
-
-export function uncurried_subscribe<a>(scheduler: Scheduler, source: Event<a>, sink: Sink<a>): void {
-    if (source.tag === Tag.Never) return
-
-    return source.subscribe(sink, scheduler)
 }
