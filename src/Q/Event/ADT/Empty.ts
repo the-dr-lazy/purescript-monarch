@@ -5,13 +5,13 @@ import { Scheduler } from '../../Scheduler';
  * `Empty` type constructor
  */
 export interface Empty extends Tagged<Tag.Empty> {
-    subscribe<a>(sink: Sink<a>, scheduler: Scheduler): void
+    subscribe<a>(scheduler: Scheduler,sink: Sink<a>): void
 }
 
 /**
  * `Empty` subscribe function
  */
-function subscribe<a>(_sink: Sink<a>, _scheduler: Scheduler): void {
+function subscribe<a>(_scheduler: Scheduler, _sink: Sink<a>): void {
     // ToDo: call the `sink.end` at 0.
 }
 
