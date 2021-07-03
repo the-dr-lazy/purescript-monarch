@@ -16,8 +16,9 @@ export interface Map<a, b> extends Tagged<Tag.Map>, Subscribable<b> {
  */
 function subscribe<a, b>(this: Map<a, b>, scheduler: Scheduler, sink: Sink<b>): void {
     return this.source.subscribe(scheduler, {
-        ...sink,
         next: (t, a) => sink.next(t, this.f(a)),
+        error: sink.error,
+        end: sink.end
     })
 }
 
