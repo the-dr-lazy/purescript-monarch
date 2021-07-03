@@ -29,5 +29,5 @@ export function mk<a, b>(p: FilterMap<a, b>['p'], f: FilterMap<a, b>['f'], sourc
     // f <$> empty = empty
     if (source.tag === Tag.Empty || source.tag === Tag.Never) return source
 
-    return { tag: Tag.Filter, p, f, source, subscribe }
+    return { tag: Tag.FilterMap, p, f, source, subscribe }
 }
