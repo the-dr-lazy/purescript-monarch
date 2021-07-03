@@ -1,5 +1,6 @@
 export { Empty } from './ADT/Empty'
 export { Filter } from './ADT/Filter'
+export { FilterMap } from './ADT/FilterMap'
 export { Map } from './ADT/Map'
 export { MapTo } from './ADT/MapTo'
 export { Never } from './ADT/Never'

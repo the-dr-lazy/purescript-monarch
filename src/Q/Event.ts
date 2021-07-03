@@ -7,6 +7,7 @@ import { Time, Scheduler } from './Scheduler'
 export const enum Tag {
     Empty,
     Filter,
+    FilterMap,
     Map,
     MapTo,
     Never,
@@ -19,6 +20,7 @@ export const enum Tag {
 export type Event<a>
     = ADT.Empty
     | ADT.Filter<a>
+    | ADT.FilterMap<any, a>
     | ADT.Map<any, a>
     | ADT.MapTo<a>
     | ADT.Never
