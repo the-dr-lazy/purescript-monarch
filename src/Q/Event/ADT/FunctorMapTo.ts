@@ -2,17 +2,17 @@ import { Tag, Event, Subscribable, Sink, Wirable } from '../../Event'
 import { Scheduler } from '../../Scheduler'
 
 /**
- * `MapTo` type constructor
+ * `FunctorMapTo` type constructor
  */
-export interface MapTo<b> extends Tagged<Tag.MapTo>, Subscribable<b> {
+export interface FunctorMapTo<b> extends Tagged<Tag.FunctorMapTo>, Subscribable<b> {
     source: Wirable<any>
     value: b
 }
 
 /**
- * `MapTo` subscribe function
+ * `FunctorMapTo` subscribe function
  */
-function subscribe<b>(this: MapTo<b>, scheduler: Scheduler, sink: Sink<b>): void {
+function subscribe<b>(this: FunctorMapTo<b>, scheduler: Scheduler, sink: Sink<b>): void {
     return this.source.subscribe(scheduler, {
         ...sink,
         next: t => sink.next(t, this.value),
@@ -20,7 +20,7 @@ function subscribe<b>(this: MapTo<b>, scheduler: Scheduler, sink: Sink<b>): void
 }
 
 /**
- * `MapTo` smart data constructor
+ * `FunctorMapTo` smart data constructor
  */
 export function mk<a, b>(value: b, source: Event<a>): Event<b> {
     switch (source.tag) {
@@ -40,13 +40,13 @@ export function mk<a, b>(value: b, source: Event<a>): Event<b> {
         // map (const x) . map f = map (const x . f)
         //                       = map (const x)
         //
-        case Tag.Map:
+        case Tag.FunctorMap:
         // map (const x) . map (const y) = map (const x . const y)
         //                               = map (const x)
-        case Tag.MapTo:
+        case Tag.FunctorMapTo:
             source = source.source
             break
     }
 
-    return { tag: Tag.MapTo, source, value, subscribe }
+    return { tag: Tag.FunctorMapTo, source, value, subscribe }
 }

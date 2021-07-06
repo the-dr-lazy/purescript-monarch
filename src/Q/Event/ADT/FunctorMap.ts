@@ -1,20 +1,20 @@
 import { Tag, Event, Subscribable, Wirable, Sink } from '../../Event'
-import * as EventMapTo from './MapTo'
+import * as EventFunctorMapTo from './FunctorMapTo'
 import * as EventFilterMap from './FilterMap'
 import { Scheduler } from '../../Scheduler'
 
 /**
- * `Map` type constructor
+ * `FunctorMap` type constructor
  */
-export interface Map<a, b> extends Tagged<Tag.Map>, Subscribable<b> {
+export interface FunctorMap<a, b> extends Tagged<Tag.FunctorMap>, Subscribable<b> {
     source: Wirable<a>
     f: (a: a) => b
 }
 
 /**
- * `Map` subscribe function
+ * `FunctorMap` subscribe function
  */
-function subscribe<a, b>(this: Map<a, b>, scheduler: Scheduler, sink: Sink<b>): void {
+function subscribe<a, b>(this: FunctorMap<a, b>, scheduler: Scheduler, sink: Sink<b>): void {
     return this.source.subscribe(scheduler, {
         next: (t, a) => sink.next(t, this.f(a)),
         error: sink.error,
@@ -23,7 +23,7 @@ function subscribe<a, b>(this: Map<a, b>, scheduler: Scheduler, sink: Sink<b>): 
 }
 
 /**
- * `Map` smart data constructor
+ * `FunctorMap` smart data constructor
  */
 export function mk<a, b>(f: (a: a) => b, source: Event<a>): Event<b> {
     switch (source.tag) {
@@ -37,7 +37,7 @@ export function mk<a, b>(f: (a: a) => b, source: Event<a>): Event<b> {
         // Note [Functor Composition Axiom]
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         // map f . map g = map (f . g)
-        case Tag.Map: {
+        case Tag.FunctorMap: {
             const g = source.f
 
             f = x => f(g(x))
@@ -60,11 +60,11 @@ export function mk<a, b>(f: (a: a) => b, source: Event<a>): Event<b> {
         // axiom for a special case:
         // map f . map (const x) = map (f . const x)
         //                       = map (const (f x))
-        case Tag.MapTo: return EventMapTo.mk(f(source.value), source.source)
+        case Tag.FunctorMapTo: return EventFunctorMapTo.mk(f(source.value), source.source)
 
         // ToDo: explain the axiom
-        case Tag.Filter: return EventFilterMap.mk(source.p, f, source.source)
+        case Tag.Filter: return EventFilterFunctorMap.mk(source.p, f, source.source)
     }
 
-    return { tag: Tag.Map, source, f, subscribe }
+    return { tag: Tag.FunctorMap, source, f, subscribe }
 }

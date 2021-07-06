@@ -8,8 +8,8 @@ export const enum Tag {
     Empty,
     Filter,
     FilterMap,
-    Map,
-    MapTo,
+    FunctorMap,
+    FunctorMapTo,
     Never,
     Producer,
 }
@@ -21,8 +21,8 @@ export type Event<a>
     = ADT.Empty
     | ADT.Filter<a>
     | ADT.FilterMap<any, a>
-    | ADT.Map<any, a>
-    | ADT.MapTo<a>
+    | ADT.FunctorMap<any, a>
+    | ADT.FunctorMapTo<a>
     | ADT.Never
     | ADT.Producer<a>
 
