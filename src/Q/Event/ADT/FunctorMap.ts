@@ -63,7 +63,7 @@ export function mk<a, b>(f: (a: a) => b, source: Event<a>): Event<b> {
         case Tag.FunctorMapTo: return EventFunctorMapTo.mk(f(source.value), source.source)
 
         // ToDo: explain the axiom
-        case Tag.Filter: return EventFilterFunctorMap.mk(source.p, f, source.source)
+        case Tag.Filter: return EventFilterMap.mk(source.p, f, source.source)
     }
 
     return { tag: Tag.FunctorMap, source, f, subscribe }
