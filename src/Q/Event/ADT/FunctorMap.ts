@@ -1,4 +1,4 @@
-import { Tag, Event, Subscribable, Wirable, Sink } from '../../Event'
+import { Tag, Event, Subscribable, Wirable, Sink, Unsubscribe } from '../../Event'
 import * as EventFunctorMapTo from './FunctorMapTo'
 import * as EventFilterMap from './FilterMap'
 import { Scheduler } from '../../Scheduler'
@@ -14,7 +14,7 @@ export interface FunctorMap<e, a, b> extends Tagged<Tag.FunctorMap>, Subscribabl
 /**
  * `FunctorMap` subscribe function
  */
-function subscribe<e, a, b>(this: FunctorMap<e, a, b>, scheduler: Scheduler, sink: Sink<e, b>): void {
+function subscribe<e, a, b>(this: FunctorMap<e, a, b>, scheduler: Scheduler, sink: Sink<e, b>): Unsubscribe {
     return this.source.subscribe(scheduler, {
         next: sink.next && ((t, a) => sink.next!(t, this.f(a))),
         error: sink.error,

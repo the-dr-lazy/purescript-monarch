@@ -1,4 +1,4 @@
-import { Subscribable, Wirable, Event, Tag, Sink } from '../../Event'
+import { Subscribable, Wirable, Event, Tag, Sink, Unsubscribe } from '../../Event'
 import { Scheduler } from '../../Scheduler'
 
 /**
@@ -13,7 +13,7 @@ export interface FilterMap<e, a, b> extends Tagged<Tag.FilterMap>, Subscribable<
 /**
  * `FilterMap` subscribe function
  */
-function subscribe<e, a, b>(this: FilterMap<e, a, b>, scheduler: Scheduler, sink: Sink<e, b>): void {
+function subscribe<e, a, b>(this: FilterMap<e, a, b>, scheduler: Scheduler, sink: Sink<e, b>): Unsubscribe {
     return this.source.subscribe(scheduler, {
         next: sink.next && ((t, a) => this.p(a) && sink.next!(t, this.f(a))),
         error: sink.error,

@@ -1,5 +1,5 @@
-import { Subscribable, Wirable, Event, Tag, Sink } from 'monarch/Q/Event'
-import { Scheduler } from 'monarch/Q/Scheduler'
+import { Subscribable, Wirable, Event, Tag, Sink, Unsubscribe } from '../../Event'
+import { Scheduler } from '../../Scheduler'
 
 /**
  * `Filter` type constructor
@@ -12,7 +12,7 @@ export interface Filter<e, a> extends Tagged<Tag.Filter>, Subscribable<e, a> {
 /**
  * `Filter` subscribe function
  */
-function subscribe<e, a>(this: Filter<e, a>, scheduler: Scheduler, sink: Sink<e, a>): void {
+function subscribe<e, a>(this: Filter<e, a>, scheduler: Scheduler, sink: Sink<e, a>): Unsubscribe {
     return this.source.subscribe(scheduler, {
         next: sink.next && ((t, a) => this.p(a) && sink.next!(t, a)),
         error: sink.error,

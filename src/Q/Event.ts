@@ -29,7 +29,7 @@ export type Event<e, a> =
 export type Wirable<e, a> = Exclude<Event<e, a>, ADT.Empty | ADT.Never>
 
 export interface Subscribable<e, a> {
-    subscribe(scheduler: Scheduler, sink: Sink<e, a>): void
+    subscribe(scheduler: Scheduler, sink: Sink<e, a>): Unsubscribe
 }
 
 export interface Sink<e, a> {
@@ -37,3 +37,5 @@ export interface Sink<e, a> {
     error?(t: Time, error: e): void
     end?(t: Time): void
 }
+
+export type Unsubscribe = Effect<Unit>
