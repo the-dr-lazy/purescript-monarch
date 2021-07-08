@@ -4,15 +4,15 @@ import { Scheduler } from 'monarch/Q/Scheduler'
 /**
  * `Filter` type constructor
  */
-export interface Filter<a> extends Tagged<Tag.Filter>, Subscribable<a> {
-    source: Wirable<a>
+export interface Filter<e, a> extends Tagged<Tag.Filter>, Subscribable<e, a> {
+    source: Wirable<e, a>
     p: (a: a) => boolean
 }
 
 /**
  * `Filter` subscribe function
  */
-function subscribe<a>(this: Filter<a>, scheduler: Scheduler, sink: Sink<a>): void {
+function subscribe<e, a>(this: Filter<e, a>, scheduler: Scheduler, sink: Sink<e, a>): void {
     return this.source.subscribe(scheduler, {
         next: sink.next && ((t, a) => this.p(a) && sink.next!(t, a)),
         error: sink.error,
@@ -23,7 +23,7 @@ function subscribe<a>(this: Filter<a>, scheduler: Scheduler, sink: Sink<a>): voi
 /**
  * `Filter` smart data constructor
  */
-export function mk<a>(p: Filter<a>['p'], source: Event<a>): Event<a> {
+export function mk<e, a>(p: Filter<e, a>['p'], source: Event<e, a>): Event<e, a> {
     switch (source.tag) {
         // Note [Plus Annihilation Axiom]
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

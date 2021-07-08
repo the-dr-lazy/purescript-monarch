@@ -17,23 +17,23 @@ export const enum Tag {
 /**
  * Event ADT
  */
-export type Event<a>
-    = ADT.Empty
-    | ADT.Filter<a>
-    | ADT.FilterMap<any, a>
-    | ADT.FunctorMap<any, a>
-    | ADT.FunctorMapTo<a>
+export type Event<e, a> =
+    | ADT.Empty
+    | ADT.Filter<e, a>
+    | ADT.FilterMap<e, any, a>
+    | ADT.FunctorMap<e, any, a>
+    | ADT.FunctorMapTo<e, a>
     | ADT.Never
-    | ADT.Producer<a>
+    | ADT.Producer<e, a>
 
-export type Wirable<a> = Exclude<Event<a>, ADT.Empty | ADT.Never>
+export type Wirable<e, a> = Exclude<Event<e, a>, ADT.Empty | ADT.Never>
 
-export interface Subscribable<a> {
-    subscribe(scheduler: Scheduler, sink: Sink<a>): void
+export interface Subscribable<e, a> {
+    subscribe(scheduler: Scheduler, sink: Sink<e, a>): void
 }
 
-export interface Sink<a> {
+export interface Sink<e, a> {
     next?(t: Time, a: a): void
-    error?(t: Time, error: undefined): void
+    error?(t: Time, error: e): void
     end?(t: Time): void
 }

@@ -4,15 +4,15 @@ import { Scheduler } from '../../Scheduler'
 /**
  * `FunctorMapTo` type constructor
  */
-export interface FunctorMapTo<b> extends Tagged<Tag.FunctorMapTo>, Subscribable<b> {
-    source: Wirable<any>
+export interface FunctorMapTo<e, b> extends Tagged<Tag.FunctorMapTo>, Subscribable<e, b> {
+    source: Wirable<e, any>
     value: b
 }
 
 /**
  * `FunctorMapTo` subscribe function
  */
-function subscribe<b>(this: FunctorMapTo<b>, scheduler: Scheduler, sink: Sink<b>): void {
+function subscribe<e, b>(this: FunctorMapTo<e, b>, scheduler: Scheduler, sink: Sink<e, b>): void {
     return this.source.subscribe(scheduler, {
         next: sink.next && (t => sink.next!(t, this.value)),
         error: sink.error,
@@ -23,7 +23,7 @@ function subscribe<b>(this: FunctorMapTo<b>, scheduler: Scheduler, sink: Sink<b>
 /**
  * `FunctorMapTo` smart data constructor
  */
-export function mk<a, b>(value: b, source: Event<a>): Event<b> {
+export function mk<e, a, b>(value: b, source: Event<e, a>): Event<e, b> {
     switch (source.tag) {
         // Note [Plus Annihilation Axiom]
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

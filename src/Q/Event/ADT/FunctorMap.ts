@@ -6,26 +6,26 @@ import { Scheduler } from '../../Scheduler'
 /**
  * `FunctorMap` type constructor
  */
-export interface FunctorMap<a, b> extends Tagged<Tag.FunctorMap>, Subscribable<b> {
-    source: Wirable<a>
+export interface FunctorMap<e, a, b> extends Tagged<Tag.FunctorMap>, Subscribable<e, b> {
+    source: Wirable<e, a>
     f: (a: a) => b
 }
 
 /**
  * `FunctorMap` subscribe function
  */
-function subscribe<a, b>(this: FunctorMap<a, b>, scheduler: Scheduler, sink: Sink<b>): void {
+function subscribe<e, a, b>(this: FunctorMap<e, a, b>, scheduler: Scheduler, sink: Sink<e, b>): void {
     return this.source.subscribe(scheduler, {
         next: sink.next && ((t, a) => sink.next!(t, this.f(a))),
         error: sink.error,
-        end: sink.end
+        end: sink.end,
     })
 }
 
 /**
  * `FunctorMap` smart data constructor
  */
-export function mk<a, b>(f: (a: a) => b, source: Event<a>): Event<b> {
+export function mk<e, a, b>(f: (a: a) => b, source: Event<e, a>): Event<e, b> {
     switch (source.tag) {
         // Note [Plus Annihilation Axiom]
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -60,10 +60,12 @@ export function mk<a, b>(f: (a: a) => b, source: Event<a>): Event<b> {
         // axiom for a special case:
         // map f . map (const x) = map (f . const x)
         //                       = map (const (f x))
-        case Tag.FunctorMapTo: return EventFunctorMapTo.mk(f(source.value), source.source)
+        case Tag.FunctorMapTo:
+            return EventFunctorMapTo.mk(f(source.value), source.source)
 
         // ToDo: explain the axiom
-        case Tag.Filter: return EventFilterMap.mk(source.p, f, source.source)
+        case Tag.Filter:
+            return EventFilterMap.mk(source.p, f, source.source)
     }
 
     return { tag: Tag.FunctorMap, source, f, subscribe }
