@@ -14,8 +14,9 @@ export interface FunctorMapTo<b> extends Tagged<Tag.FunctorMapTo>, Subscribable<
  */
 function subscribe<b>(this: FunctorMapTo<b>, scheduler: Scheduler, sink: Sink<b>): void {
     return this.source.subscribe(scheduler, {
-        ...sink,
-        next: t => sink.next(t, this.value),
+        next: sink.next && (t => sink.next!(t, this.value)),
+        error: sink.error,
+        end: sink.end
     })
 }
 

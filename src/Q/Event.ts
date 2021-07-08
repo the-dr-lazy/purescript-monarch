@@ -33,7 +33,7 @@ export interface Subscribable<a> {
 }
 
 export interface Sink<a> {
-    next(t: Time, a: a): void
-    error(t: Time, error: undefined): void
-    end(t: Time): void
+    next?(t: Time, a: a): void
+    error?(t: Time, error: undefined): void
+    end?(t: Time): void
 }

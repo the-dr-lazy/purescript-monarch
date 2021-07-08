@@ -14,7 +14,7 @@ export interface Filter<a> extends Tagged<Tag.Filter>, Subscribable<a> {
  */
 function subscribe<a>(this: Filter<a>, scheduler: Scheduler, sink: Sink<a>): void {
     return this.source.subscribe(scheduler, {
-        next: (t, a) => this.p(a) && sink.next(t, a),
+        next: sink.next && ((t, a) => this.p(a) && sink.next!(t, a)),
         error: sink.error,
         end: sink.end
     })
