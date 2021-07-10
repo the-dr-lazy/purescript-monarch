@@ -21,3 +21,18 @@ export const getCurrentTime: GetCurrentTime = (() => {
         return () => Date.now() - initialTime
     }
 })()
+
+interface Scheduler {
+    shouldYieldToBrowser(): boolean
+    promoteDeadline(): void
+}
+
+export function mkScheduler(): Scheduler {
+    let deadline = 0
+    return {
+        shouldYieldToBrowser: () => getCurrentTime() > deadline,
+        promoteDeadline: () => {
+            deadline = deadline + 5
+        },
+    }
+}

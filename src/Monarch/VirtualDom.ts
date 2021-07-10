@@ -13,7 +13,7 @@ import { VirtualDomTree, realize, diff, DownstreamNode } from 'monarch/Monarch/V
 import { PatchTree, unsafe_uncurried_applyPatchTree } from 'monarch/Monarch/VirtualDom/PatchTree'
 import { OutputHandlersList } from 'monarch/Monarch/VirtualDom/OutputHandlersList'
 
-function unsafe_uncurried_mount<a>(domNode: Node, outputHandlers: OutputHandlersList.Nil, vNode: VirtualDomTree<a>): void {
+export function unsafe_uncurried_mount<a>(domNode: Node, outputHandlers: OutputHandlersList.Nil, vNode: VirtualDomTree<a>): void {
     while (domNode.firstChild) {
         domNode.removeChild(domNode.lastChild!)
     }
@@ -77,7 +77,7 @@ interface UnsafeDiffWorkEnvironment<a, b> {
 /**
  * ToDo: document this function.
  */
-function unsafe_uncurried_performDiffWork<a, b>(
+export function unsafe_uncurried_performDiffWork<a, b>(
     work: DiffWork<a, b>,
     { scheduler, finishDiffWork, dispatchDiffWork }: UnsafeDiffWorkEnvironment<a, b>,
 ): void {

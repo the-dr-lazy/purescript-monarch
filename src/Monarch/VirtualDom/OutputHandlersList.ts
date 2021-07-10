@@ -17,8 +17,8 @@ export namespace OutputHandlersList {
      * `Nil` type constructor
      */
     export type Nil = (message: any) => void
-    export function mkNil<message>(dispatchMessage: (message: message) => Effect<Unit>) {
-        return (message: message) => dispatchMessage(message)()
+    export function mkNil<message>(dispatchMessage: (message: message) => void) {
+        return (message: message) => dispatchMessage(message)
     }
 
     // SUM TYPE: Cons
