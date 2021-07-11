@@ -44,7 +44,7 @@ interface DiffWorkState<a, b> {
     queue: DiffWorkQueue<a, b>
 }
 
-interface DiffWork<a, b> {
+export interface DiffWork<a, b> {
     node: DownstreamNode<a, b>
     state: DiffWorkState<a, b>
 }
@@ -88,7 +88,6 @@ export function unsafe_uncurried_performDiffWork<a, b>(
     scheduler.promoteDeadline()
 
     while (node && !scheduler.shouldYieldToBrowser()) {
-
         const { patches, downstreamNodes } = diff(node.x, node.y)
 
         let patchTree

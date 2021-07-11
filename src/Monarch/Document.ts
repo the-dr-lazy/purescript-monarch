@@ -1,7 +1,7 @@
 import * as OutputHandlersList from 'monarch/Monarch/VirtualDom/OutputHandlersList'
 import { VirtualDomTree } from 'monarch/Monarch/VirtualDom/VirtualDomTree'
-import { unsafe_uncurried_applyPatchTree } from 'monarch/Monarch/VirtualDom/PatchTree'
-import { unsafe_uncurried_mount, mkDiffWork, unsafe_uncurried_performDiffWork } from 'monarch/Monarch/VirtualDom'
+import { PatchTree, unsafe_uncurried_applyPatchTree } from 'monarch/Monarch/VirtualDom/PatchTree'
+import { DiffWork, unsafe_uncurried_mount, mkDiffWork, unsafe_uncurried_performDiffWork } from 'monarch/Monarch/VirtualDom'
 import { mkScheduler } from 'monarch/Monarch/Scheduler'
 import { asap } from 'asap/browser-asap'
 import 'setimmediate'
@@ -14,6 +14,11 @@ interface Spec<input, model, message> {
     view(model: model): VirtualDomTree<message>
 }
 
+interface FinishDiffWorkSpec<message> {
+    rootVNode: VirtualDomTree<message>
+    rootPathTree: PatchTree
+}
+
 export function document<input, model, message>({ init, input, update, container, view }: Spec<input, model, message>) {
     const initialModel = init(input)
     const initialVirtualDomTree = view(initialModel)
@@ -23,9 +28,9 @@ export function document<input, model, message>({ init, input, update, container
 
     let model = initialModel
     let commitedVirtualDomTree = initialVirtualDomTree
-    let diffWork: any = undefined
+    let diffWork: DiffWork<any, any> | undefined = undefined
 
-    let requestedAsyncRenderId: any = undefined
+    let requestedAsyncRenderId: number | undefined = undefined
     let requestedAsyncPerformDiffWorkId: number | undefined = undefined
 
     function dispatchMessage(message: message): void {
@@ -50,17 +55,17 @@ export function document<input, model, message>({ init, input, update, container
         dispatchDiffWork(initialDiffWork)
     }
 
-    function dispatchDiffWork(nextDiffWork: any): void {
+    function dispatchDiffWork(nextDiffWork: DiffWork<any, any>): void {
         diffWork = nextDiffWork
 
         if (!requestedAsyncPerformDiffWorkId) {
             requestedAsyncPerformDiffWorkId = window.setImmediate(() => {
-                unsafe_uncurried_performDiffWork(diffWork, environment)
+                unsafe_uncurried_performDiffWork(diffWork!, environment)
             })
         }
     }
 
-    function finishDiffWork({ rootVNode, rootPathTree }: any): void {
+    function finishDiffWork({ rootVNode, rootPathTree }: FinishDiffWorkSpec<message>): void {
         commitedVirtualDomTree = rootVNode
         requestedAsyncPerformDiffWorkId = undefined
 
