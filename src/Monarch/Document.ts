@@ -3,6 +3,7 @@ import { VirtualDomTree } from 'monarch/Monarch/VirtualDom/VirtualDomTree'
 import { unsafe_uncurried_applyPatchTree } from 'monarch/Monarch/VirtualDom/PatchTree'
 import { unsafe_uncurried_mount, mkDiffWork, unsafe_uncurried_performDiffWork } from 'monarch/Monarch/VirtualDom'
 import { mkScheduler } from 'monarch/Monarch/Scheduler'
+import { asap } from 'asap/browser-asap'
 import 'setimmediate'
 
 interface Spec<input, model, message> {
@@ -74,6 +75,6 @@ export function document<input, model, message>({ init, input, update, container
 }
 
 function requestAsap(task: () => void) {
-    Promise.resolve().then(task)
+    asap(task)
     return 1
 }
