@@ -17,7 +17,17 @@
         "type": "git",
         "url": "git+https://github.com/thebrodmann/monarch.git"
     },
-    "keywords": ["frontend", "functional", "elm", "react", "reactive", "TEA", "UI", "front-end", "purescript"],
+    "keywords": [
+        "frontend",
+        "functional",
+        "elm",
+        "react",
+        "reactive",
+        "TEA",
+        "UI",
+        "front-end",
+        "purescript"
+    ],
     "author": "Mohammad Hasani <thebrodmann@protonmail.com>",
     "license": "MPL",
     "bugs": {
@@ -25,6 +35,7 @@
     },
     "homepage": "https://github.com/thebrodmann/monarch#readme",
     "dependencies": {
+        "asap": "^2.0.6",
         "setimmediate": "^1.0.5",
         "tslib": "^2.0.0"
     },
