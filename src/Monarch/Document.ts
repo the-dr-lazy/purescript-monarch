@@ -7,11 +7,11 @@ import { asap } from 'asap/browser-asap'
 import 'setimmediate'
 
 interface Spec<input, model, message> {
-    init(input: input): model
     input: input
+    init(input: input): model
     update: (message: message) => (model: model) => model
-    container: HTMLElement
     view(model: model): VirtualDomTree<message>
+    container: HTMLElement
 }
 
 interface FinishDiffWorkSpec<message> {
@@ -19,7 +19,7 @@ interface FinishDiffWorkSpec<message> {
     rootPatchTree: PatchTree
 }
 
-export function document<input, model, message>({ init, input, update, container, view }: Spec<input, model, message>) {
+function unsafe_document<input, model, message>({ init, input, update, container, view }: Spec<input, model, message>): void {
     const initialModel = init(input)
     const initialVirtualDomTree = view(initialModel)
     const outputHandlers = OutputHandlersList.mkNil(dispatchMessage)
@@ -87,6 +87,10 @@ export function document<input, model, message>({ init, input, update, container
     }
 
     requestAnimationFrame(() => unsafe_uncurried_mount(container, outputHandlers, initialVirtualDomTree))
+}
+
+export function document<input, model, message>(spec: Spec<input, model, message>): Effect<Unit> {
+    return () => unsafe_document(spec)
 }
 
 function requestAsap(task: () => void) {
