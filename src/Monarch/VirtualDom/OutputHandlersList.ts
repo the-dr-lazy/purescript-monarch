@@ -31,5 +31,3 @@ export namespace OutputHandlersList {
         next: OutputHandlersList
     }
 }
-
-export const nil = OutputHandlersList.mkNil
