@@ -49,19 +49,16 @@ export interface DiffWork<a, b> {
     state: DiffWorkState<a, b>
 }
 
-// prettier-ignore
-interface MkRootDiffWork {
-    <a, b>(commitedVNode: VirtualDomTree<a>, vNode: VirtualDomTree<b>): DiffWork<a, b>
+export function mkRootDiffWork<a, b>(x: VirtualDomTree<a>, y: VirtualDomTree<b>) {
+    return {
+        node: { x, y, ix: 0 },
+        state: {
+            rootVNode: y,
+            address: [],
+            queue: [],
+        },
+    }
 }
-
-export const mkRootDiffWork: MkRootDiffWork = (x, y) => ({
-    node: { x, y, ix: 0 },
-    state: {
-        rootVNode: y,
-        address: [],
-        queue: [],
-    },
-})
 
 interface Scheduler {
     shouldYieldToBrowser: Effect<boolean>
