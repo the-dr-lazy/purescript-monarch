@@ -63,7 +63,7 @@ subscription = const eNever
 
 main :: HTMLElement -> Effect Unit
 main container = do
-  Monarch.document_ { input: unit
+  Monarch.document  { input: unit
                     , init: const init
                     , update
                     , view
