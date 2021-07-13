@@ -67,9 +67,9 @@ function unsafe_document<input, model, message>({ init, input, update, container
         const hasRequestedAsyncDiffWorkPerformance = state.diffWork !== undefined
         state.diffWork = nextDiffWork
 
-        if (!hasRequestedAsyncDiffWorkPerformance) {
-            window.setImmediate(performDiffWork)
-        }
+        if (hasRequestedAsyncDiffWorkPerformance) return
+
+        window.setImmediate(performDiffWork)
     }
 
     function performDiffWork() {
@@ -82,9 +82,9 @@ function unsafe_document<input, model, message>({ init, input, update, container
         const hasRequestedAsyncCommitting = state.diffWorkResult.rootPatchTree !== undefined
         state.diffWorkResult = newDiffWrokResult
 
-        if (!hasRequestedAsyncCommitting) {
-            requestAnimationFrame(commit)
-        }
+        if (hasRequestedAsyncCommitting) return
+
+        requestAnimationFrame(commit)
     }
 
     function commit() {
@@ -97,7 +97,11 @@ function unsafe_document<input, model, message>({ init, input, update, container
     requestAnimationFrame(() => unsafe_uncurried_mount(container, outputHandlers, initialVirtualDomTree))
 }
 
-export function document<input, model, message>(spec: Spec<input, model, message>): Effect<Unit> {
+interface Document {
+    <input, model, message>(spec: Spec<input, model, message>): Effect<Unit>
+}
+
+export const document: Document = spec => {
     return () => unsafe_document(spec)
 }
 
