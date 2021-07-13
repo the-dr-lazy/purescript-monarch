@@ -24,4 +24,4 @@ interface Tagged<a> {
     tag: a
 }
 
-declare module 'asap/browser-asap'
+declare module 'asap'

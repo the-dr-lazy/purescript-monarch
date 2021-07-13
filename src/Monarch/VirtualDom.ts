@@ -50,11 +50,11 @@ export interface DiffWork<a, b> {
 }
 
 // prettier-ignore
-interface MkDiffWork {
+interface MkRootDiffWork {
     <a, b>(commitedVNode: VirtualDomTree<a>, vNode: VirtualDomTree<b>): DiffWork<a, b>
 }
 
-export const mkDiffWork: MkDiffWork = (x, y) => ({
+export const mkRootDiffWork: MkRootDiffWork = (x, y) => ({
     node: { x, y, ix: 0 },
     state: {
         rootVNode: y,
