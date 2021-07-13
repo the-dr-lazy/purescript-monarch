@@ -12,6 +12,7 @@ import 'setimmediate'
 import { VirtualDomTree, realize, diff, DownstreamNode } from 'monarch/Monarch/VirtualDom/VirtualDomTree'
 import { PatchTree, unsafe_uncurried_applyPatchTree } from 'monarch/Monarch/VirtualDom/PatchTree'
 import { OutputHandlersList } from 'monarch/Monarch/VirtualDom/OutputHandlersList'
+import { Scheduler } from './Scheduler'
 
 export function unsafe_uncurried_mount<a>(domNode: Node, outputHandlers: OutputHandlersList.Nil, vNode: VirtualDomTree<a>): void {
     while (domNode.firstChild) {
@@ -60,11 +61,6 @@ export function mkRootDiffWork<a, b>(x: VirtualDomTree<a>, y: VirtualDomTree<b>)
     }
 }
 
-interface Scheduler {
-    shouldYieldToBrowser: Effect<boolean>
-    promoteDeadline: Effect<Unit>
-}
-
 interface UnsafeDiffWorkEnvironment<a, b> {
     dispatchDiffWork(work: DiffWork<a, b>): void
     finishDiffWork(spec: Pick<DiffWorkState<a, b>, 'rootVNode' | 'rootPatchTree'>): void
@@ -82,9 +78,9 @@ export function unsafe_uncurried_performDiffWork<a, b>(
 
     let node: DownstreamNode<a, b> | undefined = work.node
 
-    scheduler.promoteDeadline()
+    scheduler.unsafe_promoteDeadline()
 
-    while (node && !scheduler.shouldYieldToBrowser()) {
+    while (node && !scheduler.unsafe_shouldYieldToBrowser()) {
         const { patches, downstreamNodes } = diff(node.x, node.y)
 
         let patchTree
