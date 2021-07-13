@@ -1,7 +1,8 @@
 import { OutputHandlersList } from 'monarch/Monarch/VirtualDom/OutputHandlersList'
 import { VirtualDomTree } from 'monarch/Monarch/VirtualDom/VirtualDomTree'
-import { PatchTree, unsafe_uncurried_applyPatchTree } from 'monarch/Monarch/VirtualDom/PatchTree'
-import { DiffWork, mkRootDiffWork, unsafe_uncurried_mount, unsafe_uncurried_performDiffWork } from 'monarch/Monarch/VirtualDom'
+import { unsafe_uncurried_applyPatchTree } from 'monarch/Monarch/VirtualDom/PatchTree'
+import { unsafe_uncurried_mount } from 'monarch/Monarch/VirtualDom'
+import { DiffWorkEnvironment, DiffWork, DiffWorkResult, mkRootDiffWork, unsafe_uncurried_performDiffWork } from 'monarch/Monarch/VirtualDom/DiffWork'
 import { mkScheduler } from 'monarch/Monarch/Scheduler'
 import * as asap from 'asap'
 import 'setimmediate'
@@ -14,34 +15,33 @@ interface Spec<input, model, message> {
     container: HTMLElement
 }
 
-interface DocumentState<model, message> {
-    model: model
+interface State<model, message> {
     commitedVirtualDomTree: VirtualDomTree<message>
     diffWork?: DiffWork<any, any>
-    diffWorkResult: DiffWorkResult<message>
+    diffWorkResult?: DiffWorkResult<message>
     hasRequestedAsyncRendering: boolean
-}
-
-interface DiffWorkResult<message> {
-    rootVNode?: VirtualDomTree<message>
-    rootPatchTree?: PatchTree
+    model: model
 }
 
 function unsafe_document<input, model, message>({ init, input, update, container, view }: Spec<input, model, message>): void {
-    const initialModel = init(input)
-    const initialVirtualDomTree = view(initialModel)
-    const outputHandlers = OutputHandlersList.mkNil(dispatchMessage)
-    const scheduler = mkScheduler()
-    const environment = { scheduler, dispatchDiffWork, finishDiffWork }
-
-    let state: DocumentState<model, message> = {
-        model: initialModel,
-        commitedVirtualDomTree: initialVirtualDomTree,
-        diffWorkResult: {},
-        hasRequestedAsyncRendering: false,
+    const initialModel: model = init(input)
+    const initialVirtualDomTree: VirtualDomTree<message> = view(initialModel)
+    const outputHandlers = OutputHandlersList.mkNil(unsafe_dispatchMessage)
+    const environment: DiffWorkEnvironment<message, message> = {
+        scheduler: mkScheduler(),
+        unsafe_dispatchDiffWork,
+        unsafe_finishDiffWork,
     }
 
-    function dispatchMessage(message: message): void {
+    let state: State<model, message> = {
+        commitedVirtualDomTree: initialVirtualDomTree,
+        diffWork: undefined,
+        diffWorkResult: undefined,
+        hasRequestedAsyncRendering: false,
+        model: initialModel,
+    }
+
+    function unsafe_dispatchMessage(message: message): void {
         const previousModel = state.model
         const nextModel = update(message)(previousModel)
 
@@ -49,48 +49,59 @@ function unsafe_document<input, model, message>({ init, input, update, container
 
         state.model = nextModel
 
-        if (!state.hasRequestedAsyncRendering) {
-            state.hasRequestedAsyncRendering = requestAsap(render)
-        }
+        if (state.hasRequestedAsyncRendering) return
+
+        state.hasRequestedAsyncRendering = requestAsap(unsafe_render)
     }
 
-    function render() {
+    function unsafe_render(): void {
         const nextVirtualDomTree = view(state.model)
         const initialDiffWork = mkRootDiffWork(state.commitedVirtualDomTree, nextVirtualDomTree)
 
         state.hasRequestedAsyncRendering = false
 
-        dispatchDiffWork(initialDiffWork)
+        unsafe_dispatchDiffWork(initialDiffWork)
     }
 
-    function dispatchDiffWork(nextDiffWork: DiffWork<any, any>): void {
+    function unsafe_dispatchDiffWork(diffWork: DiffWork<any, any>): void {
         const hasRequestedAsyncDiffWorkPerformance = state.diffWork !== undefined
-        state.diffWork = nextDiffWork
+
+        state.diffWork = diffWork
 
         if (hasRequestedAsyncDiffWorkPerformance) return
 
-        window.setImmediate(performDiffWork)
+        window.setImmediate(unsafe_performDiffWork)
     }
 
-    function performDiffWork() {
+    function unsafe_performDiffWork() {
         const diffWork = state.diffWork!
+
         state.diffWork = undefined
+
         unsafe_uncurried_performDiffWork(diffWork, environment)
     }
 
-    function finishDiffWork(newDiffWrokResult: DiffWorkResult<message>): void {
-        const hasRequestedAsyncCommitting = state.diffWorkResult.rootPatchTree !== undefined
-        state.diffWorkResult = newDiffWrokResult
+    function unsafe_finishDiffWork(diffWorkResult: DiffWorkResult<message>): void {
+        const hasRequestedAsyncCommitting = state.diffWorkResult !== undefined
+
+        state.diffWorkResult = diffWorkResult
 
         if (hasRequestedAsyncCommitting) return
 
-        requestAnimationFrame(commit)
+        requestAnimationFrame(unsafe_commit)
     }
 
-    function commit() {
-        const patchTree = state.diffWorkResult.rootPatchTree!
-        state.commitedVirtualDomTree = state.diffWorkResult.rootVNode!
-        state.diffWorkResult.rootPatchTree = undefined
+    function unsafe_commit() {
+        if (state.diffWorkResult === undefined) {
+            // ToDo: This is a serious bug. Should be reported.
+            throw '### INVARIANT ###'
+        }
+
+        const patchTree = state.diffWorkResult.rootPatchTree
+
+        state.commitedVirtualDomTree = state.diffWorkResult.rootVNode
+        state.diffWorkResult = undefined
+
         unsafe_uncurried_applyPatchTree(container, patchTree)
     }
 
