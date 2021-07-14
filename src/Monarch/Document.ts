@@ -71,10 +71,10 @@ function unsafe_document<input, model, message>({ init, input, update, container
 
         if (hasRequestedAsyncDiffWorkPerformance) return
 
-        window.setImmediate(unsafe_performDiffWork)
+        window.setImmediate(unsafe_diff)
     }
 
-    function unsafe_performDiffWork() {
+    function unsafe_diff() {
         const diffWork = state.diffWork!
 
         state.diffWork = undefined
