@@ -1,11 +1,11 @@
+import 'setimmediate'
+
 import { OutputHandlersList } from 'monarch/Monarch/VirtualDom/OutputHandlersList'
 import { VirtualDomTree } from 'monarch/Monarch/VirtualDom/VirtualDomTree'
 import { unsafe_uncurried_applyPatchTree } from 'monarch/Monarch/VirtualDom/PatchTree'
 import { unsafe_uncurried_mount } from 'monarch/Monarch/VirtualDom'
 import { DiffWorkEnvironment, DiffWork, DiffWorkResult, mkRootDiffWork, unsafe_uncurried_performDiffWork } from 'monarch/Monarch/VirtualDom/DiffWork'
 import { mkScheduler } from 'monarch/Monarch/Scheduler'
-import * as asap from 'asap'
-import 'setimmediate'
 
 interface Spec<input, model, message> {
     input: input
@@ -51,7 +51,8 @@ function unsafe_document<input, model, message>({ init, input, update, container
 
         if (state.hasRequestedAsyncRendering) return
 
-        state.hasRequestedAsyncRendering = requestAsap(unsafe_render)
+        window.setImmediate(unsafe_render)
+        state.hasRequestedAsyncRendering = true
     }
 
     function unsafe_render(): void {
@@ -60,7 +61,7 @@ function unsafe_document<input, model, message>({ init, input, update, container
 
         state.hasRequestedAsyncRendering = false
 
-        unsafe_dispatchDiffWork(initialDiffWork)
+        unsafe_uncurried_performDiffWork(initialDiffWork, environment)
     }
 
     function unsafe_dispatchDiffWork(diffWork: DiffWork<any, any>): void {
@@ -114,9 +115,4 @@ interface Document {
 
 export const document: Document = spec => {
     return () => unsafe_document(spec)
-}
-
-function requestAsap(task: () => void) {
-    asap(task)
-    return true
 }
