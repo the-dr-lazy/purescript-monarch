@@ -18,16 +18,37 @@ where
 import Prelude
 
 import Monarch.Html          ( Html )
+import Monarch.Command       ( BASIC )
+import Monarch.Command       as Command
 import Effect                ( Effect )
 import Web.HTML              ( HTMLElement )
+import Run                   ( Run )
 
-type Spec input model message r
-  = ( input     :: input
-    , init      :: input -> model
-    , update    :: message -> model -> model
-    , view      :: model -> Html message
-    , container :: HTMLElement
+
+type DocumentImplementaionSpec input model message r
+  = ( input      :: input
+    , init       :: input -> model
+    , update     :: message -> model -> model
+    , view       :: model -> Html message
+    , container  :: HTMLElement
+    , runCommand :: message -> model -> (message -> Effect Unit) -> Effect Unit
     | r
     )
 
-foreign import document :: forall input model message r. { | Spec input model message r } -> Effect Unit
+foreign import documentImpl :: forall input model message r. { | DocumentImplementaionSpec input model message r } -> Effect Unit
+
+type Spec input model message effects a r
+  = ( input       :: input
+    , init        :: input -> model
+    , update      :: message -> model -> model
+    , view        :: model -> Html message
+    , container   :: HTMLElement
+    , command     :: message -> model -> Run effects a
+    , interpreter :: Run effects a -> Run (BASIC message ()) Unit
+    | r
+    )
+
+document :: forall input model message effects a r. { | Spec input model message effects a r } -> Effect Unit
+document spec = do
+  documentImpl
+    { input: spec.input, init: spec.init, update: spec.update, view: spec.view, container: spec.container, runCommand: Command.run spec.command spec.interpreter }

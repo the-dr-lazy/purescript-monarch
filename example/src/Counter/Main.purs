@@ -16,7 +16,7 @@ import Run                   ( Run, EFFECT )
 import Effect                ( Effect )
 import Effect.Aff            ( launchAff_ )
 import Web.HTML              ( HTMLElement )
-import Monarch               ( Command, Upstream )
+import Monarch.Command       ( Command )
 import Monarch                                   as Monarch
 import Monarch.Html
 import Monarch.Event         ( Event
@@ -50,16 +50,16 @@ view model =
 
 command :: Message
         -> Model
-        -> Command (API.COUNTER ()) Message Output Unit
+        -> Command (API.COUNTER ()) Message Unit
 command message _ = case message of
   UserClickedIncreaseButton -> API.increase
   UserClickedDecreaseButton -> API.decrease
 
-interpreter :: Command (API.COUNTER ()) Message Output Unit -> Command () Message Output Unit
+interpreter :: Command (API.COUNTER ()) Message Unit -> Command () Message Unit
 interpreter = API.run
 
-subscription :: Upstream Input Model Message -> Event Message
-subscription = const eNever
+-- subscription :: Upstream Input Model Message -> Event Message
+-- subscription = const eNever
 
 main :: HTMLElement -> Effect Unit
 main container = do
@@ -69,6 +69,5 @@ main container = do
                     , view
                     , command
                     , interpreter
-                    , subscription
                     , container
                     }
