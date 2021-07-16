@@ -17,12 +17,17 @@ import { unsafe_uncurried_mount } from 'monarch/Monarch/VirtualDom'
 import { DiffWorkEnvironment, DiffWork, DiffWorkResult, mkRootDiffWork, unsafe_uncurried_performDiffWork } from 'monarch/Monarch/VirtualDom/DiffWork'
 import { mkScheduler } from 'monarch/Monarch/Scheduler'
 
+interface DispatchMessage<message> {
+    (message: message): Effect<Unit>
+}
+
 interface Spec<input, model, message> {
     input: input
     init(input: input): model
     update: (message: message) => (model: model) => model
     view(model: model): VirtualDomTree<message>
     container: HTMLElement
+    runCommand: (message: message) => (model: model) => (dispatchMessage: DispatchMessage<message>) => Effect<Unit>
 }
 
 interface State<model, message> {
@@ -33,10 +38,11 @@ interface State<model, message> {
     model: model
 }
 
-function unsafe_document<input, model, message>({ init, input, update, container, view }: Spec<input, model, message>): void {
+function unsafe_documentImpl<input, model, message>({ init, input, update, runCommand, container, view }: Spec<input, model, message>): void {
     const initialModel: model = init(input)
     const initialVirtualDomTree: VirtualDomTree<message> = view(initialModel)
     const outputHandlers = OutputHandlersList.mkNil(unsafe_dispatchMessage)
+    const dispatchMessage: DispatchMessage<message> = message => () => unsafe_dispatchMessage(message)
     const environment: DiffWorkEnvironment<message, message> = {
         scheduler: mkScheduler(),
         unsafe_dispatchDiffWork,
@@ -56,6 +62,8 @@ function unsafe_document<input, model, message>({ init, input, update, container
         const nextModel = update(message)(previousModel)
 
         if (previousModel === nextModel) return
+
+        runCommand(message)(nextModel)(dispatchMessage)()
 
         state.model = nextModel
 
@@ -123,6 +131,6 @@ interface Document {
     <input, model, message>(spec: Spec<input, model, message>): Effect<Unit>
 }
 
-export const document: Document = spec => {
-    return () => unsafe_document(spec)
+export const documentImpl: Document = spec => {
+    return () => unsafe_documentImpl(spec)
 }
