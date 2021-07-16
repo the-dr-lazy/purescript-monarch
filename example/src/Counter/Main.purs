@@ -50,12 +50,12 @@ view model =
 
 command :: Message
         -> Model
-        -> Command (API.COUNTER ()) Message Unit
+        -> Command (API.COUNTER ()) Message Output Unit
 command message _ = case message of
   UserClickedIncreaseButton -> API.increase
   UserClickedDecreaseButton -> API.decrease
 
-interpreter :: Command (API.COUNTER ()) Message Unit -> Command () Message Unit
+interpreter :: Command (API.COUNTER ()) Message Output Unit -> Command () Message Output Unit
 interpreter = API.run
 
 -- subscription :: Upstream Input Model Message -> Event Message
@@ -63,7 +63,7 @@ interpreter = API.run
 
 main :: HTMLElement -> Effect Unit
 main container = do
-  Monarch.document  { input: unit
+  Monarch.document_ { input: unit
                     , init: const init
                     , update
                     , view
