@@ -57,10 +57,77 @@ interface Spec<input, model, message, output, effects, a> {
 }
 
 interface State<model, message> {
-    commitedVirtualDomTree: VirtualDomTree<message>
-    diffWork?: DiffWork<any, any>
+    /**
+     * The virtual DOM tree that has been committed into the DOM tree.
+     *
+     * @remarks
+     *
+     * Mutation cases:
+     *
+     * - When the `PatchTree` has been applied should become
+     *   the `VirtualDomTree` that is associated with the `PatchTree` in the `DiffWorkResult`.
+     *
+     */
+    committedVirtualDomTree: VirtualDomTree<message>
+
+    /**
+     * The next `DiffWork` that should perform in the next loop.
+     *
+     * @remarks
+     *
+     * Mutation cases:
+     *
+     * - When a new `DiffWork` has been dispatched should mutate to it.
+     * - When the `DiffWork` started should flush to `undefined`.
+     *
+     * This state predicates whether an async callback for performing `DiffWork` has been requested or not.
+     *
+     * - `undefined`: There is no requested async callback for performing a `DiffWork`.
+     * - `DiffWork<message, message>`: An async callback for performing the `DiffWork` has been requested.
+     */
+    diffWork?: DiffWork<message, message>
+
+    /**
+     * Result of a finished diff process that should be applied in the next rAF.
+     *
+     * @remarks
+     *
+     * Mutation cases:
+     *
+     * - When a diff process has been finished should store result of it.
+     * - When the `PathTree` has been applied.
+     *
+     * This state predicated whether an async callback for applying the `PatchTree` has been requested or not.
+     *
+     * - `undefined`: There is no requested async callback for performing a `PatchTree`.
+     * - `DiffWorkResult<message>`: An async callback for applying the `PatchTree` has been requested.
+     */
     diffWorkResult?: DiffWorkResult<message>
+
+    /**
+     * Whether an async callback for rendering next virtual DOM tree has been requested or not.
+     *
+     * @remakrs
+     *
+     * Mutation cases:
+     *
+     * - When an async callback for rendering has been requested it should become `true`.
+     * - When there is no async callback for rendering it should flush to `false`.
+     */
     hasRequestedAsyncRendering: boolean
+
+    /**
+     * Single source of truth of the application.
+     *
+     * @remarks
+     *
+     * Note: this state should mutate synchronously.
+     *
+     * Mutation cases:
+     *
+     * - When a new `message` has been dispatched.
+     *
+     */
     model: model
 }
 
@@ -88,7 +155,7 @@ function unsafe_document<input, model, message, output, effects, a>({
     }
 
     let state: State<model, message> = {
-        commitedVirtualDomTree: initialVirtualDomTree,
+        committedVirtualDomTree: initialVirtualDomTree,
         diffWork: undefined,
         diffWorkResult: undefined,
         hasRequestedAsyncRendering: false,
@@ -113,7 +180,7 @@ function unsafe_document<input, model, message, output, effects, a>({
 
     function unsafe_render(): void {
         const nextVirtualDomTree = view(state.model)
-        const initialDiffWork = mkRootDiffWork(state.commitedVirtualDomTree, nextVirtualDomTree)
+        const initialDiffWork = mkRootDiffWork(state.committedVirtualDomTree, nextVirtualDomTree)
 
         state.hasRequestedAsyncRendering = false
 
@@ -156,7 +223,7 @@ function unsafe_document<input, model, message, output, effects, a>({
 
         const patchTree = state.diffWorkResult.rootPatchTree
 
-        state.commitedVirtualDomTree = state.diffWorkResult.rootVNode
+        state.committedVirtualDomTree = state.diffWorkResult.rootVNode
         state.diffWorkResult = undefined
 
         unsafe_uncurried_applyPatchTree(container, patchTree)
