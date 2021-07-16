@@ -14,47 +14,88 @@ import { OutputHandlersList } from 'monarch/Monarch/VirtualDom/OutputHandlersLis
 import { VirtualDomTree } from 'monarch/Monarch/VirtualDom/VirtualDomTree'
 import { unsafe_uncurried_applyPatchTree } from 'monarch/Monarch/VirtualDom/PatchTree'
 import { unsafe_uncurried_mount } from 'monarch/Monarch/VirtualDom'
-import { DiffWorkEnvironment, DiffWork, DiffWorkResult, mkRootDiffWork, unsafe_uncurried_performDiffWork } from 'monarch/Monarch/VirtualDom/DiffWork'
+import {
+    DiffWorkEnvironment,
+    DiffWork,
+    DiffWorkResult,
+    mkRootDiffWork,
+    unsafe_uncurried_performDiffWork,
+} from 'monarch/Monarch/VirtualDom/DiffWork'
 import { mkScheduler } from 'monarch/Monarch/Scheduler'
 
 interface DispatchMessage<message> {
     (message: message): Effect<Unit>
 }
 
-interface Spec<input, model, message> {
+interface DispatchOutput<output> {
+    (output: output): Effect<Unit>
+}
+
+interface OutputCallback<output> {
+    (output: output): Effect<Unit>
+}
+
+interface Output<output> {
+    (callback: OutputCallback<output>): Effect<Unit>
+}
+
+// prettier-ignore
+interface Spec<input, model, message, output> {
     input: input
     init(input: input): model
     update: (message: message) => (model: model) => model
     view(model: model): VirtualDomTree<message>
     container: HTMLElement
-    runCommand: (message: message) => (model: model) => (dispatchMessage: DispatchMessage<message>) => Effect<Unit>
+    runCommand: (message: message) => (model: model) => (dispatchMessage: DispatchMessage<message>) => (dispatchOutput: DispatchOutput<output>) => Effect<Unit>
 }
 
-interface State<model, message> {
+interface State<model, message, output> {
     commitedVirtualDomTree: VirtualDomTree<message>
     diffWork?: DiffWork<any, any>
     diffWorkResult?: DiffWorkResult<message>
     hasRequestedAsyncRendering: boolean
     model: model
+    outputCallbacks: OutputCallback<output>[]
 }
 
-function unsafe_documentImpl<input, model, message>({ init, input, update, runCommand, container, view }: Spec<input, model, message>): void {
+interface Document<output> {
+    output: Output<output>
+}
+
+function unsafe_documentImpl<input, model, message, output>({
+    init,
+    input,
+    update,
+    runCommand,
+    container,
+    view,
+}: Spec<input, model, message, output>): Document<output> {
     const initialModel: model = init(input)
     const initialVirtualDomTree: VirtualDomTree<message> = view(initialModel)
     const outputHandlers = OutputHandlersList.mkNil(unsafe_dispatchMessage)
-    const dispatchMessage: DispatchMessage<message> = message => () => unsafe_dispatchMessage(message)
     const environment: DiffWorkEnvironment<message, message> = {
         scheduler: mkScheduler(),
         unsafe_dispatchDiffWork,
         unsafe_finishDiffWork,
     }
 
-    let state: State<model, message> = {
+    let state: State<model, message, output> = {
         commitedVirtualDomTree: initialVirtualDomTree,
         diffWork: undefined,
         diffWorkResult: undefined,
         hasRequestedAsyncRendering: false,
         model: initialModel,
+        outputCallbacks: [],
+    }
+
+    const dispatchMessage: DispatchMessage<message> = message => () => unsafe_dispatchMessage(message)
+
+    const dispatchOutput: DispatchOutput<output> = output => () => {
+        state.outputCallbacks.forEach(callback => callback(output))
+    }
+
+    const output: Output<output> = callback => () => {
+        state.outputCallbacks.push(callback)
     }
 
     function unsafe_dispatchMessage(message: message): void {
@@ -63,7 +104,7 @@ function unsafe_documentImpl<input, model, message>({ init, input, update, runCo
 
         if (previousModel === nextModel) return
 
-        runCommand(message)(nextModel)(dispatchMessage)()
+        runCommand(message)(nextModel)(dispatchMessage)(dispatchOutput)()
 
         state.model = nextModel
 
@@ -125,12 +166,14 @@ function unsafe_documentImpl<input, model, message>({ init, input, update, runCo
     }
 
     requestAnimationFrame(() => unsafe_uncurried_mount(container, outputHandlers, initialVirtualDomTree))
+
+    return { output }
 }
 
-interface Document {
-    <input, model, message>(spec: Spec<input, model, message>): Effect<Unit>
+interface DocumentImplementation {
+    <input, model, message, output>(spec: Spec<input, model, message, output>): Effect<Document<output>>
 }
 
-export const documentImpl: Document = spec => {
+export const documentImpl: DocumentImplementation = spec => {
     return () => unsafe_documentImpl(spec)
 }

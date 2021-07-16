@@ -4,6 +4,7 @@ module Monarch.Command
   , COMMAND
   , CommandF
   , dispatch
+  , raise
   , run
   )
 where
@@ -23,45 +24,53 @@ import Effect.Aff             ( launchAff_
                               )
 
 
-data CommandF message a
+data CommandF message output a
   = Dispatch message a
+  | Raise output a
 
-derive instance functorCommandF :: Functor (CommandF message)
+derive instance functorCommandF :: Functor (CommandF message output)
 
 _command = Proxy :: Proxy "command"
 
-type COMMAND message r = (command :: CommandF message | r)
+type COMMAND message output r = (command :: CommandF message output | r)
 
-type BASIC message r
+type BASIC message output r
   = EFFECT
   + AFF
-  + COMMAND message
+  + COMMAND message output
   + r
 
-type Command effects message = Run (BASIC message effects)
+type Command effects message output = Run (BASIC message output effects)
 
-dispatch :: forall message r. message -> Run (COMMAND message + r) Unit
+dispatch :: forall message output r. message -> Run (COMMAND message output + r) Unit
 dispatch message = Run.lift _command $ Dispatch message unit
 
-runCommand :: forall message r
+raise :: forall message output r. output -> Run (COMMAND message output + r) Unit
+raise output = Run.lift _command $ Raise output unit
+
+runCommand :: forall message output r
             . (message -> Effect Unit)
-           -> Run (COMMAND message + EFFECT + r)
+           -> (output -> Effect Unit)
+           -> Run (COMMAND message output + EFFECT + r)
            ~> Run (EFFECT + r)
-runCommand dispatchMessage = interpret (Run.on _command (handleCommand dispatchMessage) Run.send)
+runCommand dispatchMessage dispatchOutput = interpret (Run.on _command (handleCommand dispatchMessage dispatchOutput) Run.send)
 
-handleCommand :: forall message r
+handleCommand :: forall message output r
               . (message -> Effect Unit)
-             -> CommandF message
+             -> (output -> Effect Unit)
+             -> CommandF message output
              ~> Run (EFFECT + r)
-handleCommand dispatchMessage  = case _ of
+handleCommand dispatchMessage dispatchOutput = case _ of
   Dispatch message next -> Run.liftEffect $ dispatchMessage message *> pure next
+  Raise    output  next -> Run.liftEffect $ dispatchOutput output   *> pure next
 
-run :: forall message model effects a
+run :: forall message model output effects a
     . (message -> model -> Run effects a)
-    -> (Run effects a -> Run (BASIC message ()) Unit)
+    -> (Run effects a -> Run (BASIC message output ()) Unit)
     -> message
     -> model
     -> (message -> Effect Unit)
+    -> (output -> Effect Unit)
     -> Effect Unit
-run command interpreter message model dispatchMessage =
-  launchAff_ <<< runBaseAff' <<< runCommand dispatchMessage <<< interpreter $ command message model
+run command interpreter message model dispatchMessage dispatchOutput =
+  launchAff_ <<< runBaseAff' <<< runCommand dispatchMessage dispatchOutput <<< interpreter $ command message model

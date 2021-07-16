@@ -16,4 +16,4 @@ module Monarch
 where
 
 import Monarch.Document
-import Monarch.Command ( BASIC, Command, dispatch )
+import Monarch.Command ( BASIC, Command, dispatch, raise )
