@@ -31,14 +31,6 @@ interface DispatchOutput<output> {
     (output: output): Effect<Unit>
 }
 
-interface OutputCallback<output> {
-    (output: output): Effect<Unit>
-}
-
-interface Output<output> {
-    (callback: OutputCallback<output>): Effect<Unit>
-}
-
 // prettier-ignore
 interface Spec<input, model, message, output> {
     input: input
@@ -47,19 +39,15 @@ interface Spec<input, model, message, output> {
     view(model: model): VirtualDomTree<message>
     container: HTMLElement
     runCommand: (message: message) => (model: model) => (dispatchMessage: DispatchMessage<message>) => (dispatchOutput: DispatchOutput<output>) => Effect<Unit>
+    onOutput(output: output): Effect<Unit>
 }
 
-interface State<model, message, output> {
+interface State<model, message> {
     commitedVirtualDomTree: VirtualDomTree<message>
     diffWork?: DiffWork<any, any>
     diffWorkResult?: DiffWorkResult<message>
     hasRequestedAsyncRendering: boolean
     model: model
-    outputCallbacks: OutputCallback<output>[]
-}
-
-interface Document<output> {
-    output: Output<output>
 }
 
 function unsafe_documentImpl<input, model, message, output>({
@@ -69,7 +57,8 @@ function unsafe_documentImpl<input, model, message, output>({
     runCommand,
     container,
     view,
-}: Spec<input, model, message, output>): Document<output> {
+    onOutput,
+}: Spec<input, model, message, output>): void {
     const initialModel: model = init(input)
     const initialVirtualDomTree: VirtualDomTree<message> = view(initialModel)
     const outputHandlers = OutputHandlersList.mkNil(unsafe_dispatchMessage)
@@ -79,23 +68,18 @@ function unsafe_documentImpl<input, model, message, output>({
         unsafe_finishDiffWork,
     }
 
-    let state: State<model, message, output> = {
+    let state: State<model, message> = {
         commitedVirtualDomTree: initialVirtualDomTree,
         diffWork: undefined,
         diffWorkResult: undefined,
         hasRequestedAsyncRendering: false,
         model: initialModel,
-        outputCallbacks: [],
     }
 
     const dispatchMessage: DispatchMessage<message> = message => () => unsafe_dispatchMessage(message)
 
     const dispatchOutput: DispatchOutput<output> = output => () => {
-        state.outputCallbacks.forEach(callback => callback(output))
-    }
-
-    const output: Output<output> = callback => () => {
-        state.outputCallbacks.push(callback)
+        onOutput(output)()
     }
 
     function unsafe_dispatchMessage(message: message): void {
@@ -166,12 +150,10 @@ function unsafe_documentImpl<input, model, message, output>({
     }
 
     requestAnimationFrame(() => unsafe_uncurried_mount(container, outputHandlers, initialVirtualDomTree))
-
-    return { output }
 }
 
 interface DocumentImplementation {
-    <input, model, message, output>(spec: Spec<input, model, message, output>): Effect<Document<output>>
+    <input, model, message, output>(spec: Spec<input, model, message, output>): Effect<Unit>
 }
 
 export const documentImpl: DocumentImplementation = spec => {

@@ -12,7 +12,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 module Monarch.Document
   ( Spec
   , document
-  , document_
   )
 where
 
@@ -25,10 +24,6 @@ import Effect                ( Effect )
 import Web.HTML              ( HTMLElement )
 import Run                   ( Run )
 
-type Document output
-  = { output :: (output -> Effect Unit) -> Effect Unit
-    }
-
 type DocumentImplementaionSpec input model message output r
   = ( input      :: input
     , init       :: input -> model
@@ -36,10 +31,11 @@ type DocumentImplementaionSpec input model message output r
     , view       :: model -> Html message
     , container  :: HTMLElement
     , runCommand :: message -> model -> (message -> Effect Unit) -> (output -> Effect Unit) -> Effect Unit
+    , onOutput   :: output -> Effect Unit
     | r
     )
 
-foreign import documentImpl :: forall input model message output r. { | DocumentImplementaionSpec input model message output r } -> Effect (Document output)
+foreign import documentImpl :: forall input model message output r. { | DocumentImplementaionSpec input model message output r } -> Effect Unit
 
 type Spec input model message output effects a r
   = ( input       :: input
@@ -49,13 +45,11 @@ type Spec input model message output effects a r
     , container   :: HTMLElement
     , command     :: message -> model -> Run effects a
     , interpreter :: Run effects a -> Run (BASIC message output ()) Unit
+    , onOutput    :: output -> Effect Unit
     | r
     )
 
-document :: forall input model message output effects a r. { | Spec input model message output effects a r } -> Effect (Document output)
+document :: forall input model message output effects a r. { | Spec input model message output effects a r } -> Effect Unit
 document spec = do
   documentImpl
-    { input: spec.input, init: spec.init, update: spec.update, view: spec.view, container: spec.container, runCommand: Command.run spec.command spec.interpreter }
-
-document_ :: forall input model message output effects a r. { | Spec input model message output effects a r } -> Effect Unit
-document_ = void <<< document
+    { input: spec.input, init: spec.init, update: spec.update, view: spec.view, container: spec.container, onOutput: spec.onOutput, runCommand: Command.run spec.command spec.interpreter }

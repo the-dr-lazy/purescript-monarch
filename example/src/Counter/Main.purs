@@ -63,11 +63,12 @@ interpreter = API.run
 
 main :: HTMLElement -> Effect Unit
 main container = do
-  Monarch.document_ { input: unit
+  Monarch.document  { input: unit
                     , init: const init
                     , update
                     , view
                     , command
                     , interpreter
                     , container
+                    , onOutput: \output -> pure unit
                     }
