@@ -11,31 +11,30 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 module Monarch.Document
   ( Spec
-  , document
+  , bootstrap
   )
 where
 
 import Prelude
 
 import Monarch.Html          ( Html )
-import Monarch.Command       ( BASIC )
-import Monarch.Command       as Command
+import Monarch.Command       ( BASIC, mkCommandRunner )
 import Effect                ( Effect )
 import Web.HTML              ( HTMLElement )
 import Run                   ( Run )
 
-type DocumentImplementaionSpec input model message output r
+type DocumentSpec input model message output r
   = ( input      :: input
     , init       :: input -> model
     , update     :: message -> model -> model
     , view       :: model -> Html message
     , container  :: HTMLElement
-    , runCommand :: message -> model -> (message -> Effect Unit) -> (output -> Effect Unit) -> Effect Unit
+    , runCommand :: { dispatchMessage :: message -> Effect Unit, dispatchOutput :: output -> Effect Unit} -> { message :: message, model :: model } -> Effect Unit
     , onOutput   :: output -> Effect Unit
     | r
     )
 
-foreign import documentImpl :: forall input model message output r. { | DocumentImplementaionSpec input model message output r } -> Effect Unit
+foreign import document :: forall input model message output r. { | DocumentSpec input model message output r } -> Effect Unit
 
 type Spec input model message output effects a r
   = ( input       :: input
@@ -49,7 +48,7 @@ type Spec input model message output effects a r
     | r
     )
 
-document :: forall input model message output effects a r. { | Spec input model message output effects a r } -> Effect Unit
-document spec = do
-  documentImpl
-    { input: spec.input, init: spec.init, update: spec.update, view: spec.view, container: spec.container, onOutput: spec.onOutput, runCommand: Command.run spec.command spec.interpreter }
+bootstrap :: forall input model message output effects a r. { | Spec input model message output effects a r } -> Effect Unit
+bootstrap spec = do
+  document
+    { input: spec.input, init: spec.init, update: spec.update, view: spec.view, container: spec.container, onOutput: spec.onOutput, runCommand: mkCommandRunner spec.command spec.interpreter }

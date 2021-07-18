@@ -38,7 +38,7 @@ interface Spec<input, model, message, output> {
     update: (message: message) => (model: model) => model
     view(model: model): VirtualDomTree<message>
     container: HTMLElement
-    runCommand: (message: message) => (model: model) => (dispatchMessage: DispatchMessage<message>) => (dispatchOutput: DispatchOutput<output>) => Effect<Unit>
+    runCommand: (dispatches: { dispatchMessage: DispatchMessage<message>, dispatchOutput: DispatchOutput<output> }) => (data: { model: model, message: message }) => Effect<Unit>
     onOutput(output: output): Effect<Unit>
 }
 
@@ -50,7 +50,7 @@ interface State<model, message> {
     model: model
 }
 
-function unsafe_documentImpl<input, model, message, output>({
+function unsafe_document<input, model, message, output>({
     init,
     input,
     update,
@@ -78,9 +78,7 @@ function unsafe_documentImpl<input, model, message, output>({
 
     const dispatchMessage: DispatchMessage<message> = message => () => unsafe_dispatchMessage(message)
 
-    const dispatchOutput: DispatchOutput<output> = output => () => {
-        onOutput(output)()
-    }
+    const dispatchOutput: DispatchOutput<output> = onOutput
 
     function unsafe_dispatchMessage(message: message): void {
         const previousModel = state.model
@@ -88,7 +86,7 @@ function unsafe_documentImpl<input, model, message, output>({
 
         if (previousModel === nextModel) return
 
-        runCommand(message)(nextModel)(dispatchMessage)(dispatchOutput)()
+        runCommand({ dispatchMessage, dispatchOutput })({ message, model: nextModel })()
 
         state.model = nextModel
 
@@ -152,10 +150,10 @@ function unsafe_documentImpl<input, model, message, output>({
     requestAnimationFrame(() => unsafe_uncurried_mount(container, outputHandlers, initialVirtualDomTree))
 }
 
-interface DocumentImplementation {
+interface Document {
     <input, model, message, output>(spec: Spec<input, model, message, output>): Effect<Unit>
 }
 
-export const documentImpl: DocumentImplementation = spec => {
-    return () => unsafe_documentImpl(spec)
+export const document: Document = spec => {
+    return () => unsafe_document(spec)
 }
