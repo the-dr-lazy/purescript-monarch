@@ -84,9 +84,9 @@ function unsafe_document<input, model, message, output>({
         const previousModel = state.model
         const nextModel = update(message)(previousModel)
 
-        if (previousModel === nextModel) return
-
         runCommand({ dispatchMessage, dispatchOutput })({ message, model: nextModel })()
+
+        if (previousModel === nextModel) return
 
         state.model = nextModel
 
