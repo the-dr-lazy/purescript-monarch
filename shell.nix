@@ -2,5 +2,5 @@
 
 pkgs.mkShell {
   name = "purescript-monrach";
-  buildInputs = with pkgs; [ nodejs-16_x purescript ];
+  buildInputs = with pkgs; [ nodejs-16_x purescript spago ];
 }
