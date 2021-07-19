@@ -41,7 +41,7 @@ type DocumentSpec input model message output effects a r
   = Spec input model message output effects a
   + ( mkCommandRunner :: MkCommandRunner message model output effects a | r )
 
-foreign import document :: forall input model message output effects a. { | DocumentSpec input model message output effects a () } -> Effect Unit
+foreign import document :: forall input model message output effects a r. { | DocumentSpec input model message output effects a r } -> Effect Unit
 
 bootstrap :: forall input model message output effects a. { | Spec input model message output effects a () } -> Effect Unit
-bootstrap spec = document { input: spec.input, init: spec.init, update: spec.update, view: spec.view, container: spec.container, onOutput: spec.onOutput, command: spec.command, interpreter: spec.interpreter, mkCommandRunner }
+bootstrap spec = document $ Record.merge spec { mkCommandRunner: mkCommandRunner :: MkCommandRunner message model output effects a }

@@ -34,6 +34,16 @@ interface DispatchOutput<output> {
 type Run<effects, a> = unknown
 
 // prettier-ignore
+type MkCommandRunner<message, model, output, effects, a> =
+  (environment: {
+      command: (message: message) => (model: model) => Run<effects, a>,
+      interpreter: (command: Run<effects, a>) => Run<any, Unit>,
+      dispatchMessage: DispatchMessage<message>,
+      dispatchOutput: DispatchOutput<output>
+  })
+  => (input: { model: model, message: message })
+  => Effect<Unit>
+
 interface Spec<input, model, message, output, effects, a> {
     input: input
     init(input: input): model
@@ -42,7 +52,7 @@ interface Spec<input, model, message, output, effects, a> {
     container: HTMLElement
     command: (message: message) => (model: model) => Run<effects, a>
     interpreter(command: Run<effects, a>): Run<any, Unit>
-    mkCommandRunner: (r: { command: (message: message) => (model: model) => Run<effects, a>, interpreter: (command: Run<effects, a>) => Run<any, Unit>, dispatchMessage: DispatchMessage<message>, dispatchOutput: DispatchOutput<output> }) => (data: { model: model, message: message }) => Effect<Unit>
+    mkCommandRunner: MkCommandRunner<message, model, output, effects, a>
     onOutput(output: output): Effect<Unit>
 }
 
