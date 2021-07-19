@@ -14,5 +14,5 @@ let
 in pkgs.mkShell {
   name = "purescript-monarch";
   buildInputs = with pkgs;
-    nodePackages ++ [ gitFull nodejs-16_x purescript spago headroom ];
+    nodePackages ++ [ gitFull niv nodejs-16_x purescript spago headroom ];
 }
