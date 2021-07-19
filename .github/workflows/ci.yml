@@ -8,22 +8,8 @@ on:
     pull_request:
 
 jobs:
-    test:
-        name: Test
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v2
-            - uses: cachix/install-nix-action@v13
-            - uses: cachix/cachix-action@v10
-              with:
-                  name: purescript-monarch
-                  authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-
-            - name: Check headers
-              run: nix-shell --run "headroom run --check-headers"
-
-    build:
-        name: Build
+    workflow:
+        name: Workflow
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v2
