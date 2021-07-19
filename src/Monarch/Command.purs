@@ -6,6 +6,8 @@ module Monarch.Command
   , dispatch
   , raise
   , mkCommandRunner
+  , MkCommandRunner
+  , runCommand
   )
 where
 
@@ -64,11 +66,15 @@ handleCommand dispatchMessage dispatchOutput = case _ of
   Dispatch message next -> Run.liftEffect $ dispatchMessage message *> pure next
   Raise    output  next -> Run.liftEffect $ dispatchOutput output   *> pure next
 
-mkCommandRunner :: forall message model output effects a
-                 . (message -> model -> Run effects a)
-                -> (Run effects a -> Run (BASIC message output ()) Unit)
-                -> { dispatchMessage :: message -> Effect Unit, dispatchOutput :: output -> Effect Unit }
+type MkCommandRunner message model output effects a =
+                   { command         :: message -> model -> Run effects a
+                   , interpreter     :: Run effects a -> Run (BASIC message output ()) Unit
+                   , dispatchMessage :: message -> Effect Unit
+                   , dispatchOutput  :: output -> Effect Unit
+                   }
                 -> { message :: message, model :: model }
                 -> Effect Unit
-mkCommandRunner command interpreter { dispatchMessage, dispatchOutput } { message, model } =
+
+mkCommandRunner :: forall message model output effects a. MkCommandRunner message model output effects a
+mkCommandRunner { command, interpreter, dispatchMessage, dispatchOutput } { message, model } =
   launchAff_ <<< runBaseAff' <<< runCommand dispatchMessage dispatchOutput <<< interpreter $ command message model
