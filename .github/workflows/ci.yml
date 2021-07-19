@@ -37,13 +37,13 @@ jobs:
                       output
 
             - name: Install NPM dependencies
-              run: nix-shell --run "npm ci"
+              run: nix-shell --pure --run "npm ci"
 
             - name: Install & build PureScript dependencies
-              run: nix-shell --run "spago build --deps-only"
+              run: nix-shell --pure --run "spago build --deps-only"
 
             - name: Build TypeScript
-              run: nix-shell --run "tsc -p tsconfig.json"
+              run: nix-shell --pure --run "tsc -p tsconfig.json"
 
             - name: Build PureScript
-              run: nix-shell --run "spago build"
+              run: nix-shell --pure --run "spago build"
