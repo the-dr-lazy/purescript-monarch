@@ -1,4 +1,18 @@
 {
+    "headroom-darwin": {
+        "sha256": "0si1wrid5w60dj2whif35l91kis0d3g7mcbaic1f20rhjlbavvzv",
+        "type": "file",
+        "url": "https://github.com/vaclavsvejcar/headroom/releases/download/v0.3.2.0/headroom-0.3.2.0-macOS-ghc-8.8.4",
+        "url_template": "https://github.com/vaclavsvejcar/headroom/releases/download/v<version>/headroom-<version>-macOS-ghc-8.8.4",
+        "version": "0.3.2.0"
+    },
+    "headroom-linux": {
+        "sha256": "0fxpr0lgxsq5fxr2lmkd14ci7ynfhqmg1w499pgw7ppwmcfs99yg",
+        "type": "file",
+        "url": "https://github.com/vaclavsvejcar/headroom/releases/download/v0.3.2.0/headroom-0.3.2.0-Linux-ghc-8.8.4",
+        "url_template": "https://github.com/vaclavsvejcar/headroom/releases/download/v<version>/headroom-<version>-Linux-ghc-8.8.4",
+        "version": "0.3.2.0"
+    },
     "niv": {
         "branch": "master",
         "description": "Easy dependency management for Nix projects",

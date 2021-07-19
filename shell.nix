@@ -1,6 +1,18 @@
 { pkgs ? import ./nix { } }:
 
-pkgs.mkShell {
-  name = "purescript-monrach";
-  buildInputs = with pkgs; [ nodejs-16_x purescript spago ];
+let
+  nodePackages = with pkgs.nodePackages; [
+    typescript
+    typescript-language-server
+    purescript-language-server
+    prettier
+    yaml-language-server
+    vscode-html-languageserver-bin
+    parcel-bundler
+  ];
+
+in pkgs.mkShell {
+  name = "purescript-monarch";
+  buildInputs = with pkgs;
+    nodePackages ++ [ gitFull nodejs-16_x purescript spago headroom ];
 }
