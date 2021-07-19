@@ -31,14 +31,18 @@ interface DispatchOutput<output> {
     (output: output): Effect<Unit>
 }
 
+type Run<effects, a> = unknown
+
 // prettier-ignore
-interface Spec<input, model, message, output> {
+interface Spec<input, model, message, output, effects, a> {
     input: input
     init(input: input): model
     update: (message: message) => (model: model) => model
     view(model: model): VirtualDomTree<message>
     container: HTMLElement
-    runCommand: (dispatches: { dispatchMessage: DispatchMessage<message>, dispatchOutput: DispatchOutput<output> }) => (data: { model: model, message: message }) => Effect<Unit>
+    command: (message: message) => (model: model) => Run<effects, a>
+    interpreter(command: Run<effects, a>): Run<any, Unit>
+    mkCommandRunner: (r: { command: (message: message) => (model: model) => Run<effects, a>, interpreter: (command: Run<effects, a>) => Run<any, Unit>, dispatchMessage: DispatchMessage<message>, dispatchOutput: DispatchOutput<output> }) => (data: { model: model, message: message }) => Effect<Unit>
     onOutput(output: output): Effect<Unit>
 }
 
@@ -50,18 +54,23 @@ interface State<model, message> {
     model: model
 }
 
-function unsafe_document<input, model, message, output>({
+function unsafe_document<input, model, message, output, effects, a>({
     init,
     input,
     update,
-    runCommand,
+    command,
+    interpreter,
+    mkCommandRunner,
     container,
     view,
     onOutput,
-}: Spec<input, model, message, output>): void {
+}: Spec<input, model, message, output, effects, a>): void {
     const initialModel: model = init(input)
     const initialVirtualDomTree: VirtualDomTree<message> = view(initialModel)
     const outputHandlers = OutputHandlersList.mkNil(unsafe_dispatchMessage)
+    const dispatchMessage: DispatchMessage<message> = message => () => unsafe_dispatchMessage(message)
+    const dispatchOutput: DispatchOutput<output> = onOutput
+    const runCommand = mkCommandRunner({ command, interpreter, dispatchMessage, dispatchOutput })
     const environment: DiffWorkEnvironment<message, message> = {
         scheduler: mkScheduler(),
         unsafe_dispatchDiffWork,
@@ -76,15 +85,11 @@ function unsafe_document<input, model, message, output>({
         model: initialModel,
     }
 
-    const dispatchMessage: DispatchMessage<message> = message => () => unsafe_dispatchMessage(message)
-
-    const dispatchOutput: DispatchOutput<output> = onOutput
-
     function unsafe_dispatchMessage(message: message): void {
         const previousModel = state.model
         const nextModel = update(message)(previousModel)
 
-        runCommand({ dispatchMessage, dispatchOutput })({ message, model: nextModel })()
+        runCommand({ message, model: nextModel })()
 
         if (previousModel === nextModel) return
 
@@ -151,7 +156,7 @@ function unsafe_document<input, model, message, output>({
 }
 
 interface Document {
-    <input, model, message, output>(spec: Spec<input, model, message, output>): Effect<Unit>
+    <input, model, message, output, effects, a>(spec: Spec<input, model, message, output, effects, a>): Effect<Unit>
 }
 
 export const document: Document = spec => {

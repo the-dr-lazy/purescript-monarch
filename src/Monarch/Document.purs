@@ -18,23 +18,12 @@ where
 import Prelude
 
 import Monarch.Html          ( Html )
-import Monarch.Command       ( BASIC, mkCommandRunner )
+import Monarch.Command       ( BASIC, MkCommandRunner, mkCommandRunner )
 import Effect                ( Effect )
 import Web.HTML              ( HTMLElement )
+import Record                as Record
 import Run                   ( Run )
-
-type DocumentSpec input model message output r
-  = ( input      :: input
-    , init       :: input -> model
-    , update     :: message -> model -> model
-    , view       :: model -> Html message
-    , container  :: HTMLElement
-    , runCommand :: { dispatchMessage :: message -> Effect Unit, dispatchOutput :: output -> Effect Unit} -> { message :: message, model :: model } -> Effect Unit
-    , onOutput   :: output -> Effect Unit
-    | r
-    )
-
-foreign import document :: forall input model message output r. { | DocumentSpec input model message output r } -> Effect Unit
+import Type.Row              (type (+))
 
 type Spec input model message output effects a r
   = ( input       :: input
@@ -48,7 +37,11 @@ type Spec input model message output effects a r
     | r
     )
 
-bootstrap :: forall input model message output effects a r. { | Spec input model message output effects a r } -> Effect Unit
-bootstrap spec = do
-  document
-    { input: spec.input, init: spec.init, update: spec.update, view: spec.view, container: spec.container, onOutput: spec.onOutput, runCommand: mkCommandRunner spec.command spec.interpreter }
+type DocumentSpec input model message output effects a r
+  = Spec input model message output effects a
+  + ( mkCommandRunner :: MkCommandRunner message model output effects a | r )
+
+foreign import document :: forall input model message output effects a. { | DocumentSpec input model message output effects a () } -> Effect Unit
+
+bootstrap :: forall input model message output effects a. { | Spec input model message output effects a () } -> Effect Unit
+bootstrap spec = document { input: spec.input, init: spec.init, update: spec.update, view: spec.view, container: spec.container, onOutput: spec.onOutput, command: spec.command, interpreter: spec.interpreter, mkCommandRunner }
