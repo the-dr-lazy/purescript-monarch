@@ -1,11 +1,14 @@
 name: CI
 
 on:
+    pull_request:
+        branches:
+            - next
+            - master
     push:
         branches:
-            - master
             - next
-    pull_request:
+            - master
 
 jobs:
     workflow:
