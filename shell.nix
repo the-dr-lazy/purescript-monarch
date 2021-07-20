@@ -4,9 +4,15 @@ pkgs.mkShell {
   name = "purescript-monarch";
   buildInputs = with pkgs; [
     ###################################################
-    # Package managers:
-    niv
-    spago
+    # Code styles:
+    headroom
+    nixpkgs-fmt
+    nodePackages.prettier
+
+    ###################################################
+    # Command line tools:
+    gitFull
+    nodePackages.parcel-bundler
 
     ###################################################
     # Languages:
@@ -25,14 +31,8 @@ pkgs.mkShell {
     nodePackages.yaml-language-server
 
     ###################################################
-    # Code styles:
-    headroom
-    nixpkgs-fmt
-    nodePackages.prettier
-
-    ###################################################
-    # MISC:
-    gitFull
-    nodePackages.parcel-bundler
+    # Package managers:
+    niv
+    spago
   ];
 }
