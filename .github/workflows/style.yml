@@ -7,7 +7,6 @@ on:
             - master
     push:
         braches:
-            - next
             - master
 
 jobs:
