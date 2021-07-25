@@ -1,0 +1,69 @@
+exclude: '(nix/sources.nix$)'
+repos:
+    - repo: local
+      hooks:
+          - name: Check for case conflicts
+            id: check-case-conflict
+            language: system
+            entry: check-case-conflict
+
+          - name: Check JSON
+            id: check-json
+            types: [json]
+            language: system
+            entry: check-json
+
+          - name: Check for merge conflicts
+            id: check-merge-conflict
+            types: [text]
+            language: system
+            entry: check-merge-conflict
+
+          - name: Check for broken symlinks
+            id: check-symlinks
+            types: [symlink]
+            language: system
+            entry: check-symlinks
+
+          - name: Check vcs permalinks
+            id: check-vcs-permalinks
+            types: [text]
+            language: system
+            entry: check-vcs-permalinks
+
+          - name: Check Yaml
+            id: check-yaml
+            types: [yaml]
+            language: system
+            entry: check-yaml
+
+          - name: Fix End of Files
+            id: end-of-file-fixer
+            types: [text]
+            language: system
+            entry: end-of-file-fixer
+
+          - name: Check © headers
+            id: headroom
+            always_run: true
+            language: system
+            pass_filenames: false
+            entry: headroom run
+
+          - name: nix-linter
+            id: nix-linter
+            files: "\\.nix$"
+            language: system
+            entry: nix-linter
+
+          - name: nixpkgs-fmt
+            id: nixpkgs-fmt
+            files: "\\.nix$"
+            language: system
+            entry: nixpkgs-fmt
+
+          - name: Trim Trailing Whitespace
+            id: trailing-whitespace
+            types: [text]
+            language: system
+            entry: trailing-whitespace-fixer

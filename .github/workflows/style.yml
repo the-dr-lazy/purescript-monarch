@@ -20,6 +20,4 @@ jobs:
 
             - name: Check
               run: |
-                nix-build ./nix -A headroom
-                ls -lisahR result/
-                nix-build ./nix -A checks
+                nix-shell --pure --run "pre-commit run --all-files"

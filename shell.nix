@@ -2,11 +2,13 @@
 
 pkgs.mkShell {
   name = "purescript-monarch";
+
   buildInputs = builtins.concatMap builtins.attrValues [
     ###################################################
     # Code styles:
     {
-      inherit (pkgs) headroom nixpkgs-fmt nix-linter;
+      inherit (pkgs) pre-commit headroom nixpkgs-fmt nix-linter;
+      inherit (pkgs.python3Packages) pre-commit-hooks;
       inherit (pkgs.nodePackages) prettier;
     }
 
@@ -42,7 +44,7 @@ pkgs.mkShell {
   ];
 
   shellHook = ''
-    cd ${builtins.toString ./.}
-    ${pkgs.checks.shellHook}
+    cd ${pkgs.paths.string.root}
+    pre-commit install
   '';
 }
