@@ -17,9 +17,23 @@ let
       ''
     else
       throw "There is no Headroom executable for this system architecture.";
+
 in
 [
-  (final: _: { inherit sources; inherit (sources) niv; headroom = mkHeadroom final; })
+  (final: _:
+    let
+      haskellPackages = final.haskellPackages.override {
+        overrides = hfinal: hprev: {
+          mkDerivation = args: hprev.mkDerivation (args // { doCheck = false; });
+        };
+      };
+    in
+    {
+      inherit sources;
+      inherit (sources) niv;
+      headroom =
+        final.haskell.lib.justStaticExecutables (haskellPackages.headroom);
+    })
 
   (_: _: {
     paths = {

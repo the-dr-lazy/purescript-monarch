@@ -18,8 +18,8 @@ jobs:
                   name: purescript-monarch
                   authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
-            - name: Setup tmate session
-              uses: mxschmitt/action-tmate@v3
-
             - name: Check
-              run: nix-build ./nix -A checks
+              run: |
+                nix-build ./nix -A headroom
+                ls -lisahR result/
+                nix-build ./nix -A checks
