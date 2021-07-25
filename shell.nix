@@ -45,6 +45,6 @@ pkgs.mkShell {
 
   shellHook = ''
     cd ${pkgs.paths.string.root}
-    pre-commit install
+    HOME=$TMP pre-commit install
   '';
 }
