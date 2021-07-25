@@ -20,4 +20,8 @@ jobs:
 
             - name: Check
               run: |
+                set +e
                 nix-shell --pure --run "pre-commit run --all-files"
+                exitcode=$?
+                [ $exitcode != 0 ] && git --no-pager diff --color
+                exit $exitcode
