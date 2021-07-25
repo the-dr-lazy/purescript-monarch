@@ -2,37 +2,42 @@
 
 pkgs.mkShell {
   name = "purescript-monarch";
-  buildInputs = with pkgs; [
+  buildInputs = builtins.concatMap builtins.attrValues [
     ###################################################
     # Code styles:
-    headroom
-    nixpkgs-fmt
-    nodePackages.prettier
+    {
+      inherit (pkgs) headroom nixpkgs-fmt;
+      inherit (pkgs.nodePackages) prettier;
+    }
 
     ###################################################
     # Command line tools:
-    gitFull
-    nodePackages.parcel-bundler
+    {
+      inherit (pkgs) gitFull;
+      inherit (pkgs.nodePackages) parcel-bundler;
+    }
 
     ###################################################
     # Languages:
-    dhall
-    nodePackages.typescript
-    nodejs-16_x
-    purescript
+    {
+      inherit (pkgs) dhall purescript nodejs-16_x;
+      inherit (pkgs.nodePackages) typescript;
+    }
 
     ###################################################
-    # LSPs:
-    dhall-lsp-server
-    nodePackages.purescript-language-server
-    nodePackages.typescript-language-server
-    nodePackages.vscode-html-languageserver-bin
-    nodePackages.vscode-json-languageserver-bin
-    nodePackages.yaml-language-server
+    # Language servers:
+    {
+      inherit (pkgs) dhall-lsp-server;
+      inherit (pkgs.nodePackages)
+        purescript-language-server
+        typescript-language-server
+        vscode-html-languageserver-bin
+        vscode-json-languageserver-bin
+        yaml-language-server;
+    }
 
     ###################################################
     # Package managers:
-    niv
-    spago
+    { inherit (pkgs) niv spago; }
   ];
 }
