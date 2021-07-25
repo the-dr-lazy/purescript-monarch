@@ -6,7 +6,7 @@ pkgs.mkShell {
     ###################################################
     # Code styles:
     {
-      inherit (pkgs) headroom nixpkgs-fmt;
+      inherit (pkgs) headroom nixpkgs-fmt nix-linter;
       inherit (pkgs.nodePackages) prettier;
     }
 
@@ -40,4 +40,9 @@ pkgs.mkShell {
     # Package managers:
     { inherit (pkgs) niv spago; }
   ];
+
+  shellHook = ''
+    cd ${builtins.toString ./.}
+    ${pkgs.checks.shellHook}
+  '';
 }

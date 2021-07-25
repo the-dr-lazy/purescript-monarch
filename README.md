@@ -8,17 +8,17 @@
 
 <p align="center">
   <a href="LICENSE">
-    <img alt="License" 
+    <img alt="License"
          src="https://img.shields.io/badge/license-MPL-%23242631?style=for-the-badge"
     >
   </a>
   <a href="https://t.me/ifpc_group">
-    <img alt="Chat" 
+    <img alt="Chat"
          src="https://img.shields.io/badge/chat-Telegram-%23242631?style=for-the-badge"
     >
   </a>
   <a>
-    <img alt="Latest Version" 
+    <img alt="Latest Version"
          src="https://img.shields.io/badge/version-0.0.0-%23242631?style=for-the-badge"
     >
   </a>

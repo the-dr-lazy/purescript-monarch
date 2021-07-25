@@ -27,4 +27,3 @@ mkScheduler = do
   pure { shouldYieldToBrowser: (>) <$> getCurrentTime <*> Ref.read deadlineRef
        , promoteDeadline: (_ + 5.0) <$> getCurrentTime >>= flip Ref.write deadlineRef
        }
-
