@@ -10,7 +10,14 @@
 
 import { Patch } from 'monarch/Monarch/VirtualDom/Patch'
 import { OutputHandlersList } from 'monarch/Monarch/VirtualDom/OutputHandlersList'
-import { unsafe_organizeFacts, unsafe_applyFacts, OrganizedFacts, Facts, FactCategory, keyPropertyName } from 'monarch/Monarch/VirtualDom/Facts'
+import {
+    unsafe_organizeFacts,
+    unsafe_applyFacts,
+    OrganizedFacts,
+    Facts,
+    FactCategory,
+    keyPropertyName,
+} from 'monarch/Monarch/VirtualDom/Facts'
 import { ReorderHistory, resolveKeyConfliction } from 'monarch/Monarch/VirtualDom/ReorderHistory'
 import { ChildNodeByKeyMap } from 'monarch/Monarch/VirtualDom/ChildNodeByKeyMap'
 
@@ -86,7 +93,9 @@ export namespace VirtualDomTree {
     /**
      * `KeyedElementNS` type constructor
      */
-    export interface KeyedElementNS<message> extends Omit<ElementNS<message>, 'tag' | 'children'>, Tagged<typeof KeyedElementNS> {
+    export interface KeyedElementNS<message>
+        extends Omit<ElementNS<message>, 'tag' | 'children'>,
+            Tagged<typeof KeyedElementNS> {
         children?: ReadonlyArray<VirtualDomTree.Keyed<VirtualDomTree<message>>>
     }
 
@@ -147,7 +156,10 @@ export namespace VirtualDomTree {
         facts?: Facts,
         children?: ReadonlyArray<VirtualDomTree<message>>,
     ) {
-        const tag = children && children[0]?.tag === VirtualDomTree.Keyed ? VirtualDomTree.KeyedElementNS : VirtualDomTree.ElementNS
+        const tag =
+            children && children[0]?.tag === VirtualDomTree.Keyed
+                ? VirtualDomTree.KeyedElementNS
+                : VirtualDomTree.ElementNS
         let vNode: VirtualDomTree<message> = {
             tag,
             ns,
@@ -168,35 +180,35 @@ export namespace VirtualDomTree {
     /**
      * TODO: subscribe to asynchronous virtual dom tree
      */
-    export interface Async { }
+    export interface Async {}
 
     // SUM TYPE: Suspense
 
     /**
      * TODO: catch async nodes fallback
      */
-    export interface Suspense { }
+    export interface Suspense {}
 
     // SUM TYPE: Thunk
 
     /**
      * TODO: evaluate the given thunk on reference change
      */
-    export interface Thunk { }
+    export interface Thunk {}
 
     // SUM TYPE: Fragment
 
     /**
      * TODO: render subtrees as children of parent node
      */
-    export interface Fragment { }
+    export interface Fragment {}
 
     // SUM TYPE: Offscreen
 
     /**
      * TODO: evaluate subtree on browsers' idle periods
      */
-    export interface Offscreen { }
+    export interface Offscreen {}
 
     // INTERNAL
 
@@ -302,13 +314,19 @@ export function realizeVirtualDomText({ text }: VirtualDomTree.Text): Text {
     return document.createTextNode(text)
 }
 
-export function realizeVirtualDomTagger<a, b>(tagger: VirtualDomTree.Tagger<a, b>, outputHandlers: OutputHandlersList): Node {
+export function realizeVirtualDomTagger<a, b>(
+    tagger: VirtualDomTree.Tagger<a, b>,
+    outputHandlers: OutputHandlersList,
+): Node {
     unsafe_flattenVirtualDomTaggers(tagger)
 
     return realize(tagger.vNode, { value: tagger.f, next: outputHandlers })
 }
 
-export function realizeVirtualDomElementNS<a>({ ns, tagName }: VirtualDomTree.ElementNS<a> | VirtualDomTree.KeyedElementNS<a>): Element {
+export function realizeVirtualDomElementNS<a>({
+    ns,
+    tagName,
+}: VirtualDomTree.ElementNS<a> | VirtualDomTree.KeyedElementNS<a>): Element {
     return ns ? document.createElementNS(ns, tagName) : document.createElement(tagName)
 }
 
@@ -381,7 +399,11 @@ function pairwiseRefEq<a>(xs: readonly a[], ys: readonly a[]): boolean {
     return true
 }
 
-function unsafe_diffTagger<a, b, c, d>(x: VirtualDomTree.Tagger<a, b>, y: VirtualDomTree.Tagger<c, d>, patches: Patch[]): Diff<b, d> {
+function unsafe_diffTagger<a, b, c, d>(
+    x: VirtualDomTree.Tagger<a, b>,
+    y: VirtualDomTree.Tagger<c, d>,
+    patches: Patch[],
+): Diff<b, d> {
     unsafe_flattenVirtualDomTaggers(y)
 
     const nested = typeof x.f !== 'function' || typeof y.f !== 'function'
@@ -419,7 +441,8 @@ function unsafe_diffElementNS<
         diff && patches.push(Patch.mkFacts(diff))
     }
 
-    const unsafe_diffChildren: Function = x.tag === VirtualDomTree.ElementNS ? unsafe_diffElementNSChildren : unsafe_diffKeyedElementNSChildren
+    const unsafe_diffChildren: Function =
+        x.tag === VirtualDomTree.ElementNS ? unsafe_diffElementNSChildren : unsafe_diffKeyedElementNSChildren
 
     const downstreamNodes = unsafe_diffChildren(x.children, y.children, patches)
 
@@ -589,7 +612,7 @@ function unsafe_diffKeyedElementNSChildren<a, b>(
             continue
         }
 
-        break;
+        break
     }
 
     // Consume rest of old children and candidate them for removing.

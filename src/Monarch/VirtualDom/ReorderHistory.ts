@@ -102,9 +102,15 @@ export namespace ReorderHistory {
         /**
          * Push a specific commit to the DOM tree.
          */
-        export function push<message>(key: any, commit: ReorderHistory.Commit.Insert<message> | ReorderHistory.Commit.Move, childNodeByKey: ChildNodeByKeyMap, outputHandlers: OutputHandlersList): Node {
+        export function push<message>(
+            key: any,
+            commit: ReorderHistory.Commit.Insert<message> | ReorderHistory.Commit.Move,
+            childNodeByKey: ChildNodeByKeyMap,
+            outputHandlers: OutputHandlersList,
+        ): Node {
             switch (commit.tag) {
-                case ReorderHistory.Commit.Move: return childNodeByKey.get(key)!
+                case ReorderHistory.Commit.Move:
+                    return childNodeByKey.get(key)!
                 case ReorderHistory.Commit.Insert:
                     return realize(commit.vNode, outputHandlers)
             }
@@ -117,7 +123,7 @@ export namespace ReorderHistory {
     export function mk<a, b>(): ReorderHistory<a, b> {
         return {
             commitByKey: new Map(),
-            endInsertKeys: new Set()
+            endInsertKeys: new Set(),
         }
     }
 
@@ -127,7 +133,7 @@ export namespace ReorderHistory {
         ix: number,
         downstreamNodes: DownstreamNode<a, b>[],
         history: ReorderHistory<a, b>,
-        isEndInsert = false
+        isEndInsert = false,
     ): void {
         const { commitByKey, endInsertKeys } = history
         const commit = commitByKey.get(key)

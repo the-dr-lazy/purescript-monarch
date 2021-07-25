@@ -13,7 +13,11 @@ import { VirtualDomTree, realize, diff, DownstreamNode } from 'monarch/Monarch/V
 import { PatchTree, unsafe_uncurried_applyPatchTree } from 'monarch/Monarch/VirtualDom/PatchTree'
 import { OutputHandlersList } from 'monarch/Monarch/VirtualDom/OutputHandlersList'
 
-function unsafe_uncurried_mount<a>(domNode: Node, outputHandlers: OutputHandlersList.Nil, vNode: VirtualDomTree<a>): void {
+function unsafe_uncurried_mount<a>(
+    domNode: Node,
+    outputHandlers: OutputHandlersList.Nil,
+    vNode: VirtualDomTree<a>,
+): void {
     while (domNode.firstChild) {
         domNode.removeChild(domNode.lastChild!)
     }
@@ -88,7 +92,6 @@ function unsafe_uncurried_performDiffWork<a, b>(
     scheduler.promoteDeadline()
 
     while (node && !scheduler.shouldYieldToBrowser()) {
-
         const { patches, downstreamNodes } = diff(node.x, node.y)
 
         let patchTree

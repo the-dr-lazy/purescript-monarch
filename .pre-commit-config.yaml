@@ -67,3 +67,9 @@ repos:
             types: [text]
             language: system
             entry: trailing-whitespace-fixer
+
+          - name: Format TypeScript files
+            id: prettier
+            files: "\\.(ts)$"
+            language: system
+            entry: prettier --write
