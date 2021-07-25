@@ -21,7 +21,7 @@ jobs:
             - name: Debug
               run: |
                 nix-build ./nix -A headroom
-                ls -lisahR result/
+                ldd result/bin/headroom
 
             - name: Check
               run: nix-build ./nix -A checks

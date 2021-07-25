@@ -10,7 +10,7 @@ let
       null;
   mkHeadroom = pkgs:
     if headroom-exe != null then
-      pkgs.runCommand "headroom" { } ''
+      pkgs.runCommand "headroom" { buildInputs = [ pkgs.cmake ]; } ''
         mkdir -p $out/bin
         cp ${headroom-exe} $out/bin/headroom
         chmod +x $out/bin/headroom
