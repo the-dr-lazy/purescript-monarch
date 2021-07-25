@@ -18,5 +18,10 @@ jobs:
                   name: purescript-monarch
                   authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
+            - name: Debug
+              run: |
+                nix-build ./nix -A headroom
+                ls -lisahR result
+
             - name: Check
               run: nix-build ./nix -A checks
