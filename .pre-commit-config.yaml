@@ -56,7 +56,7 @@ repos:
             language: system
             entry: nix-linter
 
-          - name: nixpkgs-fmt
+          - name: Format Nix files
             id: nixpkgs-fmt
             files: "\\.nix$"
             language: system
