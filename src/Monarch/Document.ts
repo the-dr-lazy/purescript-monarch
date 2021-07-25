@@ -144,7 +144,7 @@ function unsafe_document<input, model, message, output, effects, a>({
 }: Spec<input, model, message, output, effects, a>): void {
     const initialModel: model = init(input)
     const initialVirtualDomTree: VirtualDomTree<message> = view(initialModel)
-    const outputHandlers = OutputHandlersList.mkNil(unsafe_dispatchMessage)
+    const outputHandlers: OutputHandlersList = OutputHandlersList.mkNil(unsafe_dispatchMessage)
     const dispatchMessage: DispatchMessage<message> = message => () => unsafe_dispatchMessage(message)
     const dispatchOutput: DispatchOutput<output> = onOutput
     const runCommand = mkCommandRunner({ command, interpreter, dispatchMessage, dispatchOutput })
