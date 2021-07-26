@@ -13,7 +13,12 @@ in
   (final: _:
     {
       inherit sources;
-      inherit (sources) niv;
+
+      paths = {
+        drv.root = builtins.path { path = ./..; name = "cascade"; };
+        string.root = builtins.toString ./..;
+      };
+
       headroom =
         if headroom-exe != null then
           final.runCommand "headroom" { } ''
@@ -24,11 +29,4 @@ in
         else
           throw "There is no Headroom executable for this system architecture.";
     })
-
-  (_: _: {
-    paths = {
-      drv.root = builtins.path { path = ./..; name = "cascade"; };
-      string.root = builtins.toString ./..;
-    };
-  })
 ]
