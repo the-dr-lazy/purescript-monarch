@@ -48,30 +48,27 @@ repos:
             pass_filenames: false
             entry: headroom run
 
-
           #############################################
           # JSON
-          - name: Check JSON for parsability
-            id: check-json
+          - name: Check JSON code style with prettier
+            id: prettier-json
             types: [json]
             language: system
-            entry: check-json
-
+            entry: prettier --write
 
           #############################################
           # YAML
-          - name: Check YAML for parsability
-            id: check-yaml
+          - name: Check YAML code style with prettier
+            id: prettier-yaml
             types: [yaml]
             language: system
-            entry: check-yaml
+            entry: prettier --write
 
           - name: Static analysis YAML with yamllint
             id: yamllint
             types: [yaml]
             language: system
             entry: yamllint
-
 
           #############################################
           # Nix
