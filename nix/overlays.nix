@@ -15,7 +15,7 @@ in
       inherit sources;
 
       paths = {
-        drv.root = builtins.path { path = ./..; name = "cascade"; };
+        drv.root = builtins.path { path = ./..; name = "purescript-monarch"; };
         string.root = builtins.toString ./..;
       };
 
