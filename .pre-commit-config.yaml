@@ -2,16 +2,14 @@ exclude: '(nix/sources.nix$)'
 repos:
     - repo: local
       hooks:
+          #############################################
+          # Constitutionals
+          #
+          # Reference: https://github.com/pre-commit/pre-commit-hooks/blob/d0d9883648b4b30a43cd965471c9b5fa8f8a4131/.pre-commit-hooks.yaml
           - name: Check for case conflicts
             id: check-case-conflict
             language: system
             entry: check-case-conflict
-
-          - name: Check JSON
-            id: check-json
-            types: [json]
-            language: system
-            entry: check-json
 
           - name: Check for merge conflicts
             id: check-merge-conflict
@@ -31,17 +29,17 @@ repos:
             language: system
             entry: check-vcs-permalinks
 
-          - name: Check Yaml
-            id: check-yaml
-            types: [yaml]
-            language: system
-            entry: check-yaml
-
           - name: Fix End of Files
             id: end-of-file-fixer
             types: [text]
             language: system
             entry: end-of-file-fixer
+
+          - name: Trim Trailing Whitespace
+            id: trailing-whitespace
+            types: [text]
+            language: system
+            entry: trailing-whitespace-fixer
 
           - name: Check © headers
             id: headroom
@@ -50,26 +48,49 @@ repos:
             pass_filenames: false
             entry: headroom run
 
-          - name: nix-linter
-            id: nix-linter
-            files: "\\.nix$"
-            language: system
-            entry: nix-linter
 
-          - name: Format Nix files
+          #############################################
+          # JSON
+          - name: Check JSON for parsability
+            id: check-json
+            types: [json]
+            language: system
+            entry: check-json
+
+
+          #############################################
+          # YAML
+          - name: Check YAML for parsability
+            id: check-yaml
+            types: [yaml]
+            language: system
+            entry: check-yaml
+
+          - name: Static analysis YAML with yamllint
+            id: yamllint
+            types: [yaml]
+            language: system
+            entry: yamllint
+
+
+          #############################################
+          # Nix
+          - name: Check Nix code style with nixpkgs-fmt
             id: nixpkgs-fmt
-            files: "\\.nix$"
+            files: '\.nix$'
             language: system
             entry: nixpkgs-fmt
 
-          - name: Trim Trailing Whitespace
-            id: trailing-whitespace
-            types: [text]
+          - name: Static analysis Nix with nix-linter
+            id: nix-linter
+            files: '\.nix$'
             language: system
-            entry: trailing-whitespace-fixer
+            entry: nix-linter
 
-          - name: Format TypeScript files
-            id: prettier
-            files: "\\.(ts)$"
+          #############################################
+          # TypeScript
+          - name: Check TypeScript code style with prettier
+            id: prettier-ts
+            files: '\.(ts)$'
             language: system
             entry: prettier --write
