@@ -19,4 +19,3 @@ data NS = HTML | SVG
 instance showNS :: Show NS where
   show HTML = undefined
   show SVG = "http://www.w3.org/2000/svg"
-

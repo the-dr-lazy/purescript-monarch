@@ -17,8 +17,8 @@ import { ChildNodeByKeyMap } from './ChildNodeByKeyMap'
 /**
  * Patch ADT
  */
-export type Patch
-    = Patch.Redraw
+export type Patch =
+    | Patch.Redraw
     | Patch.Text
     | Patch.Facts
     | Patch.RemoveFromEnd
@@ -37,7 +37,7 @@ export namespace Patch {
         RemoveFromEnd,
         Append,
         Tagger,
-        Reorder
+        Reorder,
     }
 
     // SUM TYPE: Redraw
@@ -167,7 +167,6 @@ export namespace Patch {
         return { tag: Tagger, fs }
     }
 
-
     // SUM TYPE: Reorder
 
     /**
@@ -188,7 +187,6 @@ export namespace Patch {
     export function mkReorder<a, b>(history: ReorderHistory<a, b>): Reorder {
         return { tag: Reorder, history }
     }
-
 }
 
 export function unsafe_applyPatch(domNode: Node, patch: Patch): void {
@@ -246,7 +244,7 @@ function unsafe_applyAppendPatch(domNode: Node, { children, from }: Patch.Append
 }
 
 function unsafe_applyTaggerPatch(domNode: Node, { fs }: Patch.Tagger): void {
-    (<OutputHandlersList.Cons>domNode.monarch_outputHandlers).value = fs
+    ;(<OutputHandlersList.Cons>domNode.monarch_outputHandlers).value = fs
 }
 
 function unsafe_applyReorderPatch(domNode: Node, { history: { commitByKey, endInsertKeys } }: Patch.Reorder): void {
@@ -262,7 +260,8 @@ function unsafe_applyReorderPatch(domNode: Node, { history: { commitByKey, endIn
 
     const fragment: Node | undefined = (() => {
         switch (endInsertKeys.size) {
-            case 0: return undefined
+            case 0:
+                return undefined
             case 1:
                 const key = endInsertKeys.values().next().value
                 const commit = <ReorderHistory.Commit.Insert<any> | ReorderHistory.Commit.Move>commitByKey.get(key)!
@@ -273,7 +272,12 @@ function unsafe_applyReorderPatch(domNode: Node, { history: { commitByKey, endIn
 
                 for (let key of endInsertKeys) {
                     const commit = <ReorderHistory.Commit.Insert<any> | ReorderHistory.Commit.Move>commitByKey.get(key)!
-                    const node = ReorderHistory.Commit.push(key, commit, childNodeByKey, domNode.monarch_outputHandlers!)
+                    const node = ReorderHistory.Commit.push(
+                        key,
+                        commit,
+                        childNodeByKey,
+                        domNode.monarch_outputHandlers!,
+                    )
 
                     fragment!.appendChild(node)
                 }

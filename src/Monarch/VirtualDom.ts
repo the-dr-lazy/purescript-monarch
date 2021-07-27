@@ -12,7 +12,11 @@ import 'setimmediate'
 import { VirtualDomTree, realize } from 'monarch/Monarch/VirtualDom/VirtualDomTree'
 import { OutputHandlersList } from 'monarch/Monarch/VirtualDom/OutputHandlersList'
 
-export function unsafe_uncurried_mount<a>(domNode: Node, outputHandlers: OutputHandlersList.Nil, vNode: VirtualDomTree<a>): void {
+export function unsafe_uncurried_mount<a>(
+    domNode: Node,
+    outputHandlers: OutputHandlersList.Nil,
+    vNode: VirtualDomTree<a>,
+): void {
     while (domNode.firstChild) {
         domNode.removeChild(domNode.lastChild!)
     }
@@ -23,4 +27,4 @@ export function unsafe_uncurried_mount<a>(domNode: Node, outputHandlers: OutputH
 /**
  * ToDo: should be implemented.
  */
-function unsafe_uncurried_unmount<message>(domNode: Node, virtualDomTree: VirtualDomTree<message>): void { }
+function unsafe_uncurried_unmount<message>(domNode: Node, virtualDomTree: VirtualDomTree<message>): void {}

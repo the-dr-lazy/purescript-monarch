@@ -1,0 +1,27 @@
+name: Code Style
+
+on:
+    pull_request:
+    push:
+        braches:
+            - master
+
+jobs:
+    checks:
+        name: Checks
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+            - uses: cachix/install-nix-action@v13
+            - uses: cachix/cachix-action@v10
+              with:
+                  name: purescript-monarch
+                  authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+
+            - name: Check
+              run: |
+                  set +e
+                  nix-shell --pure --run "pre-commit run --all-files"
+                  exitcode=$?
+                  [ $exitcode != 0 ] && git --no-pager diff --color
+                  exit $exitcode

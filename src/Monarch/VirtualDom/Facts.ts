@@ -35,7 +35,9 @@ export enum FactCategory {
     Output,
 }
 
-export function unsafe_organizeFacts(element: VirtualDomTree.ElementNS<any> | VirtualDomTree.KeyedElementNS<any>): void {
+export function unsafe_organizeFacts(
+    element: VirtualDomTree.ElementNS<any> | VirtualDomTree.KeyedElementNS<any>,
+): void {
     const organizedFacts: OrganizedFacts = {}
 
     const { facts } = element
@@ -89,7 +91,10 @@ function unsafe_applyAttributes(domNode: Element, attributes: OrganizedFacts[Fac
     }
 }
 
-function unsafe_applyProperties(domNode: { [key: string]: any }, properties: OrganizedFacts[FactCategory.Property]): void {
+function unsafe_applyProperties(
+    domNode: { [key: string]: any },
+    properties: OrganizedFacts[FactCategory.Property],
+): void {
     for (const key in properties) {
         domNode[key] = properties[key]
     }
@@ -102,7 +107,8 @@ declare global {
 }
 
 function unsafe_applyOutputs(domNode: Node, outputs: OrganizedFacts[FactCategory.Output]): void {
-    const outputHandlerInterceptors = (domNode.monarch_outputHandlerInterceptors = domNode.monarch_outputHandlerInterceptors || {})
+    const outputHandlerInterceptors = (domNode.monarch_outputHandlerInterceptors =
+        domNode.monarch_outputHandlerInterceptors || {})
 
     for (const name in outputs) {
         var newHandler = outputs[name]
@@ -133,7 +139,10 @@ interface OutputHandlerInterceptor {
     handler<a>(event: Event): a
 }
 
-function mkOutputHandlerInterceptor(handler: <a>(event: Event) => a, outputHandlers: () => OutputHandlersList): OutputHandlerInterceptor {
+function mkOutputHandlerInterceptor(
+    handler: <a>(event: Event) => a,
+    outputHandlers: () => OutputHandlersList,
+): OutputHandlerInterceptor {
     function interceptor(event: Event) {
         let message = interceptor.handler(event)
 
@@ -146,7 +155,7 @@ function mkOutputHandlerInterceptor(handler: <a>(event: Event) => a, outputHandl
                 if (typeof value === 'function') {
                     message = value(message)
                 } else {
-                    for (let i = value.length; i--;) {
+                    for (let i = value.length; i--; ) {
                         message = value[i](message)
                     }
                 }
