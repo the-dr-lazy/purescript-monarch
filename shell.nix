@@ -3,7 +3,7 @@
 pkgs.mkShell {
   name = "purescript-monarch";
 
-  buildInputs = builtins.concatMap builtins.attrValues [
+  nativeBuildInputs = builtins.concatMap builtins.attrValues [
     ###################################################
     # Code styles:
     {
@@ -31,6 +31,7 @@ pkgs.mkShell {
     {
       inherit (pkgs) dhall-lsp-server;
       inherit (pkgs.nodePackages)
+        bash-language-server
         purescript-language-server
         typescript-language-server
         vscode-html-languageserver-bin
