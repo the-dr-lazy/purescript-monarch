@@ -42,7 +42,6 @@ export function mkRootDiffWork<a, b>(x: VirtualDomTree<a>, y: VirtualDomTree<b>)
     }
 }
 
-
 export interface DiffWorkResult<message> {
     rootVNode: VirtualDomTree<message>
     rootPatchTree: PatchTree
@@ -117,5 +116,5 @@ export function unsafe_uncurried_performDiffWork<a, b>(
         return
     }
 
-    unsafe_finishDiffWork(<DiffWorkResult<b>><unknown>work.state)
+    unsafe_finishDiffWork(<DiffWorkResult<b>>(<unknown>work.state))
 }
