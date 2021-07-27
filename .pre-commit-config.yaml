@@ -71,6 +71,20 @@ repos:
             entry: yamllint
 
           #############################################
+          # Shell
+          - name: Check shell code style with shfmt
+            id: shfmt
+            types: [shell]
+            language: system
+            entry: shfmt
+
+          - name: Static analysis shell scripts with shellcheck
+            id: shellcheck
+            types: [shell]
+            language: system
+            entry: shellcheck
+
+          #############################################
           # Nix
           - name: Check Nix code style with nixpkgs-fmt
             id: nixpkgs-fmt
