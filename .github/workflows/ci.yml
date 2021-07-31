@@ -13,6 +13,11 @@ jobs:
         steps:
             - uses: actions/checkout@v2
             - uses: cachix/install-nix-action@v13
+              with:
+                  install_url: https://nixos-nix-install-tests.cachix.org/serve/0f7lh6yrv84dj3a2ar073d1mwrfiflsz/install
+                  install_options: --tarball-url-prefix https://nixos-nix-install-tests.cachix.org/serve
+                  extra_nix_config: |
+                      experimental-features = nix-command flakes
 
             - uses: cachix/cachix-action@v10
               with:
@@ -33,13 +38,13 @@ jobs:
                       output
 
             - name: Install NPM dependencies
-              run: nix-shell --pure --run "npm ci"
+              run: nix -Lv develop -c npm ci
 
             - name: Install & build PureScript dependencies
-              run: nix-shell --pure --run "spago build --deps-only"
+              run: nix -Lv develop -c spago build --deps-only
 
             - name: Build TypeScript
-              run: nix-shell --pure --run "tsc -p tsconfig.json"
+              run: nix -Lv develop -c tsc -p tsconfig.json
 
             - name: Build PureScript
-              run: nix-shell --pure --run "spago build"
+              run: nix -Lv develop -c spago build
