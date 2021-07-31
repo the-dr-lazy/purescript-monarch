@@ -1,15 +1,17 @@
-{ pkgs ? import ./nix { } }:
+{ pkgs }:
 
 pkgs.mkShell {
-  name = "purescript-monarch";
+  name = "Monarch";
 
   nativeBuildInputs = builtins.concatMap builtins.attrValues [
     ###################################################
     # Code styles:
     {
-      inherit (pkgs) pre-commit headroom nixpkgs-fmt nix-linter shfmt shellcheck;
+      inherit (pkgs) pre-commit nixpkgs-fmt nix-linter shfmt shellcheck;
       inherit (pkgs.python3Packages) pre-commit-hooks yamllint;
       inherit (pkgs.nodePackages) prettier;
+
+      headroom = pkgs.haskell.lib.justStaticExecutables (pkgs.haskellPackages.callHackage "headroom" "0.3.2.0" { });
     }
 
     ###################################################
@@ -41,6 +43,6 @@ pkgs.mkShell {
 
     ###################################################
     # Package managers:
-    { inherit (pkgs) niv spago; }
+    { inherit (pkgs) spago; }
   ];
 }

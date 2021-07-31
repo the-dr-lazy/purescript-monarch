@@ -322,3 +322,6 @@ bower_components
 # End of https://www.toptal.com/developers/gitignore/api/purescript,node,macos,emacs,react,webstorm
 
 .local
+
+# nix-direnv
+.direnv
