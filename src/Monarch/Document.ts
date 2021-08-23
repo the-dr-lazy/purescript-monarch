@@ -49,11 +49,10 @@ interface HoistEnvironment<message, output, effects> {
 
 type MkHoist<message, output, effects> = (environment: HoistEnvironment<message, output, effects>) => Hoist<effects>
 
-interface Spec<input, model, message, output, effects> {
+interface Spec<model, message, output, effects> {
     command: (message: message) => (model: model) => Run<effects, Unit>
     container: HTMLElement
-    init: (input: input) => model
-    input: input
+    initialModel: model
     interpreter: <a>(command: Run<effects, a>) => Run<any, a>
     mkHoist: MkHoist<message, output, effects>
     onOutput: (output: output) => Effect<Unit>
@@ -137,18 +136,17 @@ interface State<model, message> {
     model: model
 }
 
-function unsafe_document<input, model, message, output, effects>({
+function unsafe_document<model, message, output, effects>({
     command,
     container,
-    init,
-    input,
+    initialModel,
     interpreter,
     mkHoist,
     onOutput,
     subscription,
     update,
     view,
-}: Spec<input, model, message, output, effects>): void {
+}: Spec<model, message, output, effects>): void {
     const dispatchMessage: DispatchMessage<message> = message => () => unsafe_dispatchMessage(message)
     const dispatchOutput: DispatchOutput<output> = onOutput
     const hoist = mkHoist({ interpreter, dispatchMessage, dispatchOutput })
@@ -160,7 +158,6 @@ function unsafe_document<input, model, message, output, effects>({
         unsafe_finishDiffWork,
     }
 
-    const initialModel = init(input)
     const initialVirtualDomTree: VirtualDomTree<message> = view(initialModel)
 
     const state: State<model, message> = {
@@ -246,7 +243,7 @@ function unsafe_document<input, model, message, output, effects>({
 }
 
 interface Document {
-    <input, model, message, output, effects>(spec: Spec<input, model, message, output, effects>): Effect<Unit>
+    <model, message, output, effects>(spec: Spec<model, message, output, effects>): Effect<Unit>
 }
 
 export const document: Document = spec => () => unsafe_document(spec)

@@ -26,8 +26,7 @@ import Run                   ( Run )
 import Type.Row              (type (+))
 
 type Spec input model message output effects a r
-  = ( input        :: input
-    , init         :: input -> model
+  = ( init         :: model
     , update       :: message -> model -> model
     , view         :: model -> Html message
     , container    :: HTMLElement

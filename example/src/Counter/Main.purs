@@ -21,8 +21,6 @@ import Monarch                                   as Monarch
 import Monarch.Html
 import Counter.API                               as API
 
-type Input = Unit
-
 type Model = Int
 
 data Message = UserClickedIncreaseButton
@@ -30,8 +28,8 @@ data Message = UserClickedIncreaseButton
 
 type Output = Void
 
-init :: Input -> Model
-init _ = 0
+init :: Model
+init = 0
 
 update :: Message -> Model -> Model
 update = case _ of
@@ -62,8 +60,7 @@ subscription _ = do
 
 main :: HTMLElement -> Effect Unit
 main container = do
-  Monarch.bootstrap { input: unit
-                    , init
+  Monarch.bootstrap { init
                     , update
                     , view
                     , command
