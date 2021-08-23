@@ -31,29 +31,35 @@ interface DispatchOutput<output> {
     (output: output): Effect<Unit>
 }
 
-type Run<effects, a> = unknown
+/**
+ * An opaque type for encoding `Run` type of PureScript.
+ *
+ * Note: the type details are just for tricking the TypeScript compiler.
+ * Don't use them. This is an opaque type. You shouldn't know what is going on...
+ */
+type Run<effects, a> = { tag: Run<effects, a> }
 
-// prettier-ignore
-type MkCommandRunner<message, model, output, effects, a> =
-  (environment: {
-      command: (message: message) => (model: model) => Run<effects, a>,
-      interpreter: (command: Run<effects, a>) => Run<any, Unit>,
-      dispatchMessage: DispatchMessage<message>,
-      dispatchOutput: DispatchOutput<output>
-  })
-  => (input: { model: model, message: message })
-  => Effect<Unit>
+type Hoist<effects> = <a>(program: Run<effects, a>) => Effect<Unit>
 
-interface Spec<input, model, message, output, effects, a> {
-    input: input
-    init(input: input): model
-    update: (message: message) => (model: model) => model
-    view(model: model): VirtualDomTree<message>
+interface HoistEnvironment<message, output, effects> {
+    interpreter: <a>(program: Run<effects, a>) => Run<any, a>
+    dispatchMessage: DispatchMessage<message>
+    dispatchOutput: DispatchOutput<output>
+}
+
+type MkHoist<message, output, effects> = (environment: HoistEnvironment<message, output, effects>) => Hoist<effects>
+
+interface Spec<input, model, message, output, effects> {
+    command: (message: message) => (model: model) => Run<effects, Unit>
     container: HTMLElement
-    command: (message: message) => (model: model) => Run<effects, a>
-    interpreter(command: Run<effects, a>): Run<any, Unit>
-    mkCommandRunner: MkCommandRunner<message, model, output, effects, a>
-    onOutput(output: output): Effect<Unit>
+    init: (input: input) => model
+    input: input
+    interpreter: <a>(command: Run<effects, a>) => Run<any, a>
+    mkHoist: MkHoist<message, output, effects>
+    onOutput: (output: output) => Effect<Unit>
+    subscription: (model: model) => Run<effects, Unit>
+    update: (message: message) => (model: model) => model
+    view: (model: model) => VirtualDomTree<message>
 }
 
 interface State<model, message> {
@@ -131,30 +137,33 @@ interface State<model, message> {
     model: model
 }
 
-function unsafe_document<input, model, message, output, effects, a>({
+function unsafe_document<input, model, message, output, effects>({
+    command,
+    container,
     init,
     input,
-    update,
-    command,
     interpreter,
-    mkCommandRunner,
-    container,
-    view,
+    mkHoist,
     onOutput,
-}: Spec<input, model, message, output, effects, a>): void {
-    const initialModel: model = init(input)
-    const initialVirtualDomTree: VirtualDomTree<message> = view(initialModel)
-    const outputHandlers: OutputHandlersList = OutputHandlersList.mkNil(unsafe_dispatchMessage)
+    subscription,
+    update,
+    view,
+}: Spec<input, model, message, output, effects>): void {
     const dispatchMessage: DispatchMessage<message> = message => () => unsafe_dispatchMessage(message)
     const dispatchOutput: DispatchOutput<output> = onOutput
-    const runCommand = mkCommandRunner({ command, interpreter, dispatchMessage, dispatchOutput })
-    const environment: DiffWorkEnvironment<message, message> = {
+    const hoist = mkHoist({ interpreter, dispatchMessage, dispatchOutput })
+
+    const outputHandlers: OutputHandlersList = OutputHandlersList.mkNil(unsafe_dispatchMessage)
+    const diffWorkEnvironment: DiffWorkEnvironment<message, message> = {
         scheduler: mkScheduler(),
         unsafe_dispatchDiffWork,
         unsafe_finishDiffWork,
     }
 
-    let state: State<model, message> = {
+    const initialModel = init(input)
+    const initialVirtualDomTree: VirtualDomTree<message> = view(initialModel)
+
+    const state: State<model, message> = {
         committedVirtualDomTree: initialVirtualDomTree,
         diffWork: undefined,
         diffWorkResult: undefined,
@@ -162,11 +171,17 @@ function unsafe_document<input, model, message, output, effects, a>({
         model: initialModel,
     }
 
+    hoist(subscription(initialModel))()
+
+    requestAnimationFrame(() => {
+        unsafe_uncurried_mount(container, outputHandlers, initialVirtualDomTree)
+    })
+
     function unsafe_dispatchMessage(message: message): void {
         const previousModel = state.model
         const nextModel = update(message)(previousModel)
 
-        runCommand({ message, model: nextModel })()
+        hoist(command(message)(nextModel))()
 
         if (previousModel === nextModel) return
 
@@ -184,7 +199,7 @@ function unsafe_document<input, model, message, output, effects, a>({
 
         state.hasRequestedAsyncRendering = false
 
-        unsafe_uncurried_performDiffWork(initialDiffWork, environment)
+        unsafe_uncurried_performDiffWork(initialDiffWork, diffWorkEnvironment)
     }
 
     function unsafe_dispatchDiffWork(diffWork: DiffWork<any, any>): void {
@@ -202,7 +217,7 @@ function unsafe_document<input, model, message, output, effects, a>({
 
         state.diffWork = undefined
 
-        unsafe_uncurried_performDiffWork(diffWork, environment)
+        unsafe_uncurried_performDiffWork(diffWork, diffWorkEnvironment)
     }
 
     function unsafe_finishDiffWork(diffWorkResult: DiffWorkResult<message>): void {
@@ -228,14 +243,10 @@ function unsafe_document<input, model, message, output, effects, a>({
 
         unsafe_uncurried_applyPatchTree(container, patchTree)
     }
-
-    requestAnimationFrame(() => unsafe_uncurried_mount(container, outputHandlers, initialVirtualDomTree))
 }
 
 interface Document {
-    <input, model, message, output, effects, a>(spec: Spec<input, model, message, output, effects, a>): Effect<Unit>
+    <input, model, message, output, effects>(spec: Spec<input, model, message, output, effects>): Effect<Unit>
 }
 
-export const document: Document = spec => {
-    return () => unsafe_document(spec)
-}
+export const document: Document = spec => () => unsafe_document(spec)

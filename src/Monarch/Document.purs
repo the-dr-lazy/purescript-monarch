@@ -18,7 +18,7 @@ where
 import Prelude
 
 import Monarch.Html          ( Html )
-import Monarch.Command       ( BASIC, MkCommandRunner, mkCommandRunner )
+import Monarch.Command       ( BASIC, MkHoist, mkHoist )
 import Effect                ( Effect )
 import Web.HTML              ( HTMLElement )
 import Record                as Record
@@ -26,22 +26,23 @@ import Run                   ( Run )
 import Type.Row              (type (+))
 
 type Spec input model message output effects a r
-  = ( input       :: input
-    , init        :: input -> model
-    , update      :: message -> model -> model
-    , view        :: model -> Html message
-    , container   :: HTMLElement
-    , command     :: message -> model -> Run effects a
-    , interpreter :: Run effects a -> Run (BASIC message output ()) Unit
-    , onOutput    :: output -> Effect Unit
+  = ( input        :: input
+    , init         :: input -> model
+    , update       :: message -> model -> model
+    , view         :: model -> Html message
+    , container    :: HTMLElement
+    , command      :: message -> model -> Run effects Unit
+    , interpreter  :: Run effects a -> Run (BASIC message output ()) a
+    , onOutput     :: output -> Effect Unit
+    , subscription :: model -> Run effects Unit
     | r
     )
 
 type DocumentSpec input model message output effects a r
   = Spec input model message output effects a
-  + ( mkCommandRunner :: MkCommandRunner message model output effects a | r )
+  + ( mkHoist :: MkHoist message output effects a | r )
 
 foreign import document :: forall input model message output effects a r. { | DocumentSpec input model message output effects a r } -> Effect Unit
 
 bootstrap :: forall input model message output effects a. { | Spec input model message output effects a () } -> Effect Unit
-bootstrap spec = document $ Record.merge spec { mkCommandRunner: mkCommandRunner :: MkCommandRunner message model output effects a }
+bootstrap spec = document $ Record.merge spec { mkHoist: mkHoist :: MkHoist message output effects a }

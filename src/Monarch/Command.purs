@@ -10,32 +10,25 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -}
 
 module Monarch.Command
-  ( Command
-  , BASIC
+  ( BASIC
   , COMMAND
+  , Command
   , CommandF
+  , MkHoist
   , dispatch
+  , mkHoist
   , raise
-  , mkCommandRunner
-  , MkCommandRunner
   , runCommand
   )
 where
 
 import Prelude
 import Type.Proxy
+import Effect (Effect)
+import Effect.Aff (launchAff_)
+import Run (Run, EFFECT, AFF, runBaseAff', interpret)
+import Run as Run
 import Type.Row (type (+))
-import Run                    ( Run
-                              , EFFECT
-                              , AFF
-                              , runBaseAff'
-                              , interpret
-                              )
-import Run                                                 as Run
-import Effect                 ( Effect )
-import Effect.Aff             ( launchAff_
-                              )
-
 
 data CommandF message output a
   = Dispatch message a
@@ -66,26 +59,21 @@ runCommand :: forall message output r
            -> (output -> Effect Unit)
            -> Run (COMMAND message output + EFFECT + r)
            ~> Run (EFFECT + r)
-runCommand dispatchMessage dispatchOutput = interpret (Run.on _command (handleCommand dispatchMessage dispatchOutput) Run.send)
+runCommand dispatchMessage dispatchOutput = interpret (Run.on _command go Run.send)
+  where
+    go :: CommandF message output ~> Run (EFFECT + r)
+    go = case _ of
+      Dispatch message next -> Run.liftEffect $ dispatchMessage message *> pure next
+      Raise    output  next -> Run.liftEffect $ dispatchOutput output   *> pure next
 
-handleCommand :: forall message output r
-              . (message -> Effect Unit)
-             -> (output -> Effect Unit)
-             -> CommandF message output
-             ~> Run (EFFECT + r)
-handleCommand dispatchMessage dispatchOutput = case _ of
-  Dispatch message next -> Run.liftEffect $ dispatchMessage message *> pure next
-  Raise    output  next -> Run.liftEffect $ dispatchOutput output   *> pure next
+type MkHoist message output effects a
+  = { interpreter     :: Run effects a -> Run (BASIC message output ()) a
+    , dispatchMessage :: message -> Effect Unit
+    , dispatchOutput  :: output -> Effect Unit
+    }
+ -> Run effects a
+ -> Effect Unit
 
-type MkCommandRunner message model output effects a =
-                   { command         :: message -> model -> Run effects a
-                   , interpreter     :: Run effects a -> Run (BASIC message output ()) Unit
-                   , dispatchMessage :: message -> Effect Unit
-                   , dispatchOutput  :: output -> Effect Unit
-                   }
-                -> { message :: message, model :: model }
-                -> Effect Unit
-
-mkCommandRunner :: forall message model output effects a. MkCommandRunner message model output effects a
-mkCommandRunner { command, interpreter, dispatchMessage, dispatchOutput } { message, model } =
-  launchAff_ <<< runBaseAff' <<< runCommand dispatchMessage dispatchOutput <<< interpreter $ command message model
+mkHoist :: forall message output effects a. MkHoist message output effects a
+mkHoist { interpreter, dispatchMessage, dispatchOutput } program =
+  launchAff_ <<< runBaseAff' <<< runCommand dispatchMessage dispatchOutput <<< interpreter $ program

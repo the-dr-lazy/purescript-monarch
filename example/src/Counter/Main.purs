@@ -19,9 +19,6 @@ import Web.HTML              ( HTMLElement )
 import Monarch.Command       ( Command )
 import Monarch                                   as Monarch
 import Monarch.Html
-import Monarch.Event         ( Event
-                             , eNever
-                             )
 import Counter.API                               as API
 
 type Input = Unit
@@ -33,8 +30,8 @@ data Message = UserClickedIncreaseButton
 
 type Output = Void
 
-init :: Model
-init = 0
+init :: Input -> Model
+init _ = 0
 
 update :: Message -> Model -> Model
 update = case _ of
@@ -58,17 +55,20 @@ command message _ = case message of
 interpreter :: Command (API.COUNTER ()) Message Output Unit -> Command () Message Output Unit
 interpreter = API.run
 
--- subscription :: Upstream Input Model Message -> Event Message
--- subscription = const eNever
+subscription :: Model -> Command (API.COUNTER ()) Message Output Unit
+subscription _ = do
+  Monarch.dispatch UserClickedIncreaseButton
+  pure unit
 
 main :: HTMLElement -> Effect Unit
 main container = do
   Monarch.bootstrap { input: unit
-                    , init: const init
+                    , init
                     , update
                     , view
                     , command
                     , interpreter
                     , container
+                    , subscription
                     , onOutput: \_ -> pure unit
                     }
