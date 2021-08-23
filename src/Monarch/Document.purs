@@ -25,8 +25,8 @@ import Record                as Record
 import Run                   ( Run )
 import Type.Row              (type (+))
 
-type Spec input model message output effects a r
-  = ( init         :: model
+type Spec model message output effects a r
+  = ( initialModel :: model
     , update       :: message -> model -> model
     , view         :: model -> Html message
     , container    :: HTMLElement
@@ -37,11 +37,11 @@ type Spec input model message output effects a r
     | r
     )
 
-type DocumentSpec input model message output effects a r
-  = Spec input model message output effects a
+type DocumentSpec model message output effects a r
+  = Spec model message output effects a
   + ( mkHoist :: MkHoist message output effects a | r )
 
-foreign import document :: forall input model message output effects a r. { | DocumentSpec input model message output effects a r } -> Effect Unit
+foreign import document :: forall model message output effects a r. { | DocumentSpec model message output effects a r } -> Effect Unit
 
-bootstrap :: forall input model message output effects a. { | Spec input model message output effects a () } -> Effect Unit
+bootstrap :: forall model message output effects a. { | Spec model message output effects a () } -> Effect Unit
 bootstrap spec = document $ Record.merge spec { mkHoist: mkHoist :: MkHoist message output effects a }

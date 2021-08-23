@@ -28,9 +28,6 @@ data Message = UserClickedIncreaseButton
 
 type Output = Void
 
-init :: Model
-init = 0
-
 update :: Message -> Model -> Model
 update = case _ of
   UserClickedIncreaseButton -> (_ + 1)
@@ -60,7 +57,7 @@ subscription _ = do
 
 main :: HTMLElement -> Effect Unit
 main container = do
-  Monarch.bootstrap { init
+  Monarch.bootstrap { initialModel: 0
                     , update
                     , view
                     , command
