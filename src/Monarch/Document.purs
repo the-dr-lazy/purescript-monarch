@@ -26,14 +26,14 @@ import Run                   ( Run )
 import Type.Row              (type (+))
 
 type Spec model message output effects a r
-  = ( initialModel :: model
-    , update       :: message -> model -> model
-    , view         :: model -> Html message
+  = ( command      :: message -> model -> Run effects Unit
     , container    :: HTMLElement
-    , command      :: message -> model -> Run effects Unit
+    , initialModel :: model
     , interpreter  :: Run effects a -> Run (BASIC message output ()) a
     , onOutput     :: output -> Effect Unit
     , subscription :: model -> Run effects Unit
+    , update       :: message -> model -> model
+    , view         :: model -> Html message
     | r
     )
 
