@@ -10,6 +10,7 @@
   , "foldable-traversable"
   , "maybe"
   , "newtype"
+  , "nullable"
   , "prelude"
   , "psci-support"
   , "record"
