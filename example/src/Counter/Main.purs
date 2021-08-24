@@ -20,11 +20,14 @@ import Monarch.Command       ( Command )
 import Monarch                                   as Monarch
 import Monarch.Html
 import Counter.API                               as API
+import Data.Maybe
 
 type Model = Int
 
-data Message = UserClickedIncreaseButton
-             | UserClickedDecreaseButton
+data Message
+  = MonarchSentInitialize
+  | UserClickedIncreaseButton
+  | UserClickedDecreaseButton
 
 type Output = Void
 
@@ -32,6 +35,7 @@ update :: Message -> Model -> Model
 update = case _ of
   UserClickedIncreaseButton -> (_ + 1)
   UserClickedDecreaseButton -> (_ - 1)
+  _ -> identity
 
 view :: Model -> Html Message
 view model =
@@ -44,16 +48,14 @@ command :: Message
         -> Model
         -> Command (API.COUNTER ()) Message Output Unit
 command message _ = case message of
+  MonarchSentInitialize -> do
+    Monarch.dispatch UserClickedIncreaseButton
+    pure unit
   UserClickedIncreaseButton -> API.increase
   UserClickedDecreaseButton -> API.decrease
 
 interpreter :: Command (API.COUNTER ()) Message Output Unit -> Command () Message Output Unit
 interpreter = API.run
-
-subscription :: Model -> Command (API.COUNTER ()) Message Output Unit
-subscription _ = do
-  Monarch.dispatch UserClickedIncreaseButton
-  pure unit
 
 main :: HTMLElement -> Effect Unit
 main container = do
@@ -63,6 +65,6 @@ main container = do
                     , command
                     , interpreter
                     , container
-                    , subscription
+                    , onInitialize: Just MonarchSentInitialize
                     , onOutput: \_ -> pure unit
                     }

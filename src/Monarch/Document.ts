@@ -42,9 +42,9 @@ type Run<effects, a> = { tag: Run<effects, a> }
 type Hoist<effects> = <a>(program: Run<effects, a>) => Effect<Unit>
 
 interface HoistEnvironment<message, output, effects> {
-    interpreter: <a>(program: Run<effects, a>) => Run<any, a>
     dispatchMessage: DispatchMessage<message>
     dispatchOutput: DispatchOutput<output>
+    interpreter: <a>(program: Run<effects, a>) => Run<any, a>
 }
 
 type MkHoist<message, output, effects> = (environment: HoistEnvironment<message, output, effects>) => Hoist<effects>
@@ -55,8 +55,8 @@ interface Spec<model, message, output, effects> {
     initialModel: model
     interpreter: <a>(command: Run<effects, a>) => Run<any, a>
     mkHoist: MkHoist<message, output, effects>
+    onInitialize?: message
     onOutput: (output: output) => Effect<Unit>
-    subscription: (model: model) => Run<effects, Unit>
     update: (message: message) => (model: model) => model
     view: (model: model) => VirtualDomTree<message>
 }
@@ -142,8 +142,8 @@ function unsafe_document<model, message, output, effects>({
     initialModel,
     interpreter,
     mkHoist,
+    onInitialize,
     onOutput,
-    subscription,
     update,
     view,
 }: Spec<model, message, output, effects>): void {
@@ -168,7 +168,7 @@ function unsafe_document<model, message, output, effects>({
         model: initialModel,
     }
 
-    hoist(subscription(initialModel))()
+    onInitialize && unsafe_dispatchMessage(onInitialize)
 
     requestAnimationFrame(() => {
         unsafe_uncurried_mount(container, outputHandlers, initialVirtualDomTree)

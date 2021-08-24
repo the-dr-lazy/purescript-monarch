@@ -10,13 +10,15 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -}
 
 module Monarch.Document
-  ( Spec
+  ( CommonSpec
+    , BootstrapSpec
   , bootstrap
   )
 where
 
 import Prelude
-
+import Data.Maybe
+import Data.Nullable
 import Monarch.Html          ( Html )
 import Monarch.Command       ( BASIC, MkHoist, mkHoist )
 import Effect                ( Effect )
@@ -25,23 +27,29 @@ import Record                as Record
 import Run                   ( Run )
 import Type.Row              (type (+))
 
-type Spec model message output effects a r
+type CommonSpec model message output effects a r
   = ( command      :: message -> model -> Run effects Unit
     , container    :: HTMLElement
     , initialModel :: model
     , interpreter  :: Run effects a -> Run (BASIC message output ()) a
     , onOutput     :: output -> Effect Unit
-    , subscription :: model -> Run effects Unit
     , update       :: message -> model -> model
     , view         :: model -> Html message
     | r
     )
 
 type DocumentSpec model message output effects a r
-  = Spec model message output effects a
-  + ( mkHoist :: MkHoist message output effects a | r )
+  = CommonSpec model message output effects a
+  + ( mkHoist :: MkHoist message output effects a
+    , onInitialize :: Nullable message
+    | r
+    )
 
 foreign import document :: forall model message output effects a r. { | DocumentSpec model message output effects a r } -> Effect Unit
 
-bootstrap :: forall model message output effects a. { | Spec model message output effects a () } -> Effect Unit
-bootstrap spec = document $ Record.merge spec { mkHoist: mkHoist :: MkHoist message output effects a }
+type BootstrapSpec model message output effects a r
+  = CommonSpec model message output effects a
+  + ( onInitialize :: Maybe message | r )
+
+bootstrap :: forall model message output effects a. { | BootstrapSpec model message output effects a () } -> Effect Unit
+bootstrap spec = document $ Record.merge { mkHoist: mkHoist :: MkHoist message output effects a, onInitialize: toNullable spec.onInitialize } spec
