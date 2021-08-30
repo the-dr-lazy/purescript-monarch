@@ -8,8 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import 'setimmediate'
-
+import 'monarch/polyfills'
 import { OutputHandlersList } from 'monarch/Monarch/VirtualDom/OutputHandlersList'
 import { VirtualDomTree } from 'monarch/Monarch/VirtualDom/VirtualDomTree'
 import { unsafe_uncurried_applyPatchTree } from 'monarch/Monarch/VirtualDom/PatchTree'
@@ -23,42 +22,36 @@ import {
 } from 'monarch/Monarch/VirtualDom/DiffWork'
 import { mkScheduler } from 'monarch/Monarch/Scheduler'
 
-interface DispatchMessage<message> {
-    (message: message): Effect<Unit>
-}
+export type DispatchMessage<message> = (message: message) => Effect<Unit>
+export type DispatchOutput<output> = (output: output) => Effect<Unit>
+export type Hoist<effects> = <a>(program: Run<effects, a>) => Effect<Unit>
 
-interface DispatchOutput<output> {
-    (output: output): Effect<Unit>
-}
-
-/**
- * An opaque type for encoding `Run` type of PureScript.
- *
- * Note: the type details are just for tricking the TypeScript compiler.
- * Don't use them. This is an opaque type. You shouldn't know what is going on...
- */
-type Run<effects, a> = { tag: Run<effects, a> }
-
-type Hoist<effects> = <a>(program: Run<effects, a>) => Effect<Unit>
-
-interface HoistEnvironment<message, output, effects> {
+export interface HoistEnvironment<message, output, effects> {
     dispatchMessage: DispatchMessage<message>
     dispatchOutput: DispatchOutput<output>
     interpreter: <a>(program: Run<effects, a>) => Run<any, a>
 }
 
-type MkHoist<message, output, effects> = (environment: HoistEnvironment<message, output, effects>) => Hoist<effects>
+export type MkHoist<message, output, effects> = (
+    environment: HoistEnvironment<message, output, effects>,
+) => Hoist<effects>
 
-interface Spec<model, message, output, effects> {
+export interface Spec<model, message, output, effects> {
     command: (message: message) => (model: model) => Run<effects, Unit>
-    container: HTMLElement
+    container: Node
     initialModel: model
     interpreter: <a>(command: Run<effects, a>) => Run<any, a>
     mkHoist: MkHoist<message, output, effects>
     onInitialize?: message
+    onFinalize?: message
     onOutput: (output: output) => Effect<Unit>
     update: (message: message) => (model: model) => model
     view: (model: model) => VirtualDomTree<message>
+}
+
+interface Environment<model, message, output, effects> extends Spec<model, message, output, effects> {
+    hoist: Hoist<effects>
+    diffWorkEnvironment: DiffWorkEnvironment<message, message>
 }
 
 interface State<model, message> {
@@ -136,114 +129,123 @@ interface State<model, message> {
     model: model
 }
 
-function unsafe_document<model, message, output, effects>({
-    command,
-    container,
-    initialModel,
-    interpreter,
-    mkHoist,
-    onInitialize,
-    onOutput,
-    update,
-    view,
-}: Spec<model, message, output, effects>): void {
-    const dispatchMessage: DispatchMessage<message> = message => () => unsafe_dispatchMessage(message)
-    const dispatchOutput: DispatchOutput<output> = onOutput
-    const hoist = mkHoist({ interpreter, dispatchMessage, dispatchOutput })
+export class Application<model, message, output, effects> {
+    private _environment: Environment<model, message, output, effects>
+    private _state: State<model, message>
 
-    const outputHandlers: OutputHandlersList = OutputHandlersList.mkNil(unsafe_dispatchMessage)
-    const diffWorkEnvironment: DiffWorkEnvironment<message, message> = {
-        scheduler: mkScheduler(),
-        unsafe_dispatchDiffWork,
-        unsafe_finishDiffWork,
+    constructor(spec: Spec<model, message, output, effects>) {
+        const { interpreter, onInitialize, mkHoist, container, initialModel, view, onOutput } = spec
+
+        this._environment = {
+            ...spec,
+            hoist: mkHoist({
+                interpreter,
+                dispatchMessage: message => () => this.unsafe_dispatchMessage(message),
+                dispatchOutput: onOutput,
+            }),
+
+            diffWorkEnvironment: {
+                scheduler: mkScheduler(),
+                unsafe_dispatchDiffWork: this._unsafe_dispatchDiffWork,
+                unsafe_finishDiffWork: this._unsafe_finishDiffWork,
+            },
+        }
+
+        const outputHandlers: OutputHandlersList = OutputHandlersList.mkNil(this.unsafe_dispatchMessage)
+
+        const initialVirtualDomTree: VirtualDomTree<message> = view(initialModel)
+
+        this._state = {
+            committedVirtualDomTree: initialVirtualDomTree,
+            diffWork: undefined,
+            diffWorkResult: undefined,
+            hasRequestedAsyncRendering: false,
+            model: initialModel,
+        }
+
+        onInitialize && this.unsafe_dispatchMessage(onInitialize)
+
+        requestAnimationFrame(() => unsafe_uncurried_mount(container, outputHandlers, initialVirtualDomTree))
     }
 
-    const initialVirtualDomTree: VirtualDomTree<message> = view(initialModel)
+    public unsafe_dispatchMessage = (message: message): void => {
+        const { hoist, update, command } = this._environment
 
-    const state: State<model, message> = {
-        committedVirtualDomTree: initialVirtualDomTree,
-        diffWork: undefined,
-        diffWorkResult: undefined,
-        hasRequestedAsyncRendering: false,
-        model: initialModel,
-    }
-
-    onInitialize && unsafe_dispatchMessage(onInitialize)
-
-    requestAnimationFrame(() => {
-        unsafe_uncurried_mount(container, outputHandlers, initialVirtualDomTree)
-    })
-
-    function unsafe_dispatchMessage(message: message): void {
-        const previousModel = state.model
+        const previousModel = this._state.model
         const nextModel = update(message)(previousModel)
 
         hoist(command(message)(nextModel))()
 
         if (previousModel === nextModel) return
 
-        state.model = nextModel
+        this._state.model = nextModel
 
-        if (state.hasRequestedAsyncRendering) return
+        if (this._state.hasRequestedAsyncRendering) return
 
-        window.setImmediate(unsafe_render)
-        state.hasRequestedAsyncRendering = true
+        window.requestImmediate(this._unsafe_render)
+        this._state.hasRequestedAsyncRendering = true
     }
 
-    function unsafe_render(): void {
-        const nextVirtualDomTree = view(state.model)
-        const initialDiffWork = mkRootDiffWork(state.committedVirtualDomTree, nextVirtualDomTree)
+    private _unsafe_render = (): void => {
+        const { view, diffWorkEnvironment } = this._environment
 
-        state.hasRequestedAsyncRendering = false
+        const nextVirtualDomTree = view(this._state.model)
+        const initialDiffWork = mkRootDiffWork(this._state.committedVirtualDomTree, nextVirtualDomTree)
+
+        this._state.hasRequestedAsyncRendering = false
 
         unsafe_uncurried_performDiffWork(initialDiffWork, diffWorkEnvironment)
     }
 
-    function unsafe_dispatchDiffWork(diffWork: DiffWork<any, any>): void {
-        const hasRequestedAsyncDiffWorkPerformance = state.diffWork !== undefined
+    private _unsafe_dispatchDiffWork = (diffWork: DiffWork<any, any>): void => {
+        const hasRequestedAsyncDiffWorkPerformance = this._state.diffWork !== undefined
 
-        state.diffWork = diffWork
+        this._state.diffWork = diffWork
 
         if (hasRequestedAsyncDiffWorkPerformance) return
 
-        window.setImmediate(unsafe_diff)
+        window.requestImmediate(this._unsafe_diff)
     }
 
-    function unsafe_diff() {
-        const diffWork = state.diffWork!
+    private _unsafe_diff = () => {
+        const { diffWorkEnvironment } = this._environment
 
-        state.diffWork = undefined
+        const diffWork = this._state.diffWork!
+
+        this._state.diffWork = undefined
 
         unsafe_uncurried_performDiffWork(diffWork, diffWorkEnvironment)
     }
 
-    function unsafe_finishDiffWork(diffWorkResult: DiffWorkResult<message>): void {
-        const hasRequestedAsyncCommitting = state.diffWorkResult !== undefined
+    private _unsafe_finishDiffWork = (diffWorkResult: DiffWorkResult<message>): void => {
+        const hasRequestedAsyncCommitting = this._state.diffWorkResult !== undefined
 
-        state.diffWorkResult = diffWorkResult
+        this._state.diffWorkResult = diffWorkResult
 
         if (hasRequestedAsyncCommitting) return
 
-        requestAnimationFrame(unsafe_commit)
+        requestAnimationFrame(this._unsafe_commit)
     }
 
-    function unsafe_commit() {
-        if (state.diffWorkResult === undefined) {
+    private _unsafe_commit = () => {
+        if (this._state.diffWorkResult === undefined) {
             // ToDo: This is a serious bug. Should be reported.
             throw '### INVARIANT ###'
         }
 
-        const patchTree = state.diffWorkResult.rootPatchTree
+        const { container } = this._environment
 
-        state.committedVirtualDomTree = state.diffWorkResult.rootVNode
-        state.diffWorkResult = undefined
+        const patchTree = this._state.diffWorkResult.rootPatchTree
+
+        this._state.committedVirtualDomTree = this._state.diffWorkResult.rootVNode
+        this._state.diffWorkResult = undefined
 
         unsafe_uncurried_applyPatchTree(container, patchTree)
     }
-}
 
-interface Document {
-    <model, message, output, effects>(spec: Spec<model, message, output, effects>): Effect<Unit>
-}
+    public unmount = () => {
+        const { onFinalize } = this._environment
 
-export const document: Document = spec => () => unsafe_document(spec)
+        onFinalize && this.unsafe_dispatchMessage(onFinalize)
+    }
+}

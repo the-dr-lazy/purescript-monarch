@@ -12,15 +12,18 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 module Counter.Main (main) where
 
 import Prelude
-import Run                   ( Run, EFFECT )
+import Run                   ( Run )
 import Effect                ( Effect )
 import Effect.Aff            ( launchAff_ )
 import Web.HTML              ( HTMLElement )
-import Monarch.Command       ( Command )
+import Monarch.Effect as Monarch.Effect
 import Monarch                                   as Monarch
 import Monarch.Html
-import Counter.API                               as API
+import Monarch.Html as Html
+import Counter.Effect.Api                               as Effect.Api
 import Data.Maybe
+import Monarch.VirtualDom.Facts.Attributes
+import Type.Row (type (+))
 
 type Model = Int
 
@@ -39,32 +42,36 @@ update = case _ of
 
 view :: Model -> Html Message
 view model =
-  div_ [ button { onClick: const UserClickedDecreaseButton } [ text "-" ]
-       , text $ show model
-       , button { onClick: const UserClickedIncreaseButton } [ text "+" ]
-       ]
+  Html.div_
+    [ Html.button { onClick: const UserClickedDecreaseButton } [ Html.text "-" ]
+    , Html.text $ show model
+    , Html.button { onClick: const UserClickedIncreaseButton } [ Html.text "+" ]
+    ]
 
-command :: Message
-        -> Model
-        -> Command (API.COUNTER ()) Message Output Unit
+command
+  :: Message
+  -> Model
+  -> Run (Monarch.Effect.Basic Message Output + Effect.Api.Counter ()) Unit
 command message _ = case message of
   MonarchSentInitialize -> do
     Monarch.dispatch UserClickedIncreaseButton
     pure unit
-  UserClickedIncreaseButton -> API.increase
-  UserClickedDecreaseButton -> API.decrease
+  UserClickedIncreaseButton -> Effect.Api.increase
+  UserClickedDecreaseButton -> Effect.Api.decrease
 
-interpreter :: Command (API.COUNTER ()) Message Output Unit -> Command () Message Output Unit
-interpreter = API.run
+interpreter
+  :: Run (Monarch.Effect.Basic Message Output + Effect.Api.Counter ())
+  ~> Run (Monarch.Effect.Basic Message Output ())
+interpreter = Effect.Api.run
 
 main :: HTMLElement -> Effect Unit
 main container = do
-  Monarch.bootstrap { initialModel: 0
-                    , update
-                    , view
-                    , command
-                    , interpreter
-                    , container
-                    , onInitialize: Just MonarchSentInitialize
-                    , onOutput: \_ -> pure unit
-                    }
+  Monarch.mkApplication { initialModel: 0
+                        , update
+                        , view
+                        , command
+                        , interpreter
+                        , container
+                        , onInitialize: Just MonarchSentInitialize
+                        , onOutput: \_ -> pure unit
+                        }

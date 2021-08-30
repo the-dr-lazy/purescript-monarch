@@ -24,4 +24,20 @@ interface Tagged<a> {
     tag: a
 }
 
-declare module 'asap'
+type Nullable<a> = null | a
+
+/**
+ * An opaque type for encoding `Run` type of PureScript.
+ *
+ * Note: the type details are just for tricking the TypeScript compiler.
+ * Don't use them. This is an opaque type. You shouldn't know what is going on...
+ */
+type Run<effects, a> = { tag: Run<effects, a> }
+
+/**
+ * An opaque type for encoding `Either` type of PureScript.
+ *
+ * Note: the type details are just for tricking the TypeScript compiler.
+ * Don't use them. This is an opaque type. You shouldn't know what is going on...
+ */
+type Either<e, a> = { tag: Either<e, a> }

@@ -1,5 +1,5 @@
 {-|
-Module     : Monarch
+Module     : Monarch.Effect
 Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <the-dr-lazy@pm.me>
 Copyright  : (c) 2020-2021 Monarch
 License    : MPL 2.0
@@ -9,11 +9,8 @@ License, version 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -}
 
-module Monarch
-  ( module Monarch.Application
-  , module Monarch.Effect.Application
-  )
-where
+module Monarch.Effect
+  ( module Monarch.Effect.Application
+  ) where
 
-import Monarch.Effect.Application (dispatch, raise)
-import Monarch.Application (mkApplication)
+import Monarch.Effect.Application (Application, Basic)

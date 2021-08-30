@@ -5,6 +5,7 @@
         "module": "commonjs",
         "moduleResolution": "node",
         "downlevelIteration": true,
+        "esModuleInterop": true,
         "allowJs": true,
         "noEmitHelpers": true,
         "importHelpers": true,

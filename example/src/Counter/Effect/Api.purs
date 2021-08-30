@@ -1,5 +1,5 @@
 {-|
-Module     : Counter.API
+Module     : Counter.Effect.Api
 Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <the-dr-lazy@pm.me>
 Copyright  : (c) 2020-2021 Monarch
 License    : MPL 2.0
@@ -9,10 +9,9 @@ License, version 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -}
 
-module Counter.API (COUNTER, CounterF, increase, decrease, runCounter, run) where
+module Counter.Effect.Api (Counter, CounterF, increase, decrease, runCounter, run) where
 
 import Prelude
-
 import Run               ( Run
                          , EFFECT
                          , interpret
@@ -27,18 +26,18 @@ data CounterF a = Increase a
 
 derive instance functorCounterF :: Functor CounterF
 
-type COUNTER r = (counter :: CounterF | r)
+type Counter r = ("api-counter" :: CounterF | r)
 
-_counter :: Proxy "counter"
+_counter :: Proxy "api-counter"
 _counter = Proxy
 
-increase :: forall r. Run (COUNTER + r) Unit
+increase :: forall r. Run (Counter + r) Unit
 increase = Run.lift _counter $ Increase unit
 
-decrease :: forall r. Run (COUNTER + r) Unit
+decrease :: forall r. Run (Counter + r) Unit
 decrease = Run.lift _counter $ Decrease unit
 
-runCounter :: forall r. Run (COUNTER + EFFECT + r) ~> Run (EFFECT + r)
+runCounter :: forall r. Run (Counter + EFFECT + r) ~> Run (EFFECT + r)
 runCounter = interpret (Run.on _counter handleCounter Run.send)
 
 handleCounter :: forall r. CounterF ~> Run (EFFECT + r)
@@ -50,5 +49,5 @@ handleCounter = case _ of
     Run.liftEffect $ Console.log "decrease requested"
     pure next
 
-run :: forall r. Run (COUNTER + EFFECT + r) ~> Run (EFFECT + r)
+run :: forall r. Run (Counter + EFFECT + r) ~> Run (EFFECT + r)
 run = runCounter
