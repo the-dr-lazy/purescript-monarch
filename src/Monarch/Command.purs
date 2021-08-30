@@ -24,11 +24,11 @@ where
 
 import Prelude
 import Type.Proxy
-import Effect (Effect)
+import Effect     (Effect)
 import Effect.Aff (launchAff_)
-import Run (Run, EFFECT, AFF, runBaseAff', interpret)
-import Run as Run
-import Type.Row (type (+))
+import Run        (Run, EFFECT, AFF, runBaseAff', interpret)
+import Run                                                     as Run
+import Type.Row   (type (+))
 
 data CommandF message output a
   = Dispatch message a
