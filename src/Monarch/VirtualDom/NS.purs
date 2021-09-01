@@ -9,13 +9,13 @@ License, version 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -}
 
-module Monarch.VirtualDom.NS where
+module Monarch.VirtualDom.NS (class IsNS, reflectNS, NS) where
 
 import Prelude
 import Undefined
+import Type.Proxy
 
-data NS = HTML | SVG
+data NS
 
-instance showNS :: Show NS where
-  show HTML = undefined
-  show SVG = "http://www.w3.org/2000/svg"
+class IsNS ns where
+  reflectNS :: Proxy ns -> String

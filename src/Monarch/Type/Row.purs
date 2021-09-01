@@ -9,8 +9,12 @@ License, version 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -}
 
-module Monarch.Type.Row where
+module Monarch.Type.Row
+  ( class OptionalRecordCons
+  , class Union3
+  ) where
 
+import Type.Row
 import Type.RowList (class RowToList)
 import Monarch.Type.RowList as RowList
 
@@ -18,3 +22,7 @@ import Monarch.Type.RowList as RowList
 class OptionalRecordCons (row :: Row Type) (name :: Symbol) (s :: Row Type) (t :: Row Type)
 
 instance rowListOptionalRecordCons :: (RowToList row list, RowList.OptionalRecordCons list name s t) => OptionalRecordCons row name s t
+
+class Union3 a b c abc | a b c -> abc
+
+instance union3 :: (Union a b ab, Union ab c abc) => Union3 a b c abc

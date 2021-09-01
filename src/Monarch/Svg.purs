@@ -12,29 +12,40 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 module Monarch.Svg
   ( module Monarch.VirtualDom.VirtualDomTree.Prelude
   , Svg
-  , svg , svg_, svg'
+  , SVG
+  , svg
   )
 where
 
-import Monarch.VirtualDom.VirtualDomTree
-import Monarch.VirtualDom.NS as NS
-import Monarch.VirtualDom.VirtualDomTree.Prelude
 import Monarch.Svg.Facts.Attributes
-import Monarch.Svg.Facts.Properties
 import Monarch.Svg.Facts.Outputs
+import Monarch.Svg.Facts.Properties
 import Monarch.Type.Maybe
+import Monarch.VirtualDom.Facts
+import Monarch.VirtualDom.NS
+import Monarch.VirtualDom.VirtualDomTree
+import Monarch.VirtualDom.VirtualDomTree.Prelude
+import Type.Proxy
 
--- Data Type
+foreign import data SVG  :: NS
+
+instance svgIsNS :: IsNS SVG where
+  reflectNS _ = "http://www.w3.org/2000/svg"
 
 type Svg = VirtualDomTree Nothing ()
 
 -- Elements
 
-svg :: Node SvgSvgElementProperties SvgSvgElementOutputs SvgSvgElementAttributes
-svg = nodeNS NS.SVG "svg"
+instance divFacts
+  :: (MkFacts (SvgSvgElementProperties ())
+              (SvgSvgElementOutputs message ())
+              (SvgSvgElementAttributes ())
+              message
+              facts
+     )
+  => Facts SVG "svg" message facts
 
-svg_ :: Node_
-svg_ = nodeNS_ NS.SVG "svg"
-
-svg' :: forall message. Svg message
-svg' = nodeNS' NS.SVG "svg"
+svg =
+  node { ns: Proxy :: Proxy SVG
+       , tagName: Proxy :: Proxy "svg"
+       }
