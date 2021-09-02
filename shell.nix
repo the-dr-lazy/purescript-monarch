@@ -17,7 +17,7 @@ pkgs.stable.mkShell {
     ###################################################
     # Command line tools:
     {
-      inherit (pkgs.stable) gitFull;
+      inherit (pkgs.stable) gitFull gitflow;
       inherit (pkgs.stable.nodePackages) parcel-bundler;
     }
 
