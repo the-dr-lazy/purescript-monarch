@@ -38,7 +38,7 @@ foreign import data VirtualDomTree :: Maybe Type -> Row Type -> Type -> Type
 
 foreign import fmapVirtualDomTree :: forall key slots a b. (a -> b) -> VirtualDomTree key slots a -> VirtualDomTree key slots b
 
-instance functorVirtualDomTree :: Functor (VirtualDomTree key slots) where
+instance Functor (VirtualDomTree key slots) where
   map = fmapVirtualDomTree
 
 -- Hyperscript
@@ -79,14 +79,14 @@ foreign import keyed :: forall key slots message. key -> VirtualDomTree Nothing 
 
 class ExtractKeyType (row :: Row Type) (key :: Maybe Type) | row -> key
 
-instance rowListExtractKeyType :: (RowToList row list, ExtractKeyType' list key) => ExtractKeyType row key
+instance (RowToList row list, ExtractKeyType' list key) => ExtractKeyType row key
 
 class ExtractKeyType' (row :: RowList Type) (key :: Maybe Type) | row -> key
 
-instance nilExtractKeyType :: ExtractKeyType' RowList.Nil Nothing
+instance ExtractKeyType' RowList.Nil Nothing
 
-instance consExtractKeyType :: ExtractKeyType' (RowList.Cons "key" a _tail) (Just a)
-else instance fallbackExtractKeyType :: (ExtractKeyType' tail key) => ExtractKeyType' (RowList.Cons _name _t tail) key
+instance ExtractKeyType' (RowList.Cons "key" a _tail) (Just a)
+else instance (ExtractKeyType' tail key) => ExtractKeyType' (RowList.Cons _name _t tail) key
 
 nodeNS :: forall r key key' slots message
        . ExtractKeyType r key
