@@ -1,38 +1,39 @@
 { pkgs }:
 
-pkgs.mkShell {
+pkgs.stable.mkShell {
   name = "Monarch";
 
   nativeBuildInputs = builtins.concatMap builtins.attrValues [
     ###################################################
     # Code styles:
     {
-      inherit (pkgs) pre-commit nixpkgs-fmt nix-linter shfmt shellcheck;
-      inherit (pkgs.python3Packages) pre-commit-hooks yamllint;
-      inherit (pkgs.nodePackages) prettier;
+      inherit (pkgs.stable) pre-commit nixpkgs-fmt nix-linter shfmt shellcheck;
+      inherit (pkgs.stable.python3Packages) pre-commit-hooks yamllint;
+      inherit (pkgs.stable.nodePackages) prettier;
 
-      headroom = pkgs.haskell.lib.justStaticExecutables (pkgs.haskellPackages.callHackage "headroom" "0.3.2.0" { });
+      headroom = pkgs.stable.haskell.lib.justStaticExecutables (pkgs.stable.haskellPackages.callHackage "headroom" "0.3.2.0" { });
     }
 
     ###################################################
     # Command line tools:
     {
-      inherit (pkgs) gitFull;
-      inherit (pkgs.nodePackages) parcel-bundler;
+      inherit (pkgs.stable) gitFull;
+      inherit (pkgs.stable.nodePackages) parcel-bundler;
     }
 
     ###################################################
     # Languages:
     {
-      inherit (pkgs) dhall purescript nodejs-16_x;
-      inherit (pkgs.nodePackages) typescript;
+      inherit (pkgs.stable) dhall nodejs-16_x;
+      inherit (pkgs.unstable) purescript;
+      inherit (pkgs.stable.nodePackages) typescript;
     }
 
     ###################################################
     # Language servers:
     {
-      inherit (pkgs) dhall-lsp-server;
-      inherit (pkgs.nodePackages)
+      inherit (pkgs.stable) dhall-lsp-server;
+      inherit (pkgs.stable.nodePackages)
         bash-language-server
         purescript-language-server
         typescript-language-server
@@ -43,6 +44,6 @@ pkgs.mkShell {
 
     ###################################################
     # Package managers:
-    { inherit (pkgs) spago; }
+    { inherit (pkgs.unstable) spago; }
   ];
 }
