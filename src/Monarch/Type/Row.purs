@@ -11,10 +11,21 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 module Monarch.Type.Row where
 
-import Type.RowList (class RowToList)
-import Monarch.Type.RowList as RowList
+import Type.Prelude
+import Type.RowList as RowList
+import Type.Row as Row
 
 -- | Adds an optional record constraint with type `s` for field `name` to the given `row` type
-class OptionalRecordCons (row :: Row Type) (name :: Symbol) (s :: Row Type) (t :: Row Type)
+class OptionalRecordCons :: forall r. r Type -> Symbol -> Row Type -> Row Type -> Constraint
+class OptionalRecordCons row name s t
 
-instance (RowToList row list, RowList.OptionalRecordCons list name s t) => OptionalRecordCons row name s t
+instance OptionalRecordCons RowList.Nil _name _s _t
+-- | Constraint target field (`name`) when it exists on given `row`
+else instance
+  ( Row.Union t _t s ) =>
+  OptionalRecordCons (RowList.Cons name { | t } _tail) name s t
+else instance
+  (OptionalRecordCons tail name s t) => OptionalRecordCons (RowList.Cons _name _t tail) name s t
+-- | `Row` to `RowList` conversion of the `row`
+else instance
+  (RowToList row list, OptionalRecordCons list name s t) => OptionalRecordCons row name s t
