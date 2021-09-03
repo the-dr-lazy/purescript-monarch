@@ -33,7 +33,7 @@ import Type.Proxy
 
 foreign import data HTML :: NS
 
-instance htmlIsNS :: IsNS HTML where
+instance IsNS HTML where
   reflectNS _ = undefined
 
 type Html = VirtualDomTree Nothing ()

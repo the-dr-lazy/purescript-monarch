@@ -25,7 +25,7 @@ import Type.Proxy
 data CounterF a = Increase a
                 | Decrease a
 
-derive instance functorCounterF :: Functor CounterF
+derive instance Functor CounterF
 
 type COUNTER r = (counter :: CounterF | r)
 

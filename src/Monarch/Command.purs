@@ -34,7 +34,7 @@ data CommandF message output a
   = Dispatch message a
   | Raise output a
 
-derive instance functorCommandF :: Functor (CommandF message output)
+derive instance Functor (CommandF message output)
 
 _command = Proxy :: Proxy "command"
 

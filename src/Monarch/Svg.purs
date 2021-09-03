@@ -29,7 +29,7 @@ import Type.Proxy
 
 foreign import data SVG  :: NS
 
-instance svgIsNS :: IsNS SVG where
+instance IsNS SVG where
   reflectNS _ = "http://www.w3.org/2000/svg"
 
 type Svg = VirtualDomTree Nothing ()

@@ -21,8 +21,8 @@ import Monarch.Type.RowList as RowList
 -- | Adds an optional record constraint with type `s` for field `name` to the given `row` type
 class OptionalRecordCons (row :: Row Type) (name :: Symbol) (s :: Row Type) (t :: Row Type)
 
-instance rowListOptionalRecordCons :: (RowToList row list, RowList.OptionalRecordCons list name s t) => OptionalRecordCons row name s t
+instance (RowToList row list, RowList.OptionalRecordCons list name s t) => OptionalRecordCons row name s t
 
 class Union3 a b c abc | a b c -> abc
 
-instance union3 :: (Union a b ab, Union ab c abc) => Union3 a b c abc
+instance (Union a b ab, Union ab c abc) => Union3 a b c abc
