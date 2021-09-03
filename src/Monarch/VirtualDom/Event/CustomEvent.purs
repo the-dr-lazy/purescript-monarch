@@ -1,5 +1,5 @@
 {-|
-Module     : Monarch.VirtualDom.Facts.Outputs
+Module     : Monarch.VirtualDom.Event.CustomEvent
 Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <the-dr-lazy@pm.me>
 Copyright  : (c) 2020-2021 Monarch
 License    : MPL 2.0
@@ -9,14 +9,14 @@ License, version 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -}
 
-module Monarch.VirtualDom.Facts.Outputs where
+module Monarch.VirtualDom.Event.CustomEvent where
 
-import Type.Prelude
 import Monarch.VirtualDom.Event.Handle
 
-type GlobalOutputs message r
-  = ( onClick :: MouseEventHandle True True -> message
-    | r
-    )
+class CustomEvent h where
+  detail :: forall a. h a -> a
 
-type ElementOutputs message r = GlobalOutputs message r
+foreign import foreign_detail :: forall h a. h a -> a
+
+instance CustomEvent (CustomEventHandle bubbles composed) where
+  detail = foreign_detail
