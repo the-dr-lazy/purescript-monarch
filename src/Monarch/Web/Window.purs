@@ -21,9 +21,9 @@ foreign import clearTimeout :: Int -> Effect Unit
 
 newtype TimeoutId = TimeoutId Int
 
-derive instance newtypeTimeoutId :: Newtype TimeoutId _
-derive instance eqTimeoutId :: Eq TimeoutId
-derive instance ordTimeoutId :: Ord TimeoutId
+derive instance Newtype TimeoutId _
+derive instance Eq TimeoutId
+derive instance Ord TimeoutId
 
 requestTimeout :: Int -> Effect Unit -> Effect TimeoutId
 requestTimeout n = map TimeoutId <<< setTimeout n
@@ -37,9 +37,9 @@ foreign import clearInterval :: Int -> Effect Unit
 
 newtype IntervalId = IntervalId Int
 
-derive instance newtypeIntervalId :: Newtype IntervalId _
-derive instance eqIntervalId :: Eq IntervalId
-derive instance ordIntervalId :: Ord IntervalId
+derive instance Newtype IntervalId _
+derive instance Eq IntervalId
+derive instance Ord IntervalId
 
 requestInterval :: Int -> Effect Unit -> Effect IntervalId
 requestInterval n = map IntervalId <<< setInterval n
@@ -53,9 +53,9 @@ foreign import _cancelAnimationFrame :: Int -> Effect Unit
 
 newtype AnimationFrameId = AnimationFrameId Int
 
-derive instance newtypeAnimationFrameId :: Newtype AnimationFrameId _
-derive instance eqAnimationFrameId :: Eq AnimationFrameId
-derive instance ordAnimationFrameId :: Ord AnimationFrameId
+derive instance Newtype AnimationFrameId _
+derive instance Eq AnimationFrameId
+derive instance Ord AnimationFrameId
 
 requestAnimationFrame :: Effect Unit -> Effect AnimationFrameId
 requestAnimationFrame = map AnimationFrameId <<< _requestAnimationFrame
@@ -69,9 +69,9 @@ foreign import _cancelIdleCallback :: Int -> Effect Unit
 
 newtype IdleCallbackId = IdleCallbackId Int
 
-derive instance newtypeIdleCallbackId :: Newtype IdleCallbackId _
-derive instance eqIdleCallbackId :: Eq IdleCallbackId
-derive instance ordIdleCallbackId :: Ord IdleCallbackId
+derive instance Newtype IdleCallbackId _
+derive instance Eq IdleCallbackId
+derive instance Ord IdleCallbackId
 
 requestIdleCallback :: Int -> Effect Unit -> Effect IdleCallbackId
 requestIdleCallback n = map IdleCallbackId <<< _requestIdleCallback n
@@ -90,9 +90,9 @@ foreign import _cancelImmediate :: Int -> Effect Unit
 
 newtype ImmediateId = ImmediateId Int
 
-derive instance newtypeImmediateId :: Newtype ImmediateId _
-derive instance eqImmediateId :: Eq ImmediateId
-derive instance ordImmediateId :: Ord ImmediateId
+derive instance Newtype ImmediateId _
+derive instance Eq ImmediateId
+derive instance Ord ImmediateId
 
 requestImmediate :: Effect Unit -> Effect ImmediateId
 requestImmediate = map ImmediateId <<< _requestImmediate

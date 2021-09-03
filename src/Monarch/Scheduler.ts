@@ -22,6 +22,6 @@ export function mkScheduler(): Scheduler {
 
     return {
         unsafe_shouldYieldToBrowser: () => performance.now() > state.deadline,
-        unsafe_promoteDeadline: () => (state.deadline = state.deadline + 5),
+        unsafe_promoteDeadline: () => (state.deadline = performance.now() + 5),
     }
 }

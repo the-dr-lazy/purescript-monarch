@@ -18,9 +18,9 @@ import Type.RowList (RowList)
 -- | `RowList` version of `OptionalRecordCons` typeclass
 class OptionalRecordCons (row :: RowList Type) (name :: Symbol) (s :: Row Type) (t :: Row Type)
 
-instance nilOptionalRecordCons :: OptionalRecordCons RowList.Nil _name _s _t
+instance OptionalRecordCons RowList.Nil _name _s _t
 -- | Constraint target field (`name`) when it exists on given `row`
-instance consOptionalRecordCons ::
+instance
   (Row.Union t _t s) => OptionalRecordCons (RowList.Cons name { | t } tail) name s t
-else instance fallbackConsOptionalRecordCons ::
+else instance
   (OptionalRecordCons tail name s t) => OptionalRecordCons (RowList.Cons _name _t tail) name s t
