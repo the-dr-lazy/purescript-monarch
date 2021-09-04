@@ -7,7 +7,7 @@ pkgs.stable.mkShell {
     ###################################################
     # Code styles:
     {
-      inherit (pkgs.stable) pre-commit nixpkgs-fmt nix-linter shfmt shellcheck;
+      inherit (pkgs.stable) pre-commit purs-tidy nixpkgs-fmt nix-linter shfmt shellcheck;
       inherit (pkgs.stable.python3Packages) pre-commit-hooks yamllint;
       inherit (pkgs.stable.nodePackages) prettier;
 
