@@ -61,14 +61,14 @@ class Node :: NS -> Symbol ->  Type -> Constraint
 class Node ns tagName r where
   node :: { ns :: Proxy ns, tagName :: Proxy tagName } -> r
 
-instance maximalNode
-  :: ( TypeEquals child (VirtualDomTree key' slots message)
-     , TypeEquals v (VirtualDomTree key slots message)
-     , IsNS ns
-     , IsSymbol tagName
-     , Facts ns tagName message facts
-     , ExtractKeyType facts key
-     )
+instance
+  ( TypeEquals child (VirtualDomTree key' slots message)
+  , TypeEquals v (VirtualDomTree key slots message)
+  , IsNS ns
+  , IsSymbol tagName
+  , Facts ns tagName message facts
+  , ExtractKeyType facts key
+  )
   => Node ns tagName ({ | facts } -> Array child -> v) where
   node proxies facts children = unsafeCoerce
     (mkElementNS { ns: reflectNS proxies.ns
@@ -76,26 +76,12 @@ instance maximalNode
                 , facts: facts
                 , children: unsafeCoerce children
                 })
-else instance minimaxNodeWithFacts
-  :: ( TypeEquals v (VirtualDomTree key slots message)
-     , IsNS ns
-     , IsSymbol tagName
-     , Facts ns tagName message facts
-     , ExtractKeyType facts key
-     )
-  => Node ns tagName ({ | facts } -> v) where
-  node proxies facts = unsafeCoerce
-    (mkElementNS { ns: reflectNS proxies.ns
-                , tagName: reflectSymbol proxies.tagName
-                , facts: facts
-                , children: undefined
-                })
-else instance minimaxNodeWithChildren
-  :: ( TypeEquals child (VirtualDomTree key' slots message)
-     , TypeEquals v (VirtualDomTree Nothing slots message)
-     , IsNS ns
-     , IsSymbol tagName
-     )
+else instance
+  ( TypeEquals child (VirtualDomTree key' slots message)
+  , TypeEquals v (VirtualDomTree Nothing slots message)
+  , IsNS ns
+  , IsSymbol tagName
+  )
   => Node ns tagName (Array child -> v) where
   node proxies children = unsafeCoerce
     (mkElementNS { ns: reflectNS proxies.ns
@@ -103,30 +89,20 @@ else instance minimaxNodeWithChildren
                 , facts: undefined
                 , children: unsafeCoerce children
                 })
-else instance minimalNode
-  :: ( TypeEquals v (VirtualDomTree Nothing slots message)
-     , IsNS ns
-     , IsSymbol tagName
-     )
-  => Node ns tagName v where
-  node proxies = unsafeCoerce
-    (mkElementNS { ns: reflectNS proxies.ns
-                , tagName: reflectSymbol proxies.tagName
-                , facts: undefined
-                , children: undefined
-                })
+else instance (Leaf ns tagName return) => Node ns tagName return where
+  node = leaf
 
 class Leaf :: NS -> Symbol -> Type -> Constraint
 class Leaf ns tagName r where
   leaf :: { ns :: Proxy ns, tagName :: Proxy tagName } -> r
 
-instance maximalLeaf
-  :: ( TypeEquals v (VirtualDomTree key slots message)
-     , IsNS ns
-     , IsSymbol tagName
-     , Facts ns tagName message facts
-     , ExtractKeyType facts key
-     )
+instance
+  ( TypeEquals v (VirtualDomTree key slots message)
+  , IsNS ns
+  , IsSymbol tagName
+  , Facts ns tagName message facts
+  , ExtractKeyType facts key
+  )
   => Leaf ns tagName ({ | facts } -> v) where
   leaf proxies facts = unsafeCoerce
     (mkElementNS { ns: reflectNS proxies.ns
@@ -134,11 +110,11 @@ instance maximalLeaf
                 , facts: facts
                 , children: undefined
                 })
-else instance minimalLeaf
-  :: ( TypeEquals v (VirtualDomTree Nothing slots message)
-     , IsNS ns
-     , IsSymbol tagName
-     )
+else instance
+  ( TypeEquals v (VirtualDomTree Nothing slots message)
+  , IsNS ns
+  , IsSymbol tagName
+  )
   => Leaf ns tagName v where
   leaf proxies = unsafeCoerce
     (mkElementNS { ns: reflectNS proxies.ns
