@@ -51,7 +51,7 @@ foreign import text :: forall message. String -> VirtualDomTree Nothing () messa
 foreign import mkElementNS
   :: forall r key child_key slots message
    . { ns :: String
-     , tag_name :: String
+     , tagName :: String
      , facts :: { | r }
      , children :: Array (VirtualDomTree child_key slots message)
      }
@@ -72,7 +72,7 @@ instance
   => Node ns tag_name ({ | facts } -> Array child -> return) where
   node proxies facts children = unsafeCoerce
     (mkElementNS { ns: reflectNS proxies.ns
-                , tag_name: reflectSymbol proxies.tagName
+                 , tagName: reflectSymbol proxies.tagName
                 , facts: facts
                 , children: unsafeCoerce children
                 })
@@ -85,10 +85,10 @@ else instance
   => Node ns tag_name (Array child -> return) where
   node proxies children = unsafeCoerce
     (mkElementNS { ns: reflectNS proxies.ns
-                , tag_name: reflectSymbol proxies.tagName
-                , facts: undefined
-                , children: unsafeCoerce children
-                })
+                 , tagName: reflectSymbol proxies.tagName
+                 , facts: undefined
+                 , children: unsafeCoerce children
+                 })
 else instance (Leaf ns tag_name return) => Node ns tag_name return where
   node = leaf
 
@@ -106,10 +106,10 @@ instance
   => Leaf ns tag_name ({ | facts } -> return) where
   leaf proxies facts = unsafeCoerce
     (mkElementNS { ns: reflectNS proxies.ns
-                , tag_name: reflectSymbol proxies.tagName
-                , facts: facts
-                , children: undefined
-                })
+                 , tagName: reflectSymbol proxies.tagName
+                 , facts: facts
+                 , children: undefined
+                 })
 else instance
   ( TypeEquals return (VirtualDomTree Nothing slots message)
   , IsNS ns
@@ -118,10 +118,10 @@ else instance
   => Leaf ns tag_name return where
   leaf proxies = unsafeCoerce
     (mkElementNS { ns: reflectNS proxies.ns
-                , tag_name: reflectSymbol proxies.tagName
-                , facts: undefined
-                , children: undefined
-                })
+                 , tagName: reflectSymbol proxies.tagName
+                 , facts: undefined
+                 , children: undefined
+                 })
 
 foreign import keyed :: forall key slots message. key -> VirtualDomTree Nothing slots message -> VirtualDomTree (Just key) slots message
 
