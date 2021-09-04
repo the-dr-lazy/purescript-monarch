@@ -11,30 +11,16 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 module Monarch.Svg
   ( module Monarch.VirtualDom.VirtualDomTree.Prelude
-  , Svg
-  , svg , svg_, svg'
+  , svg
   )
 where
 
 import Monarch.VirtualDom.VirtualDomTree
-import Monarch.VirtualDom.NS as NS
 import Monarch.VirtualDom.VirtualDomTree.Prelude
 import Monarch.Svg.Facts.Attributes
 import Monarch.Svg.Facts.Properties
 import Monarch.Svg.Facts.Outputs
-import Monarch.Type.Maybe
-
--- Data Type
-
-type Svg = VirtualDomTree Nothing ()
 
 -- Elements
 
-svg :: Node SvgSvgElementProperties SvgSvgElementOutputs SvgSvgElementAttributes
-svg = nodeNS NS.SVG "svg"
-
-svg_ :: Node_
-svg_ = nodeNS_ NS.SVG "svg"
-
-svg' :: forall message. Svg message
-svg' = nodeNS' NS.SVG "svg"
+foreign import svg :: Node SvgSvgElementProperties SvgSvgElementOutputs SvgSvgElementAttributes
