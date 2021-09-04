@@ -10,8 +10,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -}
 
 module Monarch.VirtualDom.VirtualDomTree.Prelude
-  ( module Monarch.VirtualDom.VirtualDomTree
-  )
-where
+    ( module Monarch.VirtualDom.VirtualDomTree
+    ) where
 
 import Monarch.VirtualDom.VirtualDomTree (text, keyed)

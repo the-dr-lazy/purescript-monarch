@@ -13,14 +13,16 @@ module Monarch.VirtualDom.Facts where
 
 import Type.Row (type (+))
 
-type Facts (properties :: Row Type -> Row Type)
-           (outputs    :: Row Type -> Row Type)
-           (attributes :: Row Type)
-           (hooks      :: Row Type)
-           (key        :: Type)
-  = properties
-  + outputs
-  + ( attributes :: { | attributes }
-    , hooks      :: { | hooks }
-    , key        :: key
-    )
+type Facts
+    (properties :: Row Type -> Row Type)
+    (outputs :: Row Type -> Row Type)
+    (attributes :: Row Type)
+    (hooks :: Row Type)
+    (key :: Type)
+    = properties
+    + outputs
+    +
+        ( attributes :: { | attributes }
+        , hooks :: { | hooks }
+        , key :: key
+        )

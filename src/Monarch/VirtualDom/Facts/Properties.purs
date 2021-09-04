@@ -11,13 +11,14 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 module Monarch.VirtualDom.Facts.Properties where
 
-import Monarch.VirtualDom.Facts.Attributes    ( ClassName )
-import Type.Row                               ( type (+) )
+import Monarch.VirtualDom.Facts.Attributes (ClassName)
+import Type.Row (type (+))
 
 type NodeProperties r = (| r)
 
 type ElementProperties r
-  = NodeProperties
-  + ( className :: ClassName
-    | r
-    )
+    = NodeProperties
+    +
+        ( className :: ClassName
+        | r
+        )

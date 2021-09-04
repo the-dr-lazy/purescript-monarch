@@ -11,14 +11,15 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 module Monarch.Html.Facts.Attributes where
 
-import Type.Row    ( type (+) )
+import Type.Row (type (+))
 import Monarch.VirtualDom.Facts.Attributes
 
 type HtmlDivElementAttributes r = GlobalAttributes r
 
 type HtmlButtonElementAttributes r
-  = GlobalAttributes
-  + ( autofocus :: Boolean -- | Automatically focus the form control when the page is loaded
-    , disabled  :: Boolean -- | Whether the form control is disabled
-    | r
-    )
+    = GlobalAttributes
+    +
+        ( autofocus :: Boolean -- | Automatically focus the form control when the page is loaded
+        , disabled :: Boolean -- | Whether the form control is disabled
+        | r
+        )

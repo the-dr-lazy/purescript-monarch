@@ -10,29 +10,28 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -}
 
 module Monarch.Command
-  ( BASIC
-  , COMMAND
-  , Command
-  , CommandF
-  , MkHoist
-  , dispatch
-  , mkHoist
-  , raise
-  , runCommand
-  )
-where
+    ( BASIC
+    , COMMAND
+    , Command
+    , CommandF
+    , MkHoist
+    , dispatch
+    , mkHoist
+    , raise
+    , runCommand
+    ) where
 
 import Prelude
 import Type.Proxy
-import Effect     (Effect)
+import Effect (Effect)
 import Effect.Aff (launchAff_)
-import Run        (Run, EFFECT, AFF, runBaseAff', interpret)
-import Run                                                     as Run
-import Type.Row   (type (+))
+import Run (Run, EFFECT, AFF, runBaseAff', interpret)
+import Run as Run
+import Type.Row (type (+))
 
 data CommandF message output a
-  = Dispatch message a
-  | Raise output a
+    = Dispatch message a
+    | Raise output a
 
 derive instance Functor (CommandF message output)
 
@@ -41,10 +40,10 @@ _command = Proxy :: Proxy "command"
 type COMMAND message output r = (command :: CommandF message output | r)
 
 type BASIC message output r
-  = EFFECT
-  + AFF
-  + COMMAND message output
-  + r
+    = EFFECT
+    + AFF
+    + COMMAND message output
+    + r
 
 type Command effects message output = Run (BASIC message output effects)
 
@@ -54,26 +53,28 @@ dispatch message = Run.lift _command $ Dispatch message unit
 raise :: forall message output r. output -> Run (COMMAND message output + r) Unit
 raise output = Run.lift _command $ Raise output unit
 
-runCommand :: forall message output r
-            . (message -> Effect Unit)
-           -> (output -> Effect Unit)
-           -> Run (COMMAND message output + EFFECT + r)
+runCommand
+    :: forall message output r
+     . (message -> Effect Unit)
+    -> (output -> Effect Unit)
+    -> Run (COMMAND message output + EFFECT + r)
            ~> Run (EFFECT + r)
 runCommand dispatchMessage dispatchOutput = interpret (Run.on _command go Run.send)
-  where
+    where
     go :: CommandF message output ~> Run (EFFECT + r)
     go = case _ of
-      Dispatch message next -> Run.liftEffect $ dispatchMessage message *> pure next
-      Raise    output  next -> Run.liftEffect $ dispatchOutput output   *> pure next
+        Dispatch message next -> Run.liftEffect $ dispatchMessage message *> pure next
+        Raise output next -> Run.liftEffect $ dispatchOutput output *> pure next
 
 type MkHoist message output effects a
-  = { interpreter     :: Run effects a -> Run (BASIC message output ()) a
+    =
+    { interpreter :: Run effects a -> Run (BASIC message output ()) a
     , dispatchMessage :: message -> Effect Unit
-    , dispatchOutput  :: output -> Effect Unit
+    , dispatchOutput :: output -> Effect Unit
     }
- -> Run effects a
- -> Effect Unit
+    -> Run effects a
+    -> Effect Unit
 
 mkHoist :: forall message output effects a. MkHoist message output effects a
 mkHoist { interpreter, dispatchMessage, dispatchOutput } program =
-  launchAff_ <<< runBaseAff' <<< runCommand dispatchMessage dispatchOutput <<< interpreter $ program
+    launchAff_ <<< runBaseAff' <<< runCommand dispatchMessage dispatchOutput <<< interpreter $ program

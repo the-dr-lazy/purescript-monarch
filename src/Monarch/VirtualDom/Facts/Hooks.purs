@@ -12,5 +12,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 module Monarch.VirtualDom.Facts.Hooks where
 
 type Hooks message
-  = ( init :: message
+    =
+    ( init :: message
     )

@@ -10,10 +10,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -}
 
 module Monarch
-  ( module Monarch.Document
-  , module Monarch.Command
-  )
-where
+    ( module Monarch.Document
+    , module Monarch.Command
+    ) where
 
 import Monarch.Document
-import Monarch.Command ( BASIC, Command, dispatch, raise )
+import Monarch.Command (BASIC, Command, dispatch, raise)

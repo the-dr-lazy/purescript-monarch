@@ -14,7 +14,8 @@ module Monarch.VirtualDom.Facts.Outputs where
 import Web.UIEvent.MouseEvent (MouseEvent)
 
 type GlobalOutputs message r
-  = ( onClick :: MouseEvent -> message
+    =
+    ( onClick :: MouseEvent -> message
     | r
     )
 

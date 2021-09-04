@@ -10,11 +10,12 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -}
 
 module Monarch.Svg
-  ( module Monarch.VirtualDom.VirtualDomTree.Prelude
-  , Svg
-  , svg , svg_, svg'
-  )
-where
+    ( module Monarch.VirtualDom.VirtualDomTree.Prelude
+    , Svg
+    , svg
+    , svg_
+    , svg'
+    ) where
 
 import Monarch.VirtualDom.VirtualDomTree
 import Monarch.VirtualDom.NS as NS
