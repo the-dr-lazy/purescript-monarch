@@ -10,12 +10,15 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -}
 
 module Monarch.Html
-  ( module Monarch.VirtualDom.VirtualDomTree.Prelude
-  , Html
-  , div, div_, div'
-  , button, button_, button'
-  )
-where
+    ( module Monarch.VirtualDom.VirtualDomTree.Prelude
+    , Html
+    , div
+    , div_
+    , div'
+    , button
+    , button_
+    , button'
+    ) where
 
 import Monarch.Html.Facts.Attributes
 import Monarch.Html.Facts.Outputs

@@ -22,6 +22,7 @@ derive newtype instance Ord ClassName
 derive newtype instance Semigroup ClassName
 
 type GlobalAttributes r
-  = ( class   :: ClassName       -- | Assigning class(es) to an element
+    =
+    ( class :: ClassName -- | Assigning class(es) to an element
     | r
     )

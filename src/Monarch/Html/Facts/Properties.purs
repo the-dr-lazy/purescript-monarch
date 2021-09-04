@@ -11,7 +11,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 module Monarch.Html.Facts.Properties where
 
-import Type.Row                         ( type (+) )
+import Type.Row (type (+))
 import Monarch.VirtualDom.Facts.Properties
 
 type HtmlElementProperties r = ElementProperties r
@@ -19,7 +19,8 @@ type HtmlElementProperties r = ElementProperties r
 type HtmlDivElementProperties r = HtmlElementProperties r
 
 type HtmlButtonElementProperties r
-  = HtmlElementProperties
-  + ( disabled :: Boolean
-    | r
-    )
+    = HtmlElementProperties
+    +
+        ( disabled :: Boolean
+        | r
+        )

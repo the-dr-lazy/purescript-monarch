@@ -17,5 +17,5 @@ import Undefined
 data NS = HTML | SVG
 
 instance Show NS where
-  show HTML = undefined
-  show SVG = "http://www.w3.org/2000/svg"
+    show HTML = undefined
+    show SVG = "http://www.w3.org/2000/svg"

@@ -10,13 +10,12 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -}
 
 module Monarch.Type.Maybe
-  ( module Data.Maybe
-  , Nothing
-  , Just
-  )
-where
+    ( module Data.Maybe
+    , Nothing
+    , Just
+    ) where
 
 import Data.Maybe (Maybe)
 
 foreign import data Nothing :: forall a. Maybe a
-foreign import data Just    :: forall a. a -> Maybe a
+foreign import data Just :: forall a. a -> Maybe a
