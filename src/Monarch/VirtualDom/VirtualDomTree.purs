@@ -49,76 +49,76 @@ instance Functor (VirtualDomTree key slots) where
 foreign import text :: forall message. String -> VirtualDomTree Nothing () message
 
 foreign import mkElementNS
-  :: forall r key key' slots message
+  :: forall r key child_key slots message
    . { ns :: String
-     , tagName :: String
+     , tag_name :: String
      , facts :: { | r }
-     , children :: Array (VirtualDomTree key' slots message)
+     , children :: Array (VirtualDomTree child_key slots message)
      }
   -> VirtualDomTree key slots message
 
 class Node :: NS -> Symbol ->  Type -> Constraint
-class Node ns tagName r where
-  node :: { ns :: Proxy ns, tagName :: Proxy tagName } -> r
+class Node ns tag_name return where
+  node :: { ns :: Proxy ns, tagName :: Proxy tag_name } -> return
 
 instance
-  ( TypeEquals child (VirtualDomTree key' slots message)
-  , TypeEquals v (VirtualDomTree key slots message)
+  ( TypeEquals child (VirtualDomTree _child_key slots message)
+  , TypeEquals return (VirtualDomTree key slots message)
   , IsNS ns
-  , IsSymbol tagName
-  , Facts ns tagName message facts
+  , IsSymbol tag_name
+  , Facts ns tag_name message facts
   , ExtractKeyType facts key
   )
-  => Node ns tagName ({ | facts } -> Array child -> v) where
+  => Node ns tag_name ({ | facts } -> Array child -> return) where
   node proxies facts children = unsafeCoerce
     (mkElementNS { ns: reflectNS proxies.ns
-                , tagName: reflectSymbol proxies.tagName
+                , tag_name: reflectSymbol proxies.tagName
                 , facts: facts
                 , children: unsafeCoerce children
                 })
 else instance
-  ( TypeEquals child (VirtualDomTree key' slots message)
-  , TypeEquals v (VirtualDomTree Nothing slots message)
+  ( TypeEquals child (VirtualDomTree _child_key slots message)
+  , TypeEquals return (VirtualDomTree Nothing slots message)
   , IsNS ns
-  , IsSymbol tagName
+  , IsSymbol tag_name
   )
-  => Node ns tagName (Array child -> v) where
+  => Node ns tag_name (Array child -> return) where
   node proxies children = unsafeCoerce
     (mkElementNS { ns: reflectNS proxies.ns
-                , tagName: reflectSymbol proxies.tagName
+                , tag_name: reflectSymbol proxies.tagName
                 , facts: undefined
                 , children: unsafeCoerce children
                 })
-else instance (Leaf ns tagName return) => Node ns tagName return where
+else instance (Leaf ns tag_name return) => Node ns tag_name return where
   node = leaf
 
 class Leaf :: NS -> Symbol -> Type -> Constraint
-class Leaf ns tagName r where
-  leaf :: { ns :: Proxy ns, tagName :: Proxy tagName } -> r
+class Leaf ns tag_name r where
+  leaf :: { ns :: Proxy ns, tagName :: Proxy tag_name } -> r
 
 instance
-  ( TypeEquals v (VirtualDomTree key slots message)
+  ( TypeEquals return (VirtualDomTree key slots message)
   , IsNS ns
-  , IsSymbol tagName
-  , Facts ns tagName message facts
+  , IsSymbol tag_name
+  , Facts ns tag_name message facts
   , ExtractKeyType facts key
   )
-  => Leaf ns tagName ({ | facts } -> v) where
+  => Leaf ns tag_name ({ | facts } -> return) where
   leaf proxies facts = unsafeCoerce
     (mkElementNS { ns: reflectNS proxies.ns
-                , tagName: reflectSymbol proxies.tagName
+                , tag_name: reflectSymbol proxies.tagName
                 , facts: facts
                 , children: undefined
                 })
 else instance
-  ( TypeEquals v (VirtualDomTree Nothing slots message)
+  ( TypeEquals return (VirtualDomTree Nothing slots message)
   , IsNS ns
-  , IsSymbol tagName
+  , IsSymbol tag_name
   )
-  => Leaf ns tagName v where
+  => Leaf ns tag_name return where
   leaf proxies = unsafeCoerce
     (mkElementNS { ns: reflectNS proxies.ns
-                , tagName: reflectSymbol proxies.tagName
+                , tag_name: reflectSymbol proxies.tagName
                 , facts: undefined
                 , children: undefined
                 })

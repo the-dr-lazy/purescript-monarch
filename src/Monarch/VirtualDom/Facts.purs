@@ -21,15 +21,15 @@ import Monarch.VirtualDom.Facts.Hooks
 import Monarch.VirtualDom.NS (NS)
 
 class Facts :: NS -> Symbol -> Type -> Row Type -> Constraint
-class Facts ns tagName message facts | ns tagName message -> facts
+class Facts ns tag_name message facts | ns tag_name message -> facts
 
 class MkFacts :: Row Type -> Row Type -> Row Type -> Type -> Row Type -> Constraint
-class MkFacts propertiesType outputsType attributesType message facts | propertiesType outputsType attributesType message -> facts
+class MkFacts properties_type outputs_type attributes_type message facts | properties_type outputs_type attributes_type message -> facts
 
-instance mkFacts
-  :: ( Row.Union3 propertiesType outputsType ( attributes :: { | attributes }, hooks :: { | hooks }, key :: keyType ) factsType
-     , Row.Union facts _facts factsType
-     , Row.OptionalRecordCons facts "attrs" attributesType attributes
-     , Row.OptionalRecordCons facts "hooks" (Hooks message) hooks
-     )
-  => MkFacts propertiesType outputsType attributesType message facts
+instance
+  ( Row.Union3 properties_type outputs_type ( attributes :: { | attributes }, hooks :: { | hooks }, key :: key ) facts_type
+  , Row.Union facts _facts facts_type
+  , Row.OptionalRecordCons facts "attrs" attributes_type attributes
+  , Row.OptionalRecordCons facts "hooks" (Hooks message) hooks
+  )
+  => MkFacts properties_type outputs_type attributes_type message facts

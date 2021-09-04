@@ -36,13 +36,13 @@ type Svg = VirtualDomTree Nothing ()
 
 -- Elements
 
-instance divFacts
-  :: (MkFacts (SvgSvgElementProperties ())
-              (SvgSvgElementOutputs message ())
-              (SvgSvgElementAttributes ())
-              message
-              facts
-     )
+instance
+  (MkFacts (SvgSvgElementProperties ())
+           (SvgSvgElementOutputs message ())
+           (SvgSvgElementAttributes ())
+           message
+           facts
+  )
   => Facts SVG "svg" message facts
 
 svg =

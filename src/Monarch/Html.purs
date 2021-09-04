@@ -40,13 +40,13 @@ type Html = VirtualDomTree Nothing ()
 
 -- Elements
 
-instance divFacts
-  :: (MkFacts (HtmlDivElementProperties ())
-              (HtmlDivElementOutputs message ())
-              (HtmlDivElementAttributes ())
-              message
-              facts
-     )
+instance
+  (MkFacts (HtmlDivElementProperties ())
+           (HtmlDivElementOutputs message ())
+           (HtmlDivElementAttributes ())
+           message
+           facts
+  )
   => Facts HTML "div" message facts
 
 div =
@@ -54,13 +54,13 @@ div =
        , tagName: Proxy :: Proxy "div"
        }
 
-instance buttonFacts
-  :: (MkFacts (HtmlButtonElementProperties ())
-              (HtmlButtonElementOutputs message ())
-              (HtmlButtonElementAttributes ())
-              message
-              facts
-     )
+instance
+  (MkFacts (HtmlButtonElementProperties ())
+           (HtmlButtonElementOutputs message ())
+           (HtmlButtonElementAttributes ())
+           message
+           facts
+  )
   => Facts HTML "button" message facts
 
 button =
