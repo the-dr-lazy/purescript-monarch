@@ -11,16 +11,20 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 module Monarch.VirtualDom.Event.UiEvent where
 
+import Data.Maybe
+import Data.Nullable (Nullable)
+import Data.Nullable as Nullable
 import Monarch.VirtualDom.Event.Handle
+import Prelude
 import Web.HTML as Web
 
 class UiEvent h where
-  view :: h -> Web.Window
+  view :: h -> Maybe Web.Window
 
-foreign import foreign_view :: forall a. a -> Web.Window
+foreign import foreign_view :: forall a. a -> Nullable Web.Window
 
 instance UiEvent (UiEventHandle bubbles composed) where
-  view = foreign_view
+  view = Nullable.toMaybe <<< foreign_view
 
 instance UiEvent (MouseEventHandle bubbles composed) where
-  view = foreign_view
+  view = Nullable.toMaybe <<< foreign_view
