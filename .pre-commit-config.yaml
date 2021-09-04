@@ -85,6 +85,14 @@ repos:
             entry: shellcheck
 
           #############################################
+          # PureScript
+          - name: Check PureScript code style with purs-tidy
+            id: purs-tidy
+            files: '\.purs$'
+            language: system
+            entry: purs-tidy format-in-place
+
+          #############################################
           # Nix
           - name: Check Nix code style with nixpkgs-fmt
             id: nixpkgs-fmt
