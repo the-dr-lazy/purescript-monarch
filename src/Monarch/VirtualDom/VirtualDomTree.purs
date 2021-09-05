@@ -11,12 +11,14 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 module Monarch.VirtualDom.VirtualDomTree
   ( VirtualDomTree
-  , Node, Node_
+  , Node
   , Leaf
   , class ExtractKeyType
   , class ExtractKeyType'
   , text
   , keyed
+  , node
+  , leaf
   )
 where
 
@@ -39,31 +41,45 @@ instance Functor (VirtualDomTree key slots) where
 
 -- Hyperscript
 
-type Node (mkProperties :: Row Type -> Row Type)
-          (mkOutputs    :: Type -> Row Type -> Row Type)
-          (mkAttributes :: Row Type -> Row Type)
+type Node (mk_properties :: Row Type -> Row Type)
+          (mk_outputs    :: Type -> Row Type -> Row Type)
+          (mk_attributes :: Row Type -> Row Type)
   = forall facts _facts _key key child_key attributes hooks slots message
-  . Row.Union facts _facts (Facts mkProperties (mkOutputs message) attributes hooks _key)
- => Row.OptionalRecordCons facts "attrs" (mkAttributes ()) attributes
+  . Row.Union facts _facts (Facts mk_properties (mk_outputs message) attributes hooks _key)
+ => Row.OptionalRecordCons facts "attrs" (mk_attributes ()) attributes
  => Row.OptionalRecordCons facts "hooks" (Hooks message) hooks
  => ExtractKeyType facts key
  => { | facts }
  -> Array (VirtualDomTree child_key slots message)
  -> VirtualDomTree key slots message
 
-type Node_
-  = forall key slots message. Array (VirtualDomTree key slots message) -> VirtualDomTree Nothing slots message
+foreign import node
+  :: forall facts child_key key slots message
+   . { ns :: String
+     , tagName :: String
+     , facts :: { | facts }
+     , children :: Array (VirtualDomTree child_key slots message)
+     }
+  -> VirtualDomTree key slots message
 
-type Leaf (mkProperties :: Row Type -> Row Type)
-          (mkOutputs    :: Type -> Row Type -> Row Type)
-          (mkAttributes :: Row Type -> Row Type)
+type Leaf (mk_properties :: Row Type -> Row Type)
+          (mk_outputs    :: Type -> Row Type -> Row Type)
+          (mk_attributes :: Row Type -> Row Type)
   = forall facts _facts _key key attributes hooks slots message
-  . Row.Union facts _facts (Facts mkProperties (mkOutputs message) attributes hooks _key)
- => Row.OptionalRecordCons facts "attrs" (mkAttributes ()) attributes
+  . Row.Union facts _facts (Facts mk_properties (mk_outputs message) attributes hooks _key)
+ => Row.OptionalRecordCons facts "attrs" (mk_attributes ()) attributes
  => Row.OptionalRecordCons facts "hooks" (Hooks message) hooks
  => ExtractKeyType facts key
  => { | facts }
  -> VirtualDomTree key slots message
+
+foreign import leaf
+  :: forall facts child_key key slots message
+   . { ns :: String
+     , tagName :: String
+     , facts :: { | facts }
+     }
+  -> VirtualDomTree key slots message
 
 foreign import text :: forall message. String -> VirtualDomTree Nothing () message
 

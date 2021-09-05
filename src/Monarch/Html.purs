@@ -25,10 +25,12 @@ import Monarch.VirtualDom.VirtualDomTree as VirtualDomTree
 import Monarch.VirtualDom.VirtualDomTree.Prelude
 import Monarch.VirtualDom.Facts.Hooks
 import Monarch.Type.Maybe
+import Undefined
 
 type Root = VirtualDomTree Nothing ()
 
--- Elements
+div :: VirtualDomTree.Node HtmlDivElementProperties HtmlDivElementOutputs HtmlDivElementAttributes
+div facts children = VirtualDomTree.node { ns: undefined, tagName: "div", facts, children }
 
-foreign import div :: Node HtmlDivElementProperties HtmlDivElementOutputs HtmlDivElementAttributes
-foreign import button :: Node HtmlButtonElementProperties HtmlButtonElementOutputs HtmlButtonElementAttributes
+button :: VirtualDomTree.Node HtmlButtonElementProperties HtmlButtonElementOutputs HtmlButtonElementAttributes
+button facts children = VirtualDomTree.node { ns: undefined, tagName: "button", facts, children }

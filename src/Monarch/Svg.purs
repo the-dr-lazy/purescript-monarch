@@ -15,12 +15,14 @@ module Monarch.Svg
   )
 where
 
-import Monarch.VirtualDom.VirtualDomTree
+import Monarch.VirtualDom.VirtualDomTree as VirtualDomTree
 import Monarch.VirtualDom.VirtualDomTree.Prelude
 import Monarch.Svg.Facts.Attributes
 import Monarch.Svg.Facts.Properties
 import Monarch.Svg.Facts.Outputs
 
--- Elements
+ns :: String
+ns = "http://www.w3.org/2000/svg"
 
-foreign import svg :: Node SvgSvgElementProperties SvgSvgElementOutputs SvgSvgElementAttributes
+svg :: VirtualDomTree.Node SvgSvgElementProperties SvgSvgElementOutputs SvgSvgElementAttributes
+svg facts children = VirtualDomTree.node { ns, tagName: "svg", facts, children }
