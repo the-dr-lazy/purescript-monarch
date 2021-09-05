@@ -39,7 +39,7 @@ update = case _ of
   UserClickedDecreaseButton -> (_ - 1)
   _ -> identity
 
-view :: Model -> Html.Root Message
+view :: Model -> Html.Root _ Message
 view model =
   Html.div {}
     [ Html.button { onClick: const UserClickedDecreaseButton } [ Html.text "-" ]

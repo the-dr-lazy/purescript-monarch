@@ -11,7 +11,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 module Monarch.VirtualDom.VirtualDomTree
   ( VirtualDomTree
-  , Node, Node_
+  , Node
   , Leaf
   , class ExtractKeyType
   , class ExtractKeyType'
@@ -21,53 +21,66 @@ module Monarch.VirtualDom.VirtualDomTree
 where
 
 import Prelude
-import Undefined
-import Type.Row                                            as Row
-import Type.RowList (kind RowList, class RowToList)
-import Type.RowList as RowList
+import Data.Symbol
+import Monarch.Type.Maybe
+import Monarch.Type.Row as Row
 import Monarch.VirtualDom.Facts
 import Monarch.VirtualDom.Facts.Hooks
 import Monarch.Type.Row                                    as Row
 import Monarch.Type.Maybe
+import Type.Prelude
+import Type.RowList (RowList)
+import Type.RowList as RowList
+import Type.Row as Row
+import Monarch.VirtualDom.Slots as Slots
 
-foreign import data VirtualDomTree :: Maybe Type -> Row Type -> Type -> Type
+foreign import data VirtualDomTree
+  :: Symbol     -- ^ Substituted slot
+  -> Row Type   -- ^ Downstream slots
+  -> Row Type   -- ^ Global facts extension
+  -> Maybe Type -- ^ Key
+  -> Type       -- ^ Message
+  -> Type
 
-foreign import fmapVirtualDomTree :: forall key slots a b. (a -> b) -> VirtualDomTree key slots a -> VirtualDomTree key slots b
+foreign import fmapVirtualDomTree
+  :: forall substituted_slot downstream_slots facts_r key a b
+   . (a -> b)
+  -> VirtualDomTree substituted_slot downstream_slots facts_r key a
+  -> VirtualDomTree substituted_slot downstream_slots facts_r key b
 
-instance Functor (VirtualDomTree key slots) where
+instance Functor (VirtualDomTree substituted_slot downstream_slots facts_r key) where
   map = fmapVirtualDomTree
 
 -- Hyperscript
 
-type Node (mkProperties :: Row Type -> Row Type)
-          (mkOutputs    :: Type -> Row Type -> Row Type)
-          (mkAttributes :: Row Type -> Row Type)
-  = forall facts _facts _key key child_key attributes hooks slots message
-  . Row.Union facts _facts (Facts mkProperties (mkOutputs message) attributes hooks _key)
- => Row.OptionalRecordCons facts "attrs" (mkAttributes ()) attributes
+type Node :: (Row Type -> Row Type) -> (Type -> Row Type -> Row Type) -> (Row Type -> Row Type) -> Type
+type Node mk_properties mk_outputs mk_attributes
+  = forall facts facts_r _facts key _key _child_key attributes hooks substituted_slot downstream_slots message
+  . Row.Union facts _facts (Facts mk_properties (mk_outputs message) attributes hooks _key facts_r)
+ => Row.OptionalRecordCons facts "attrs" (mk_attributes ()) attributes
  => Row.OptionalRecordCons facts "hooks" (Hooks message) hooks
  => ExtractKeyType facts key
  => { | facts }
- -> Array (VirtualDomTree child_key slots message)
- -> VirtualDomTree key slots message
+ -> Array (VirtualDomTree Slots.Default downstream_slots facts_r _child_key message)
+ -> VirtualDomTree substituted_slot downstream_slots facts_r key message
 
-type Node_
-  = forall key slots message. Array (VirtualDomTree key slots message) -> VirtualDomTree Nothing slots message
-
-type Leaf (mkProperties :: Row Type -> Row Type)
-          (mkOutputs    :: Type -> Row Type -> Row Type)
-          (mkAttributes :: Row Type -> Row Type)
-  = forall facts _facts _key key attributes hooks slots message
-  . Row.Union facts _facts (Facts mkProperties (mkOutputs message) attributes hooks _key)
- => Row.OptionalRecordCons facts "attrs" (mkAttributes ()) attributes
+type Leaf :: (Row Type -> Row Type) -> (Type -> Row Type -> Row Type) -> (Row Type -> Row Type) -> Type
+type Leaf mk_properties mk_outputs mk_attributes
+  = forall facts facts_r _facts key _key attributes hooks substituted_slot downstream_slots message
+  . Row.Union facts _facts (Facts mk_properties (mk_outputs message) attributes hooks _key facts_r)
+ => Row.OptionalRecordCons facts "attrs" (mk_attributes ()) attributes
  => Row.OptionalRecordCons facts "hooks" (Hooks message) hooks
  => ExtractKeyType facts key
  => { | facts }
- -> VirtualDomTree key slots message
+ -> VirtualDomTree substituted_slot downstream_slots facts_r key message
 
-foreign import text :: forall message. String -> VirtualDomTree Nothing () message
+foreign import text :: forall downstream_slots facts_r message. String -> VirtualDomTree Slots.Default downstream_slots facts_r Nothing message
 
-foreign import keyed :: forall key slots message. key -> VirtualDomTree Nothing slots message -> VirtualDomTree (Just key) slots message
+foreign import keyed
+  :: forall substituted_slot downstream_slots facts_r key message
+   . key
+  -> VirtualDomTree substituted_slot downstream_slots facts_r Nothing    message
+  -> VirtualDomTree substituted_slot downstream_slots facts_r (Just key) message
 
 class ExtractKeyType (row :: Row Type) (key :: Maybe Type) | row -> key
 

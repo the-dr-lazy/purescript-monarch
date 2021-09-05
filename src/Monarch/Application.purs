@@ -16,41 +16,41 @@ module Monarch.Application
   )
 where
 
-import Prelude
 import Data.Maybe
-import Data.Nullable
-import Monarch.Html as Html
+import Data.Nullable (Nullable, toNullable)
+import Effect (Effect)
 import Monarch.Effect as Effect
 import Monarch.Effect.Application (MkHoist, mkHoist)
-import Effect                ( Effect )
-import Web.HTML              ( HTMLElement )
-import Record                as Record
-import Run                   ( Run )
-import Type.Row              (type (+))
+import Monarch.Html as Html
+import Prelude
+import Record.Unsafe.Union as Record
+import Run (Run)
+import Type.Row (type (+))
+import Web.HTML (HTMLElement)
 
-type CommonSpec model message output effects a r
+type CommonSpec downstream_outputs model message output effects a r
   = ( command      :: message -> model -> Run effects Unit
     , container    :: HTMLElement
     , initialModel :: model
     , interpreter  :: Run effects a -> Run (Effect.Basic message output ()) a
     , onOutput     :: output -> Effect Unit
     , update       :: message -> model -> model
-    , view         :: model -> Html.Root message
+    , view         :: model -> Html.Root downstream_outputs message
     | r
     )
 
-type ForeignMkApplicationSpec model message output effects a r
-  = CommonSpec model message output effects a
+type ForeignMkApplicationSpec downstream_outputs model message output effects a r
+  = CommonSpec downstream_outputs model message output effects a
   + ( mkHoist :: MkHoist message output effects a
     , onInitialize :: Nullable message
     | r
     )
 
-foreign import foreign_mkApplication :: forall model message output effects a r. { | ForeignMkApplicationSpec model message output effects a r } -> Effect Unit
+foreign import foreign_mkApplication :: forall downstream_outputs model message output effects a r. { | ForeignMkApplicationSpec downstream_outputs model message output effects a r } -> Effect Unit
 
-type MkApplicationSpec model message output effects a r
-  = CommonSpec model message output effects a
+type MkApplicationSpec downstream_outputs model message output effects a r
+  = CommonSpec downstream_outputs model message output effects a
   + ( onInitialize :: Maybe message | r )
 
-mkApplication :: forall model message output effects a. { | MkApplicationSpec model message output effects a () } -> Effect Unit
-mkApplication spec = foreign_mkApplication $ Record.merge { mkHoist: mkHoist :: MkHoist message output effects a, onInitialize: toNullable spec.onInitialize } spec
+mkApplication :: forall downstream_outputs model message output effects a. { | MkApplicationSpec downstream_outputs model message output effects a () } -> Effect Unit
+mkApplication spec = foreign_mkApplication $ Record.unsafeUnion { mkHoist, onInitialize: toNullable spec.onInitialize } spec

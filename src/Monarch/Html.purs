@@ -20,15 +20,17 @@ where
 import Monarch.Html.Facts.Attributes
 import Monarch.Html.Facts.Outputs
 import Monarch.Html.Facts.Properties
-import Monarch.VirtualDom.VirtualDomTree
+import Monarch.Type.Maybe
+import Monarch.VirtualDom.Facts
+import Monarch.VirtualDom.Facts.Hooks
+import Monarch.VirtualDom.VirtualDomTree (VirtualDomTree)
 import Monarch.VirtualDom.VirtualDomTree as VirtualDomTree
 import Monarch.VirtualDom.VirtualDomTree.Prelude
 import Monarch.VirtualDom.Facts.Hooks
 import Monarch.Type.Maybe
 
-type Root = VirtualDomTree Nothing ()
 
--- Elements
+type Root downstream_outputs message = forall substituted_slot. VirtualDomTree substituted_slot () downstream_outputs Nothing message
 
-foreign import div :: Node HtmlDivElementProperties HtmlDivElementOutputs HtmlDivElementAttributes
-foreign import button :: Node HtmlButtonElementProperties HtmlButtonElementOutputs HtmlButtonElementAttributes
+foreign import div :: VirtualDomTree.Node HtmlDivElementProperties HtmlDivElementOutputs HtmlDivElementAttributes
+foreign import button :: VirtualDomTree.Node HtmlButtonElementProperties HtmlButtonElementOutputs HtmlButtonElementAttributes

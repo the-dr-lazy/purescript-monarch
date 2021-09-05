@@ -15,12 +15,10 @@ module Monarch.Svg
   )
 where
 
-import Monarch.VirtualDom.VirtualDomTree
-import Monarch.VirtualDom.VirtualDomTree.Prelude
 import Monarch.Svg.Facts.Attributes
-import Monarch.Svg.Facts.Properties
 import Monarch.Svg.Facts.Outputs
+import Monarch.Svg.Facts.Properties
+import Monarch.VirtualDom.VirtualDomTree as VirtualDomTree
+import Monarch.VirtualDom.VirtualDomTree.Prelude
 
--- Elements
-
-foreign import svg :: Node SvgSvgElementProperties SvgSvgElementOutputs SvgSvgElementAttributes
+foreign import svg :: VirtualDomTree.Node SvgSvgElementProperties SvgSvgElementOutputs SvgSvgElementAttributes

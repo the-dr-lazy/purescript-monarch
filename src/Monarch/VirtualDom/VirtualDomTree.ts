@@ -137,24 +137,26 @@ export namespace VirtualDomTree {
     /**
      * Smart constructor for `ElementNS` and `KeyedElementNS` types
      */
-    export function mkElementNS<message>(
-        ns: NS | undefined,
-        tagName: TagName,
-        facts?: Facts,
-        children?: ReadonlyArray<VirtualDomTree.Keyed<VirtualDomTree<message>>>,
-    ): SumWithKeyed<VirtualDomTree.KeyedElementNS<message>>
-    export function mkElementNS<message>(
-        ns: NS | undefined,
-        tagName: TagName,
-        facts?: Facts,
-        children?: ReadonlyArray<VirtualDomTree<message>>,
-    ): SumWithKeyed<VirtualDomTree.ElementNS<message>>
-    export function mkElementNS<message>(
-        ns: NS | undefined,
-        tagName: TagName,
-        facts?: Facts,
-        children?: ReadonlyArray<VirtualDomTree<message>>,
-    ) {
+    export function mkElementNS<message>(spec: {
+        ns: NS | undefined
+        tagName: TagName
+        facts?: Facts
+        children?: ReadonlyArray<VirtualDomTree.Keyed<VirtualDomTree<message>>>
+    }): SumWithKeyed<VirtualDomTree.KeyedElementNS<message>>
+    export function mkElementNS<message>(spec: {
+        ns: NS | undefined
+        tagName: TagName
+        facts?: Facts
+        children?: ReadonlyArray<VirtualDomTree<message>>
+    }): SumWithKeyed<VirtualDomTree.ElementNS<message>>
+    export function mkElementNS<message>(spec: {
+        ns: NS | undefined
+        tagName: TagName
+        facts?: Facts
+        children?: ReadonlyArray<VirtualDomTree<message>>
+    }) {
+        const { ns, tagName, facts, children } = spec
+
         const tag =
             children && children[0]?.tag === VirtualDomTree.Keyed
                 ? VirtualDomTree.KeyedElementNS
