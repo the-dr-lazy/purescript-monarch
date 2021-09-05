@@ -30,7 +30,7 @@ import Monarch.VirtualDom.Facts.Hooks
 import Monarch.Type.Maybe
 import Undefined
 
-type Root downstream_outputs message = forall substituted_slot. VirtualDomTree substituted_slot () downstream_outputs Nothing message
+type Root facts_r message = forall substituted_slot. VirtualDomTree substituted_slot () facts_r Nothing message
 
 div :: VirtualDomTree.Node HtmlDivElementProperties HtmlDivElementOutputs HtmlDivElementAttributes
 div facts children = VirtualDomTree.node { ns: undefined, tagName: "div", facts, children }

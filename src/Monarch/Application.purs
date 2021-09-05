@@ -28,29 +28,29 @@ import Run (Run)
 import Type.Row (type (+))
 import Web.HTML (HTMLElement)
 
-type CommonSpec downstream_outputs model message output effects a r
+type CommonSpec facts_r model message output effects a r
   = ( command      :: message -> model -> Run effects Unit
     , container    :: HTMLElement
     , initialModel :: model
     , interpreter  :: Run effects a -> Run (Effect.Basic message output ()) a
     , onOutput     :: output -> Effect Unit
     , update       :: message -> model -> model
-    , view         :: model -> Html.Root downstream_outputs message
+    , view         :: model -> Html.Root facts_r message
     | r
     )
 
-type ForeignMkApplicationSpec downstream_outputs model message output effects a r
-  = CommonSpec downstream_outputs model message output effects a
+type ForeignMkApplicationSpec facts_r model message output effects a r
+  = CommonSpec facts_r model message output effects a
   + ( mkHoist :: MkHoist message output effects a
     , onInitialize :: Nullable message
     | r
     )
 
-foreign import foreign_mkApplication :: forall downstream_outputs model message output effects a r. { | ForeignMkApplicationSpec downstream_outputs model message output effects a r } -> Effect Unit
+foreign import foreign_mkApplication :: forall facts_r model message output effects a r. { | ForeignMkApplicationSpec facts_r model message output effects a r } -> Effect Unit
 
-type MkApplicationSpec downstream_outputs model message output effects a r
-  = CommonSpec downstream_outputs model message output effects a
+type MkApplicationSpec facts_r model message output effects a r
+  = CommonSpec facts_r model message output effects a
   + ( onInitialize :: Maybe message | r )
 
-mkApplication :: forall downstream_outputs model message output effects a. { | MkApplicationSpec downstream_outputs model message output effects a () } -> Effect Unit
+mkApplication :: forall facts_r model message output effects a. { | MkApplicationSpec facts_r model message output effects a () } -> Effect Unit
 mkApplication spec = foreign_mkApplication $ Record.unsafeUnion { mkHoist, onInitialize: toNullable spec.onInitialize } spec
