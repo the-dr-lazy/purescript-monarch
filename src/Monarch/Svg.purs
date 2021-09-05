@@ -21,4 +21,8 @@ import Monarch.Svg.Facts.Properties
 import Monarch.VirtualDom.VirtualDomTree as VirtualDomTree
 import Monarch.VirtualDom.VirtualDomTree.Prelude
 
-foreign import svg :: VirtualDomTree.Node SvgSvgElementProperties SvgSvgElementOutputs SvgSvgElementAttributes
+ns :: String
+ns = "http://www.w3.org/2000/svg"
+
+svg :: VirtualDomTree.Node SvgSvgElementProperties SvgSvgElementOutputs SvgSvgElementAttributes
+svg facts children = VirtualDomTree.node { ns, tagName: "svg", facts, children }

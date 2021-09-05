@@ -28,9 +28,12 @@ import Monarch.VirtualDom.VirtualDomTree as VirtualDomTree
 import Monarch.VirtualDom.VirtualDomTree.Prelude
 import Monarch.VirtualDom.Facts.Hooks
 import Monarch.Type.Maybe
-
+import Undefined
 
 type Root downstream_outputs message = forall substituted_slot. VirtualDomTree substituted_slot () downstream_outputs Nothing message
 
-foreign import div :: VirtualDomTree.Node HtmlDivElementProperties HtmlDivElementOutputs HtmlDivElementAttributes
-foreign import button :: VirtualDomTree.Node HtmlButtonElementProperties HtmlButtonElementOutputs HtmlButtonElementAttributes
+div :: VirtualDomTree.Node HtmlDivElementProperties HtmlDivElementOutputs HtmlDivElementAttributes
+div facts children = VirtualDomTree.node { ns: undefined, tagName: "div", facts, children }
+
+button :: VirtualDomTree.Node HtmlButtonElementProperties HtmlButtonElementOutputs HtmlButtonElementAttributes
+button facts children = VirtualDomTree.node { ns: undefined, tagName: "button", facts, children }

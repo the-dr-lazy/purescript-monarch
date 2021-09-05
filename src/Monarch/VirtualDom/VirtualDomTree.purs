@@ -17,6 +17,8 @@ module Monarch.VirtualDom.VirtualDomTree
   , class ExtractKeyType'
   , text
   , keyed
+  , node
+  , leaf
   )
 where
 
@@ -64,6 +66,15 @@ type Node mk_properties mk_outputs mk_attributes
  -> Array (VirtualDomTree Slots.Default downstream_slots facts_r _child_key message)
  -> VirtualDomTree substituted_slot downstream_slots facts_r key message
 
+foreign import node
+  :: forall facts facts_r child_key key substituted_slot downstream_slots message
+   . { ns :: String
+     , tagName :: String
+     , facts :: { | facts }
+     , children :: Array (VirtualDomTree Slots.Default downstream_slots facts_r child_key message)
+     }
+  -> VirtualDomTree substituted_slot downstream_slots facts_r key message
+
 type Leaf :: (Row Type -> Row Type) -> (Type -> Row Type -> Row Type) -> (Row Type -> Row Type) -> Type
 type Leaf mk_properties mk_outputs mk_attributes
   = forall facts facts_r _facts key _key attributes hooks substituted_slot downstream_slots message
@@ -73,6 +84,14 @@ type Leaf mk_properties mk_outputs mk_attributes
  => ExtractKeyType facts key
  => { | facts }
  -> VirtualDomTree substituted_slot downstream_slots facts_r key message
+
+foreign import leaf
+  :: forall facts facts_r key substituted_slot downstream_slots message
+   . { ns :: String
+     , tagName :: String
+     , facts :: { | facts }
+     }
+  -> VirtualDomTree substituted_slot downstream_slots facts_r key message
 
 foreign import text :: forall downstream_slots facts_r message. String -> VirtualDomTree Slots.Default downstream_slots facts_r Nothing message
 
