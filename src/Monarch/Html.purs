@@ -11,9 +11,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 module Monarch.Html
   ( module Monarch.VirtualDom.VirtualDomTree.Prelude
-  , Html
-  , div, div_, div'
-  , button, button_, button'
+  , Root
+  , div
+  , button
   )
 where
 
@@ -26,26 +26,9 @@ import Monarch.VirtualDom.VirtualDomTree.Prelude
 import Monarch.VirtualDom.Facts.Hooks
 import Monarch.Type.Maybe
 
--- Data Type
-
-type Html = VirtualDomTree Nothing ()
+type Root = VirtualDomTree Nothing ()
 
 -- Elements
 
-div :: Node HtmlDivElementProperties HtmlDivElementOutputs HtmlDivElementAttributes
-div = node "div"
-
-div_ :: Node_
-div_ = node_ "div"
-
-div' :: forall message. Html message
-div' = node' "div"
-
-button :: Node HtmlButtonElementProperties HtmlButtonElementOutputs HtmlButtonElementAttributes
-button = node "button"
-
-button_ :: Node_
-button_ = node_ "button"
-
-button' :: forall message. Html message
-button' = node' "button"
+foreign import div :: Node HtmlDivElementProperties HtmlDivElementOutputs HtmlDivElementAttributes
+foreign import button :: Node HtmlButtonElementProperties HtmlButtonElementOutputs HtmlButtonElementAttributes

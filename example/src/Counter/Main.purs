@@ -18,7 +18,6 @@ import Effect.Aff            ( launchAff_ )
 import Web.HTML              ( HTMLElement )
 import Monarch.Effect as Monarch.Effect
 import Monarch                                   as Monarch
-import Monarch.Html
 import Monarch.Html as Html
 import Counter.Effect.Api                               as Effect.Api
 import Data.Maybe
@@ -40,9 +39,9 @@ update = case _ of
   UserClickedDecreaseButton -> (_ - 1)
   _ -> identity
 
-view :: Model -> Html Message
+view :: Model -> Html.Root Message
 view model =
-  Html.div_
+  Html.div {}
     [ Html.button { onClick: const UserClickedDecreaseButton } [ Html.text "-" ]
     , Html.text $ show model
     , Html.button { onClick: const UserClickedIncreaseButton } [ Html.text "+" ]
