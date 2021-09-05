@@ -41,9 +41,8 @@ instance Functor (VirtualDomTree key slots) where
 
 -- Hyperscript
 
-type Node (mk_properties :: Row Type -> Row Type)
-          (mk_outputs    :: Type -> Row Type -> Row Type)
-          (mk_attributes :: Row Type -> Row Type)
+type Node :: (Row Type -> Row Type) -> (Type -> Row Type -> Row Type) -> (Row Type -> Row Type) -> Type
+type Node mk_properties mk_outputs mk_attributes
   = forall facts _facts _key key child_key attributes hooks slots message
   . Row.Union facts _facts (Facts mk_properties (mk_outputs message) attributes hooks _key)
  => Row.OptionalRecordCons facts "attrs" (mk_attributes ()) attributes
@@ -62,9 +61,8 @@ foreign import node
      }
   -> VirtualDomTree key slots message
 
-type Leaf (mk_properties :: Row Type -> Row Type)
-          (mk_outputs    :: Type -> Row Type -> Row Type)
-          (mk_attributes :: Row Type -> Row Type)
+type Leaf :: (Row Type -> Row Type) -> (Type -> Row Type -> Row Type) -> (Row Type -> Row Type) -> Type
+type Leaf mk_properties mk_outputs mk_attributes
   = forall facts _facts _key key attributes hooks slots message
   . Row.Union facts _facts (Facts mk_properties (mk_outputs message) attributes hooks _key)
  => Row.OptionalRecordCons facts "attrs" (mk_attributes ()) attributes
