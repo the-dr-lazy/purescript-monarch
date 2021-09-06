@@ -1,5 +1,5 @@
 {
-    "include": ["src/**/*.ts"],
+    "include": ["./packages/purescript-monarch/src/**/*.ts", "./packages/purescript-monarch-core/src/**/*.ts"],
     "compilerOptions": {
         "target": "es5",
         "module": "commonjs",
@@ -13,11 +13,10 @@
         "skipLibCheck": true,
         "resolveJsonModule": true,
         "removeComments": true,
-        "rootDir": "src",
-        "rootDirs": ["src", "output"],
         "baseUrl": ".",
         "paths": {
-            "monarch/*": ["src/*"]
+            "@purescript-monarch": ["./packages/purescript-monarch/src"],
+            "@purescript-monarch/core": ["./packages/purescript-monarch-core/src"]
         }
     }
 }
