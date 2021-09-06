@@ -1,47 +1,7 @@
 {
-    "name": "monarch",
-    "version": "0.0.0",
-    "description": "Monarch",
-    "main": "index.js",
-    "scripts": {
-        "start": "parcel ./example/index.html",
-        "build:dependencies": "spago build --deps-only",
-        "build:ts": "tsc -p tsconfig.json --outDir node_modules/.temp/ts/src && cpx 'node_modules/.temp/ts/src/**/*.js' src",
-        "build:purs": "spago build",
-        "build": "run-s build:dependencies build:ts build:purs clean:temp",
-        "clean": "git clean -Xdf",
-        "clean:temp": "rimraf node_modules/.temp",
-        "test": "echo \"Error: no test specified\" && exit 1"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/thebrodmann/monarch.git"
-    },
-    "keywords": [
-        "frontend",
-        "functional",
-        "elm",
-        "react",
-        "reactive",
-        "TEA",
-        "UI",
-        "front-end",
-        "purescript"
-    ],
-    "author": "Mohammad Hasani <thebrodmann@protonmail.com>",
-    "license": "MPL",
-    "bugs": {
-        "url": "https://github.com/thebrodmann/monarch/issues"
-    },
-    "homepage": "https://github.com/thebrodmann/monarch#readme",
-    "dependencies": {
-        "setimmediate": "^1.0.5",
-        "tslib": "^2.3.0"
-    },
+    "name": "root",
+    "private": true,
     "devDependencies": {
-        "@types/setimmediate": "^1.0.2",
-        "cpx": "^1.5.0",
-        "npm-run-all": "^4.1.5",
-        "rimraf": "^3.0.2"
+        "lerna": "^4.0.0"
     }
 }

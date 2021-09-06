@@ -8,10 +8,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { VirtualDomTree, realize } from 'monarch/Monarch/VirtualDom/VirtualDomTree'
-import { OrganizedFacts, unsafe_applyFacts } from 'monarch/Monarch/VirtualDom/Facts'
-import { OutputHandlersList } from 'monarch/Monarch/VirtualDom/OutputHandlersList'
-import { ReorderHistory } from 'monarch/Monarch/VirtualDom/ReorderHistory'
+import { VirtualDomTree, realize } from '@purescript-monarch/core/VirtualDom/VirtualDomTree'
+import { OrganizedFacts, unsafe_applyFacts } from '@purescript-monarch/core/VirtualDom/Facts'
+import { OutputHandlersList } from '@purescript-monarch/core/VirtualDom/OutputHandlersList'
+import { ReorderHistory } from '@purescript-monarch/core/VirtualDom/ReorderHistory'
 import { ChildNodeByKeyMap } from './ChildNodeByKeyMap'
 
 /**

@@ -10,18 +10,18 @@
 
 import 'setimmediate'
 
-import { OutputHandlersList } from 'monarch/Monarch/VirtualDom/OutputHandlersList'
-import { VirtualDomTree } from 'monarch/Monarch/VirtualDom/VirtualDomTree'
-import { unsafe_uncurried_applyPatchTree } from 'monarch/Monarch/VirtualDom/PatchTree'
-import { unsafe_uncurried_mount } from 'monarch/Monarch/VirtualDom'
+import { OutputHandlersList } from '@purescript-monarch/core/VirtualDom/OutputHandlersList'
+import { VirtualDomTree } from '@purescript-monarch/core/VirtualDom/VirtualDomTree'
+import { unsafe_uncurried_applyPatchTree } from '@purescript-monarch/core/VirtualDom/PatchTree'
+import { unsafe_uncurried_mount } from '@purescript-monarch/core/VirtualDom'
 import {
     DiffWorkEnvironment,
     DiffWork,
     DiffWorkResult,
     mkRootDiffWork,
     unsafe_uncurried_performDiffWork,
-} from 'monarch/Monarch/VirtualDom/DiffWork'
-import { mkScheduler } from 'monarch/Monarch/Scheduler'
+} from '@purescript-monarch/core/VirtualDom/DiffWork'
+import { mkScheduler } from '@purescript-monarch/core/Scheduler'
 
 interface DispatchMessage<message> {
     (message: message): Effect<Unit>
@@ -49,7 +49,7 @@ interface HoistEnvironment<message, output, effects> {
 
 type MkHoist<message, output, effects> = (environment: HoistEnvironment<message, output, effects>) => Hoist<effects>
 
-interface Spec<model, message, output, effects> {
+export interface Spec<model, message, output, effects> {
     command: (message: message) => (model: model) => Run<effects, Unit>
     container: HTMLElement
     initialModel: model
@@ -136,7 +136,7 @@ interface State<model, message> {
     model: model
 }
 
-function unsafe_document<model, message, output, effects>({
+export function unsafe_document<model, message, output, effects>({
     command,
     container,
     initialModel,
@@ -241,9 +241,3 @@ function unsafe_document<model, message, output, effects>({
         unsafe_uncurried_applyPatchTree(container, patchTree)
     }
 }
-
-interface Document {
-    <model, message, output, effects>(spec: Spec<model, message, output, effects>): Effect<Unit>
-}
-
-export const document: Document = spec => () => unsafe_document(spec)

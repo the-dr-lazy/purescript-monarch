@@ -8,8 +8,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { Patch } from 'monarch/Monarch/VirtualDom/Patch'
-import { OutputHandlersList } from 'monarch/Monarch/VirtualDom/OutputHandlersList'
+import { Patch } from '@purescript-monarch/core/VirtualDom/Patch'
+import { OutputHandlersList } from '@purescript-monarch/core/VirtualDom/OutputHandlersList'
 import {
     unsafe_organizeFacts,
     unsafe_applyFacts,
@@ -17,8 +17,9 @@ import {
     Facts,
     FactCategory,
     keyPropertyName,
-} from 'monarch/Monarch/VirtualDom/Facts'
-import { ReorderHistory } from 'monarch/Monarch/VirtualDom/ReorderHistory'
+} from '@purescript-monarch/core/VirtualDom/Facts'
+import { ReorderHistory, resolveKeyConfliction } from '@purescript-monarch/core/VirtualDom/ReorderHistory'
+import { ChildNodeByKeyMap } from '@purescript-monarch/core/VirtualDom/ChildNodeByKeyMap'
 
 /**
  * Virtual DOM tree ADT
@@ -225,38 +226,6 @@ export namespace VirtualDomTree {
 
 export type TagName = keyof HTMLElementTagNameMap | string
 export type NS = 'http://www.w3.org/1999/xhtml' | 'http://www.w3.org/2000/svg' | 'http://www.w3.org/1998/Math/MathML'
-
-// prettier-ignore
-interface FMapVirtualDomTree {
-    <a, b>(f: (a: a) => b): (vNode: VirtualDomTree<a>) => VirtualDomTree<b>
-}
-
-// prettier-ignore
-export const fmapVirtualDomTree: FMapVirtualDomTree = f => vNode => {
-    let tagger: VirtualDomTree<any> = VirtualDomTree.mkTagger(f, vNode.tag === VirtualDomTree.Keyed ? vNode.vNode : vNode)
-
-    if (vNode.tag === VirtualDomTree.Keyed) {
-        tagger = VirtualDomTree.mkKeyed(vNode.key, tagger)
-    }
-
-    return tagger
-}
-
-export const node = <message>(spec: { ns: NS; tagName: TagName; facts: Facts }): VirtualDomTree<message> =>
-    VirtualDomTree.mkElementNS(spec.ns, spec.tagName, spec.facts, spec.facts.children)
-
-export const leaf = <message>(spec: { ns: NS; tagName: TagName; facts: Facts }): VirtualDomTree<message> =>
-    VirtualDomTree.mkElementNS(spec.ns, spec.tagName, spec.facts, undefined)
-
-export const text = VirtualDomTree.mkText
-
-// prettier-ignore
-interface Keyed {
-    (key: any): <message>(vNode: VirtualDomTree<message>) => VirtualDomTree<message>
-}
-
-// prettier-ignore
-export const keyed: Keyed = key => vNode => VirtualDomTree.mkKeyed(key, vNode)
 
 declare global {
     interface Node {
