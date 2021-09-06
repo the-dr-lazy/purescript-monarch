@@ -9,8 +9,8 @@
  */
 
 import 'setimmediate'
-import { VirtualDomTree, realize } from '@purescript-monarch/core/VirtualDom/VirtualDomTree'
-import { OutputHandlersList } from '@purescript-monarch/core/VirtualDom/OutputHandlersList'
+import { VirtualDomTree, realize } from './VirtualDom/VirtualDomTree'
+import { OutputHandlersList } from './VirtualDom/OutputHandlersList'
 
 export function unsafe_uncurried_mount<a>(
     domNode: Node,

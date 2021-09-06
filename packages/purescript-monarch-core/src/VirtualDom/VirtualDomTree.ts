@@ -8,18 +8,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { Patch } from '@purescript-monarch/core/VirtualDom/Patch'
-import { OutputHandlersList } from '@purescript-monarch/core/VirtualDom/OutputHandlersList'
-import {
-    unsafe_organizeFacts,
-    unsafe_applyFacts,
-    OrganizedFacts,
-    Facts,
-    FactCategory,
-    keyPropertyName,
-} from '@purescript-monarch/core/VirtualDom/Facts'
-import { ReorderHistory, resolveKeyConfliction } from '@purescript-monarch/core/VirtualDom/ReorderHistory'
-import { ChildNodeByKeyMap } from '@purescript-monarch/core/VirtualDom/ChildNodeByKeyMap'
+import { Patch } from './Patch'
+import { OutputHandlersList } from './OutputHandlersList'
+import { unsafe_organizeFacts, unsafe_applyFacts, OrganizedFacts, Facts, FactCategory, keyPropertyName } from './Facts'
+import { ReorderHistory } from './ReorderHistory'
 
 /**
  * Virtual DOM tree ADT
