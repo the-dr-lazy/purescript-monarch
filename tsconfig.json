@@ -13,10 +13,6 @@
         "skipLibCheck": true,
         "resolveJsonModule": true,
         "removeComments": true,
-        "baseUrl": ".",
-        "paths": {
-            "@purescript-monarch": ["./packages/purescript-monarch/src"],
-            "@purescript-monarch/core": ["./packages/purescript-monarch-core/src"]
-        }
+        "baseUrl": "."
     }
 }
