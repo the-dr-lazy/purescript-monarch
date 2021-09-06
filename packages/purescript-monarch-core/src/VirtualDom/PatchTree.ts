@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { Patch, unsafe_applyPatch } from '@purescript-monarch/core/VirtualDom/Patch'
+import { Patch, unsafe_applyPatch } from './Patch'
 
 export type PatchTree = PatchTree.Root | PatchTree.Node
 

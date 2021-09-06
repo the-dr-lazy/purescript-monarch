@@ -10,18 +10,18 @@
 
 import 'setimmediate'
 
-import { OutputHandlersList } from '@purescript-monarch/core/VirtualDom/OutputHandlersList'
-import { VirtualDomTree } from '@purescript-monarch/core/VirtualDom/VirtualDomTree'
-import { unsafe_uncurried_applyPatchTree } from '@purescript-monarch/core/VirtualDom/PatchTree'
-import { unsafe_uncurried_mount } from '@purescript-monarch/core/VirtualDom'
+import { OutputHandlersList } from './VirtualDom/OutputHandlersList'
+import { VirtualDomTree } from './VirtualDom/VirtualDomTree'
+import { unsafe_uncurried_applyPatchTree } from './VirtualDom/PatchTree'
+import { unsafe_uncurried_mount } from './VirtualDom'
 import {
     DiffWorkEnvironment,
     DiffWork,
     DiffWorkResult,
     mkRootDiffWork,
     unsafe_uncurried_performDiffWork,
-} from '@purescript-monarch/core/VirtualDom/DiffWork'
-import { mkScheduler } from '@purescript-monarch/core/Scheduler'
+} from './VirtualDom/DiffWork'
+import { mkScheduler } from './Scheduler'
 
 interface DispatchMessage<message> {
     (message: message): Effect<Unit>

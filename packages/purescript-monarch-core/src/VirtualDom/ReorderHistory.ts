@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { VirtualDomTree, DownstreamNode, realize } from '@purescript-monarch/core/VirtualDom/VirtualDomTree'
+import { VirtualDomTree, DownstreamNode, realize } from './VirtualDomTree'
 import { ChildNodeByKeyMap } from './ChildNodeByKeyMap'
 import { OutputHandlersList } from './OutputHandlersList'
 

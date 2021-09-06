@@ -8,8 +8,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { VirtualDomTree } from '@purescript-monarch/core/VirtualDom/VirtualDomTree'
-import { OutputHandlersList } from '@purescript-monarch/core/VirtualDom/OutputHandlersList'
+import { VirtualDomTree } from './VirtualDomTree'
+import { OutputHandlersList } from './OutputHandlersList'
 
 export const attributesKeyName = 'attributes'
 export const keyPropertyName = 'key'
