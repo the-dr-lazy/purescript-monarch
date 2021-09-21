@@ -11,6 +11,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 module Monarch.Type.Row
   ( class OptionalRecordCons
+  , class Union3
   , class Union4
   ) where
 
@@ -32,6 +33,12 @@ else instance
 -- | `Row` to `RowList` conversion of the `row`
 else instance
   (RowToList row list, OptionalRecordCons list name s t) => OptionalRecordCons row name s t
+
+
+class Union3 :: forall k. Row k -> Row k -> Row k -> Row k -> Constraint
+class Union3 a b c abc | a b c -> abc
+
+instance (Union a b ab, Union ab c abc) => Union3 a b c abc
 
 class Union4 :: forall k. Row k -> Row k -> Row k -> Row k -> Row k -> Constraint
 class Union4 a b c d abcd | a b c d -> abcd

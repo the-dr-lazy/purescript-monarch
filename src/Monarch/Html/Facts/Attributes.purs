@@ -22,3 +22,5 @@ type HtmlButtonElementAttributes r
     , disabled  :: Boolean -- | Whether the form control is disabled
     | r
     )
+
+type HtmlSlotElementAttributes r = r

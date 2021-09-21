@@ -23,6 +23,7 @@ import Counter.Effect.Api                               as Effect.Api
 import Data.Maybe
 import Monarch.VirtualDom.Facts.Attributes
 import Type.Row (type (+))
+import Counter.Elements.Counter
 
 type Model = Int
 
@@ -39,12 +40,20 @@ update = case _ of
   UserClickedDecreaseButton -> (_ - 1)
   _ -> identity
 
-view :: Model -> Html.Root _ Message
+view :: Model -> Html.Root Message
 view model =
   Html.div {}
     [ Html.button { onClick: const UserClickedDecreaseButton } [ Html.text "-" ]
     , Html.text $ show model
     , Html.button { onClick: const UserClickedIncreaseButton } [ Html.text "+" ]
+    , node
+        { value: Just model
+        , onChange: const UserClickedIncreaseButton
+        }
+        { title: Html.div {} [ Html.text "HI! I'm Monarch element" ]
+        , increase: Html.div {} [Html.text "INCREMENT"]
+        , decrease: Html.div {} [Html.text "DECREMENT"]
+        }
     ]
 
 command

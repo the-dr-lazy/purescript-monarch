@@ -18,3 +18,5 @@ type HtmlElementOutputs message r = ElementOutputs message r
 type HtmlDivElementOutputs message r = HtmlElementOutputs message r
 
 type HtmlButtonElementOutputs message r = HtmlElementOutputs message r
+
+type HtmlSlotElementOutputs message r = r

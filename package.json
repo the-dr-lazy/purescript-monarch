@@ -35,6 +35,7 @@
     },
     "homepage": "https://github.com/thebrodmann/monarch#readme",
     "dependencies": {
+        "@webcomponents/custom-elements": "^1.5.0",
         "asap": "^2.0.6",
         "setimmediate": "^1.0.5",
         "tslib": "^2.3.0"

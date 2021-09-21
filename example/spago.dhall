@@ -15,6 +15,9 @@ You can edit this file as you like.
   , "web-dom"
   , "web-html"
   , "maybe"
+  , "nullable"
+  , "undefined"
+  , "variant"
   ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]

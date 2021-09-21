@@ -49,6 +49,9 @@ export function unsafe_organizeFacts(
             continue
         }
 
+        if (tagName === 'slot' && key === slotNamePropertyName && facts[slotNamePropertyName] === defaultSlotName)
+            continue
+
         if (key === keyPropertyName) continue
 
         if (key.startsWith(outputKeyPrefix)) {

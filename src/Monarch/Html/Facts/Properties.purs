@@ -13,6 +13,7 @@ module Monarch.Html.Facts.Properties where
 
 import Type.Row                         ( type (+) )
 import Monarch.VirtualDom.Facts.Properties
+import Type.Proxy
 
 type HtmlElementProperties r = ElementProperties r
 
@@ -21,5 +22,11 @@ type HtmlDivElementProperties r = HtmlElementProperties r
 type HtmlButtonElementProperties r
   = HtmlElementProperties
   + ( disabled :: Boolean
+    | r
+    )
+
+type HtmlSlotElementProperties :: Symbol -> Row Type -> Row Type
+type HtmlSlotElementProperties name r
+  = ( name :: Proxy name
     | r
     )
