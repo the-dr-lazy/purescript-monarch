@@ -26,6 +26,7 @@
   , "web-html"
   , "web-uievents"
   , "either"
+  , "type-equality"
   ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]
