@@ -23,8 +23,8 @@ class UiEvent h where
 
 foreign import foreign_view :: forall a. a -> Nullable Web.Window
 
-instance UiEvent (UiEventHandle bubbles composed) where
+instance UiEvent UiEventHandle where
   view = Nullable.toMaybe <<< foreign_view
 
-instance UiEvent (MouseEventHandle bubbles composed) where
+instance UiEvent MouseEventHandle where
   view = Nullable.toMaybe <<< foreign_view

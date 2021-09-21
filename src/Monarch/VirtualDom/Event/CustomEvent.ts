@@ -9,3 +9,5 @@
  */
 
 export const foreign_detail = <a>(e: CustomEvent<a>): a => e.detail
+
+export const foreign_mk = <a>(spec: { name: string; detail: a }) => new CustomEvent(spec.name, spec)

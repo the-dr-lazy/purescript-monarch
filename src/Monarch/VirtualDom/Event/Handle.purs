@@ -11,17 +11,13 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 module Monarch.VirtualDom.Event.Handle where
 
-data EventHandle :: Boolean -> Boolean -> Type
-data EventHandle bubbles composed
+data EventHandle
 
-data CustomEventHandle :: Boolean -> Boolean -> Type -> Type
-data CustomEventHandle bubbles composed detail
+data CustomEventHandle :: Type -> Type
+data CustomEventHandle detail
 
-data UiEventHandle :: Boolean -> Boolean -> Type
-data UiEventHandle bubbles composed
+data UiEventHandle
 
-data MouseEventHandle :: Boolean -> Boolean -> Type
-data MouseEventHandle bubbles composed
+data MouseEventHandle
 
-data WheelEventHandle :: Boolean -> Boolean -> Type
-data WheelEventHandle bubbles composed
+data WheelEventHandle

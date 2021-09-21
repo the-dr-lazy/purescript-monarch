@@ -18,5 +18,5 @@ class MouseEvent h where
 
 foreign import foreign_screenX :: forall a. a -> Int
 
-instance MouseEvent (MouseEventHandle bubbles composed) where
+instance MouseEvent MouseEventHandle where
   screenX = foreign_screenX

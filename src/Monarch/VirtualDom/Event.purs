@@ -21,11 +21,14 @@ class Event h where
 
 foreign import foreign_name :: forall a. a -> String
 
-instance Event (EventHandle bubbles composed) where
+instance Event EventHandle where
   name = UnsafeMkEventName <<< foreign_name
 
-instance Event (UiEventHandle bubbles composed) where
+instance Event UiEventHandle where
   name = UnsafeMkEventName <<< foreign_name
 
-instance Event (MouseEventHandle bubbles composed) where
+instance Event MouseEventHandle where
+  name = UnsafeMkEventName <<< foreign_name
+
+instance Event (CustomEventHandle detail) where
   name = UnsafeMkEventName <<< foreign_name

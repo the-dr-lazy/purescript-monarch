@@ -15,7 +15,7 @@ import Type.Prelude
 import Monarch.VirtualDom.Event.Handle
 
 type GlobalOutputs message r
-  = ( onClick :: MouseEventHandle True True -> message
+  = ( onClick :: MouseEventHandle -> message
     | r
     )
 
