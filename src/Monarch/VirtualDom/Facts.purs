@@ -1,7 +1,7 @@
 {-|
 Module     : Monarch.VirtualDom.Facts
 Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <the-dr-lazy@pm.me>
-Copyright  : (c) 2020-2021 Monarch
+Copyright  : (c) 2020-2022 Monarch
 License    : MPL 2.0
 
 This Source Code Form is subject to the terms of the Mozilla Public
@@ -13,14 +13,15 @@ module Monarch.VirtualDom.Facts where
 
 import Type.Row (type (+))
 
-type Facts (properties :: Row Type -> Row Type)
-           (outputs    :: Row Type -> Row Type)
-           (attributes :: Row Type)
-           (hooks      :: Row Type)
-           (key        :: Type)
-  = properties
-  + outputs
-  + ( attributes :: { | attributes }
-    , hooks      :: { | hooks }
-    , key        :: key
-    )
+type Facts
+    (properties :: Row Type -> Row Type)
+    (outputs :: Row Type -> Row Type)
+    (attributes :: Row Type)
+    (hooks :: Row Type)
+    (key :: Type) = properties
+    + outputs
+    +
+        ( attributes :: { | attributes }
+        , hooks :: { | hooks }
+        , key :: key
+        )

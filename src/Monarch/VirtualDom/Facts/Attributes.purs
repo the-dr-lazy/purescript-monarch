@@ -1,7 +1,7 @@
 {-|
 Module     : Monarch.VirtualDom.Facts.Attributes
 Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <the-dr-lazy@pm.me>
-Copyright  : (c) 2020-2021 Monarch
+Copyright  : (c) 2020-2022 Monarch
 License    : MPL 2.0
 
 This Source Code Form is subject to the terms of the Mozilla Public
@@ -21,7 +21,7 @@ derive newtype instance Eq ClassName
 derive newtype instance Ord ClassName
 derive newtype instance Semigroup ClassName
 
-type GlobalAttributes r
-  = ( class   :: ClassName       -- | Assigning class(es) to an element
+type GlobalAttributes r =
+    ( class :: ClassName -- | Assigning class(es) to an element
     | r
     )

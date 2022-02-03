@@ -1,7 +1,7 @@
 {-|
 Module     : Monarch.Monad.Maybe
 Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <the-dr-lazy@pm.me>
-Copyright  : (c) 2020-2021 Monarch
+Copyright  : (c) 2020-2022 Monarch
 License    : MPL 2.0
 
 This Source Code Form is subject to the terms of the Mozilla Public
@@ -16,7 +16,7 @@ import Data.Maybe
 
 whenJust :: forall f a. Applicative f => (a -> f Unit) -> Maybe a -> f Unit
 whenJust f (Just x) = f x
-whenJust _ Nothing  = pure unit
+whenJust _ Nothing = pure unit
 
 whenJustM :: forall m a. Monad m => (a -> m Unit) -> m (Maybe a) -> m Unit
 whenJustM f mm = mm >>= whenJust f

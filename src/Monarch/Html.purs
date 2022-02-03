@@ -1,7 +1,7 @@
 {-|
 Module     : Monarch.Html
 Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <the-dr-lazy@pm.me>
-Copyright  : (c) 2020-2021 Monarch
+Copyright  : (c) 2020-2022 Monarch
 License    : MPL 2.0
 
 This Source Code Form is subject to the terms of the Mozilla Public
@@ -10,12 +10,11 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -}
 
 module Monarch.Html
-  ( module Monarch.VirtualDom.VirtualDomTree.Prelude
-  , Root
-  , div
-  , button
-  )
-where
+    ( module Monarch.VirtualDom.VirtualDomTree.Prelude
+    , Root
+    , div
+    , button
+    ) where
 
 import Monarch.Html.Facts.Attributes
 import Monarch.Html.Facts.Outputs

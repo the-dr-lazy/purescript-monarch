@@ -1,6 +1,6 @@
 /*
  * Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <the-dr-lazy@pm.me>
- * Copyright  : (c) 2020-2021 Monarch
+ * Copyright  : (c) 2020-2022 Monarch
  * License    : MPL 2.0
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -424,7 +424,7 @@ function unsafe_diffElementNS<
     a,
     x extends VirtualDomTree.ElementNS<a> | VirtualDomTree.KeyedElementNS<a>,
     b,
-    y extends x extends VirtualDomTree.ElementNS<a> ? VirtualDomTree.ElementNS<b> : VirtualDomTree.KeyedElementNS<b>
+    y extends x extends VirtualDomTree.ElementNS<a> ? VirtualDomTree.ElementNS<b> : VirtualDomTree.KeyedElementNS<b>,
 >(x: x, y: y, patches: Patch[]): Diff<a, b> {
     if (x.ns !== y.ns || x.tagName !== y.tagName) {
         patches.push(Patch.mkRedraw(y))

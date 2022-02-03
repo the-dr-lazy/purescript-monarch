@@ -1,7 +1,7 @@
 {-|
 Module     : Counter.API
 Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <the-dr-lazy@pm.me>
-Copyright  : (c) 2020-2021 Monarch
+Copyright  : (c) 2020-2022 Monarch
 License    : MPL 2.0
 
 This Source Code Form is subject to the terms of the Mozilla Public
@@ -13,17 +13,19 @@ module Counter.API (COUNTER, CounterF, increase, decrease, runCounter, run) wher
 
 import Prelude
 
-import Run               ( Run
-                         , EFFECT
-                         , interpret
-                         )
-import Run                              as Run
-import Effect.Console                   as Console
+import Run
+    ( Run
+    , EFFECT
+    , interpret
+    )
+import Run as Run
+import Effect.Console as Console
 import Type.Row (type (+))
 import Type.Proxy
 
-data CounterF a = Increase a
-                | Decrease a
+data CounterF a
+    = Increase a
+    | Decrease a
 
 derive instance Functor CounterF
 
@@ -43,12 +45,12 @@ runCounter = interpret (Run.on _counter handleCounter Run.send)
 
 handleCounter :: forall r. CounterF ~> Run (EFFECT + r)
 handleCounter = case _ of
-  Increase next -> do
-    Run.liftEffect $ Console.log "increase requested"
-    pure next
-  Decrease next -> do
-    Run.liftEffect $ Console.log "decrease requested"
-    pure next
+    Increase next -> do
+        Run.liftEffect $ Console.log "increase requested"
+        pure next
+    Decrease next -> do
+        Run.liftEffect $ Console.log "decrease requested"
+        pure next
 
 run :: forall r. Run (COUNTER + EFFECT + r) ~> Run (EFFECT + r)
 run = runCounter

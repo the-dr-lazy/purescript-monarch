@@ -1,7 +1,7 @@
 {-|
 Module     : Monarch
 Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <the-dr-lazy@pm.me>
-Copyright  : (c) 2020-2021 Monarch
+Copyright  : (c) 2020-2022 Monarch
 License    : MPL 2.0
 
 This Source Code Form is subject to the terms of the Mozilla Public
@@ -10,10 +10,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -}
 
 module Monarch
-  ( module Monarch.Document
-  , module Monarch.Command
-  )
-where
+    ( module Monarch.Document
+    , module Monarch.Command
+    ) where
 
 import Monarch.Document
-import Monarch.Command ( BASIC, Command, dispatch, raise )
+import Monarch.Command (BASIC, Command, dispatch, raise)
