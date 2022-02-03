@@ -1,7 +1,7 @@
 {-|
 Module     : Monarch.VirtualDom.VirtualDomTree
 Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <the-dr-lazy@pm.me>
-Copyright  : (c) 2020-2021 Monarch
+Copyright  : (c) 2020-2022 Monarch
 License    : MPL 2.0
 
 This Source Code Form is subject to the terms of the Mozilla Public
@@ -50,8 +50,7 @@ instance Functor (VirtualDomTree key slots) where
 type Node
     (mkProperties :: Row Type -> Row Type)
     (mkOutputs :: Type -> Row Type -> Row Type)
-    (mkAttributes :: Row Type -> Row Type)
-    =
+    (mkAttributes :: Row Type -> Row Type) =
     forall r _r keyType key key' attributes hooks slots message
      . Row.Union r _r (Facts mkProperties (mkOutputs message) attributes hooks keyType)
     => Row.OptionalRecordCons r "attrs" (mkAttributes ()) attributes
@@ -61,14 +60,12 @@ type Node
     -> Array (VirtualDomTree key' slots message)
     -> VirtualDomTree key slots message
 
-type Node_
-    = forall key slots message. Array (VirtualDomTree key slots message) -> VirtualDomTree Nothing slots message
+type Node_ = forall key slots message. Array (VirtualDomTree key slots message) -> VirtualDomTree Nothing slots message
 
 type Leaf
     (mkProperties :: Row Type -> Row Type)
     (mkOutputs :: Type -> Row Type -> Row Type)
-    (mkAttributes :: Row Type -> Row Type)
-    =
+    (mkAttributes :: Row Type -> Row Type) =
     forall r _r keyType key attributes hooks slots message
      . Row.Union r _r (Facts mkProperties (mkOutputs message) attributes hooks keyType)
     => Row.OptionalRecordCons r "attrs" (mkAttributes ()) attributes

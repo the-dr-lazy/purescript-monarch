@@ -1,7 +1,7 @@
 {-|
 Module     : Monarch.Html.Facts.Properties
 Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <the-dr-lazy@pm.me>
-Copyright  : (c) 2020-2021 Monarch
+Copyright  : (c) 2020-2022 Monarch
 License    : MPL 2.0
 
 This Source Code Form is subject to the terms of the Mozilla Public
@@ -18,8 +18,7 @@ type HtmlElementProperties r = ElementProperties r
 
 type HtmlDivElementProperties r = HtmlElementProperties r
 
-type HtmlButtonElementProperties r
-    = HtmlElementProperties
+type HtmlButtonElementProperties r = HtmlElementProperties
     +
         ( disabled :: Boolean
         | r
