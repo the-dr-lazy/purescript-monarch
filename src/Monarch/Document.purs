@@ -1,7 +1,7 @@
 {-|
 Module     : Monarch.Document
 Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <the-dr-lazy@pm.me>
-Copyright  : (c) 2020-2021 Monarch
+Copyright  : (c) 2020-2022 Monarch
 License    : MPL 2.0
 
 This Source Code Form is subject to the terms of the Mozilla Public
@@ -26,8 +26,7 @@ import Record as Record
 import Run (Run)
 import Type.Row (type (+))
 
-type CommonSpec model message output effects a r
-    =
+type CommonSpec model message output effects a r =
     ( command :: message -> model -> Run effects Unit
     , container :: HTMLElement
     , initialModel :: model
@@ -38,8 +37,7 @@ type CommonSpec model message output effects a r
     | r
     )
 
-type DocumentSpec model message output effects a r
-    = CommonSpec model message output effects a
+type DocumentSpec model message output effects a r = CommonSpec model message output effects a
     +
         ( mkHoist :: MkHoist message output effects a
         , onInitialize :: Nullable message
@@ -48,8 +46,7 @@ type DocumentSpec model message output effects a r
 
 foreign import document :: forall model message output effects a r. { | DocumentSpec model message output effects a r } -> Effect Unit
 
-type BootstrapSpec model message output effects a r
-    = CommonSpec model message output effects a
+type BootstrapSpec model message output effects a r = CommonSpec model message output effects a
     + (onInitialize :: Maybe message | r)
 
 bootstrap :: forall model message output effects a. { | BootstrapSpec model message output effects a () } -> Effect Unit

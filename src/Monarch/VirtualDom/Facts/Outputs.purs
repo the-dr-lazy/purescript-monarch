@@ -1,7 +1,7 @@
 {-|
 Module     : Monarch.VirtualDom.Facts.Outputs
 Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <the-dr-lazy@pm.me>
-Copyright  : (c) 2020-2021 Monarch
+Copyright  : (c) 2020-2022 Monarch
 License    : MPL 2.0
 
 This Source Code Form is subject to the terms of the Mozilla Public
@@ -13,8 +13,7 @@ module Monarch.VirtualDom.Facts.Outputs where
 
 import Web.UIEvent.MouseEvent (MouseEvent)
 
-type GlobalOutputs message r
-    =
+type GlobalOutputs message r =
     ( onClick :: MouseEvent -> message
     | r
     )

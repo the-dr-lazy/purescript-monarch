@@ -1,7 +1,7 @@
 {-|
 Module     : Monarch.Command
 Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <the-dr-lazy@pm.me>
-Copyright  : (c) 2020-2021 Monarch
+Copyright  : (c) 2020-2022 Monarch
 License    : MPL 2.0
 
 This Source Code Form is subject to the terms of the Mozilla Public
@@ -39,8 +39,7 @@ _command = Proxy :: Proxy "command"
 
 type COMMAND message output r = (command :: CommandF message output | r)
 
-type BASIC message output r
-    = EFFECT
+type BASIC message output r = EFFECT
     + AFF
     + COMMAND message output
     + r
@@ -66,8 +65,7 @@ runCommand dispatchMessage dispatchOutput = interpret (Run.on _command go Run.se
         Dispatch message next -> Run.liftEffect $ dispatchMessage message *> pure next
         Raise output next -> Run.liftEffect $ dispatchOutput output *> pure next
 
-type MkHoist message output effects a
-    =
+type MkHoist message output effects a =
     { interpreter :: Run effects a -> Run (BASIC message output ()) a
     , dispatchMessage :: message -> Effect Unit
     , dispatchOutput :: output -> Effect Unit

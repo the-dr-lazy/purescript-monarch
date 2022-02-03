@@ -1,7 +1,7 @@
 {-|
 Module     : Monarch.Svg.Facts.Attributes
 Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <the-dr-lazy@pm.me>
-Copyright  : (c) 2020-2021 Monarch
+Copyright  : (c) 2020-2022 Monarch
 License    : MPL 2.0
 
 This Source Code Form is subject to the terms of the Mozilla Public
@@ -32,8 +32,7 @@ mkViewBox
 mkViewBox { minX, minY, width, height } =
     ViewBox $ String.joinWith " " [ show minX, show minY, show width, show height ]
 
-type SvgSvgElementAttributes r
-    = GlobalAttributes
+type SvgSvgElementAttributes r = GlobalAttributes
     +
         ( viewBox :: ViewBox
         | r
