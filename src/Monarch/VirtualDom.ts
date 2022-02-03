@@ -1,6 +1,6 @@
 /*
  * Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <the-dr-lazy@pm.me>
- * Copyright  : (c) 2020-2021 Monarch
+ * Copyright  : (c) 2020-2022 Monarch
  * License    : MPL 2.0
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -13,18 +13,22 @@ import { VirtualDomTree, realize } from 'monarch/Monarch/VirtualDom/VirtualDomTr
 import { OutputHandlersList } from 'monarch/Monarch/VirtualDom/OutputHandlersList'
 
 export function unsafe_uncurried_mount<a>(
-    domNode: Node,
+    container: DOM.Node,
     outputHandlers: OutputHandlersList.Nil,
     vNode: VirtualDomTree<a>,
-): void {
-    while (domNode.firstChild) {
-        domNode.removeChild(domNode.lastChild!)
+): DOM.Node {
+    while (container.firstChild !== null) {
+        container.removeChild(container.lastChild!)
     }
 
-    domNode.appendChild(realize(vNode, outputHandlers))
+    const domNode = realize(vNode, outputHandlers)
+
+    container.appendChild(domNode)
+
+    return domNode
 }
 
 /**
  * ToDo: should be implemented.
  */
-function unsafe_uncurried_unmount<message>(domNode: Node, virtualDomTree: VirtualDomTree<message>): void {}
+function unsafe_uncurried_unmount<message>(domNode: DOM.Node, virtualDomTree: VirtualDomTree<message>): void {}

@@ -1,6 +1,6 @@
 /*
  * Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <the-dr-lazy@pm.me>
- * Copyright  : (c) 2020-2021 Monarch
+ * Copyright  : (c) 2020-2022 Monarch
  * License    : MPL 2.0
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -11,7 +11,6 @@
 import 'monarch/polyfills'
 import { OutputHandlersList } from 'monarch/Monarch/VirtualDom/OutputHandlersList'
 import { VirtualDomTree } from 'monarch/Monarch/VirtualDom/VirtualDomTree'
-import { unsafe_uncurried_applyPatchTree } from 'monarch/Monarch/VirtualDom/PatchTree'
 import { unsafe_uncurried_mount } from 'monarch/Monarch/VirtualDom'
 import {
     DiffWorkEnvironment,
@@ -21,6 +20,8 @@ import {
     unsafe_uncurried_performDiffWork,
 } from 'monarch/Monarch/VirtualDom/DiffWork'
 import { mkScheduler } from 'monarch/Monarch/Scheduler'
+import * as List from 'monarch/Monarch/Data/List'
+import { unsafe_applyPatch } from 'monarch/Monarch/VirtualDom/Patch'
 
 export type DispatchMessage<message> = (message: message) => Effect<Unit>
 export type DispatchOutput<output> = (output: output) => Effect<Unit>
@@ -49,7 +50,7 @@ export interface Spec<model, message, output, effects> {
     view: (model: model) => VirtualDomTree<message>
 }
 
-interface Environment<model, message, output, effects> extends Spec<model, message, output, effects> {
+interface Environment<message, effects> {
     hoist: Hoist<effects>
     diffWorkEnvironment: DiffWorkEnvironment<message, message>
 }
@@ -127,17 +128,18 @@ interface State<model, message> {
      *
      */
     model: model
+
+    rootDomNode?: DOM.Node
 }
 
 export class Application<model, message, output, effects> {
-    private _environment: Environment<model, message, output, effects>
+    private _environment: Environment<message, effects>
     private _state: State<model, message>
 
-    constructor(spec: Spec<model, message, output, effects>) {
-        const { interpreter, onInitialize, mkHoist, container, initialModel, view, onOutput } = spec
+    constructor(private _spec: Spec<model, message, output, effects>) {
+        const { interpreter, onInitialize, mkHoist, container, initialModel, view, onOutput } = _spec
 
         this._environment = {
-            ...spec,
             hoist: mkHoist({
                 interpreter,
                 dispatchMessage: message => () => this.unsafe_dispatchMessage(message),
@@ -165,11 +167,14 @@ export class Application<model, message, output, effects> {
 
         onInitialize && this.unsafe_dispatchMessage(onInitialize)
 
-        requestAnimationFrame(() => unsafe_uncurried_mount(container, outputHandlers, initialVirtualDomTree))
+        requestAnimationFrame(
+            () => (this._state.rootDomNode = unsafe_uncurried_mount(container, outputHandlers, initialVirtualDomTree)),
+        )
     }
 
     public unsafe_dispatchMessage = (message: message): void => {
-        const { hoist, update, command } = this._environment
+        const { update, command } = this._spec
+        const { hoist } = this._environment
 
         const previousModel = this._state.model
         const nextModel = update(message)(previousModel)
@@ -187,10 +192,15 @@ export class Application<model, message, output, effects> {
     }
 
     private _unsafe_render = (): void => {
-        const { view, diffWorkEnvironment } = this._environment
+        const { view } = this._spec
+        const { diffWorkEnvironment } = this._environment
 
         const nextVirtualDomTree = view(this._state.model)
-        const initialDiffWork = mkRootDiffWork(this._state.committedVirtualDomTree, nextVirtualDomTree)
+        const initialDiffWork = mkRootDiffWork(
+            this._state.committedVirtualDomTree,
+            nextVirtualDomTree,
+            this._state.rootDomNode!,
+        )
 
         this._state.hasRequestedAsyncRendering = false
 
@@ -230,21 +240,23 @@ export class Application<model, message, output, effects> {
     private _unsafe_commit = () => {
         if (this._state.diffWorkResult === undefined) {
             // ToDo: This is a serious bug. Should be reported.
-            throw '### INVARIANT ###'
+            throw '### INVARIANT diff ###'
         }
 
-        const { container } = this._environment
-
-        const patchTree = this._state.diffWorkResult.rootPatchTree
+        let patches = this._state.diffWorkResult.patches
 
         this._state.committedVirtualDomTree = this._state.diffWorkResult.rootVNode
         this._state.diffWorkResult = undefined
 
-        unsafe_uncurried_applyPatchTree(container, patchTree)
+        while (patches.tag !== List.Tag.Nil) {
+            unsafe_applyPatch(patches.head)
+
+            patches = patches.tail
+        }
     }
 
     public unmount = () => {
-        const { onFinalize } = this._environment
+        const { onFinalize } = this._spec
 
         onFinalize && this.unsafe_dispatchMessage(onFinalize)
     }

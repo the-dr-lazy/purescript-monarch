@@ -8,4 +8,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-export const foreign_screenX = (e: MouseEvent): number => e.screenX
+const enum A {
+    A0,
+    A1,
+}
+
+const enum B {
+    B0,
+    B1,
+}
+
+function f(x: A | B) {
+    if (x === A.A0) launchMissile(x)
+    else if (x === B.B0) beHuman(x)
+}

@@ -1,6 +1,6 @@
 /*
  * Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <the-dr-lazy@pm.me>
- * Copyright  : (c) 2020-2021 Monarch
+ * Copyright  : (c) 2020-2022 Monarch
  * License    : MPL 2.0
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -11,14 +11,16 @@
 import { Patch } from 'monarch/Monarch/VirtualDom/Patch'
 import { OutputHandlersList } from 'monarch/Monarch/VirtualDom/OutputHandlersList'
 import {
-    unsafe_organizeFacts,
     unsafe_applyFacts,
     OrganizedFacts,
     Facts,
     FactCategory,
     keyPropertyName,
+    organizeFacts,
 } from 'monarch/Monarch/VirtualDom/Facts'
-import { ReorderHistory } from 'monarch/Monarch/VirtualDom/ReorderHistory'
+import * as List from 'monarch/Monarch/Data/List'
+import * as LazyMorphism from 'monarch/Monarch/Data/LazyMorphism'
+import * as Children from 'monarch/Monarch/VirtualDom/VirtualDomTree/Children'
 
 /**
  * Virtual DOM tree ADT
@@ -26,20 +28,22 @@ import { ReorderHistory } from 'monarch/Monarch/VirtualDom/ReorderHistory'
 export type VirtualDomTree<message> =
     | VirtualDomTree.Text
     | VirtualDomTree.ElementNS<message>
-    | VirtualDomTree.KeyedElementNS<message>
     | VirtualDomTree.Keyed<VirtualDomTree<message>>
     | VirtualDomTree.Tagger<any, message>
+    | VirtualDomTree.CustomHtmlElement<message>
 
 export namespace VirtualDomTree {
     /**
      * Disjoint union tags for `VirtualDomTree` type
+     *
+     * Note: Don't use the 3x for any other tagged unions.
      */
-    const enum Tag {
-        Text,
-        ElementNS,
-        KeyedElementNS,
-        Keyed,
-        Tagger,
+    export enum Tag {
+        Text = 30,
+        ElementNS = 31,
+        Keyed = 32,
+        Tagger = 33,
+        CustomHtmlElement = 34,
     }
 
     // SUM TYPE: Text
@@ -74,28 +78,34 @@ export namespace VirtualDomTree {
     /**
      * `ElementNS` type constructor
      */
-    export interface ElementNS<message> extends Tagged<typeof ElementNS>, Parent<message> {
+    export interface ElementNS<message> extends Tagged<typeof ElementNS> {
         ns?: NS
         tagName: TagName
-        facts?: Facts
-        organizedFacts?: OrganizedFacts
+        facts?: LazyMorphism.Type<Facts, OrganizedFacts>
+        children?: LazyMorphism.Type<ReadonlyArray<VirtualDomTree<message>>, Children.Type<message>>
     }
-
-    // SUM TYPE: KeyedElementNS
-
     /**
-     * `KeyedElementNS` tag
-     *
-     * Use it for pattern matching
+     * Smart constructor for `ElementNS`
      */
-    export const KeyedElementNS = Tag.KeyedElementNS
-    /**
-     * `KeyedElementNS` type constructor
-     */
-    export interface KeyedElementNS<message>
-        extends Omit<ElementNS<message>, 'tag' | 'children'>,
-            Tagged<typeof KeyedElementNS> {
-        children?: ReadonlyArray<VirtualDomTree.Keyed<VirtualDomTree<message>>>
+    export function mkElementNS<message>(
+        ns: NS | undefined,
+        tagName: TagName,
+        facts?: Facts,
+        children?: ReadonlyArray<VirtualDomTree<message>>,
+    ) {
+        let vNode: VirtualDomTree.ElementNS<message> | VirtualDomTree.Keyed<VirtualDomTree.ElementNS<message>> = {
+            tag: Tag.ElementNS,
+            ns,
+            tagName,
+            facts: facts && LazyMorphism.mk(facts),
+            children: children && LazyMorphism.mk(children),
+        }
+
+        if (facts && keyPropertyName in facts) {
+            vNode = VirtualDomTree.mkKeyed(facts[keyPropertyName], vNode)
+        }
+
+        return vNode
     }
 
     // SUM TYPE: Keyed
@@ -126,7 +136,7 @@ export namespace VirtualDomTree {
     /**
      * `Tagger` type constructor
      */
-    export interface Tagger<a, b> extends Tagged<typeof Tagger> {
+    export interface Tagger<a, _b> extends Tagged<typeof Tagger> {
         f: OutputHandlersList.Cons['value']
         vNode: VirtualDomTree<a>
     }
@@ -134,44 +144,41 @@ export namespace VirtualDomTree {
         return { tag: Tagger, f, vNode }
     }
 
+    // SUM TYPE: CustomHtmlElement
+
     /**
-     * Smart constructor for `ElementNS` and `KeyedElementNS` types
+     * `CustomHtmlElement` tag
+     *
+     * Use it for pattern matching
      */
-    export function mkElementNS<message>(
-        ns: NS | undefined,
-        tagName: TagName,
+    export const CustomHtmlElement = Tag.CustomHtmlElement
+    /**
+     * `CustomHtmlElement` type constructor
+     */
+    export interface CustomHtmlElement<message> extends Tagged<typeof CustomHtmlElement> {
+        ns: undefined
+        tagName: string
+        ctor: CustomElementConstructor
+        facts?: LazyMorphism.Type<Facts, OrganizedFacts>
+        slots?: { [key: string]: VirtualDomTree<message> | ReadonlyArray<VirtualDomTree<message>> }
+    }
+    /**
+     * Smart constructor for `CustomHtmlElement` type with namespace
+     */
+    export function mkCustomHtmlElement<message>(
+        tagName: string,
+        ctor: CustomElementConstructor,
         facts?: Facts,
-        children?: ReadonlyArray<VirtualDomTree.Keyed<VirtualDomTree<message>>>,
-    ): SumWithKeyed<VirtualDomTree.KeyedElementNS<message>>
-    export function mkElementNS<message>(
-        ns: NS | undefined,
-        tagName: TagName,
-        facts?: Facts,
-        children?: ReadonlyArray<VirtualDomTree<message>>,
-    ): SumWithKeyed<VirtualDomTree.ElementNS<message>>
-    export function mkElementNS<message>(
-        ns: NS | undefined,
-        tagName: TagName,
-        facts?: Facts,
-        children?: ReadonlyArray<VirtualDomTree<message>>,
-    ) {
-        const tag =
-            children && children[0]?.tag === VirtualDomTree.Keyed
-                ? VirtualDomTree.KeyedElementNS
-                : VirtualDomTree.ElementNS
-        let vNode: VirtualDomTree<message> = {
-            tag,
-            ns,
+        slots?: { [key: string]: VirtualDomTree<message> | ReadonlyArray<VirtualDomTree<message>> },
+    ): CustomHtmlElement<message> {
+        return {
+            tag: CustomHtmlElement,
+            ns: undefined,
             tagName,
-            facts,
-            children: <any>children,
+            ctor,
+            slots,
+            facts: facts && LazyMorphism.mk(facts),
         }
-
-        if (facts && keyPropertyName in facts) {
-            vNode = VirtualDomTree.mkKeyed(facts[keyPropertyName], vNode)
-        }
-
-        return vNode
     }
 
     // SUM TYPE: Async
@@ -213,14 +220,6 @@ export namespace VirtualDomTree {
         facts: Facts,
     ) => <message>(children: ReadonlyArray<VirtualDomTree<message>>) => VirtualDomTree<message>
     export type Leaf = <message>(facts: Facts) => VirtualDomTree<message>
-
-    // INTERNAL
-
-    interface Parent<message> {
-        children?: ReadonlyArray<VirtualDomTree<message>>
-    }
-
-    type SumWithKeyed<vNode extends VirtualDomTree<any>> = vNode | VirtualDomTree.Keyed<vNode>
 }
 
 export type TagName = keyof HTMLElementTagNameMap | string
@@ -267,25 +266,28 @@ export const leaf = <message>({
 export const text = VirtualDomTree.mkText
 
 // prettier-ignore
-interface Keyed {
-    (key: any): <message>(vNode: VirtualDomTree<message>) => VirtualDomTree<message>
-}
+type Keyed = (key: any) => <message>(vNode: VirtualDomTree<message>) => VirtualDomTree<message>
+
+export const keyed: Keyed = key => vNode => VirtualDomTree.mkKeyed(key, vNode)
 
 // prettier-ignore
-export const keyed: Keyed = key => vNode => VirtualDomTree.mkKeyed(key, vNode)
+type CustomNode = (tagName: string, ctor: CustomElementConstructor) => (facts: Facts) => <message>(children: { [key: string]: VirtualDomTree<message> | ReadonlyArray<VirtualDomTree<message>> }) => VirtualDomTree<message>
+
+export const customNode: CustomNode = (tagName, ctor) => facts => children =>
+    VirtualDomTree.mkCustomHtmlElement(tagName, ctor, facts, children)
 
 declare global {
     interface Node {
-        monarch_outputHandlers: OutputHandlersList
+        __MONARCH_UNSAFE_OUTPUT_HANDLERS: OutputHandlersList
+        __MONARCH_CHILD_NODE_BY_KEY_MAP: Map<unknown, DOM.Node>
+        __MONARCH_SLOTS_CHILD_NODE_BY_KEY_MAP: { [key: string]: Map<unknown, DOM.Node> }
     }
 }
 
-export function realize<message>(vNode: VirtualDomTree<message>, outputHandlers: OutputHandlersList): Node {
+export function realize<message>(vNode: VirtualDomTree<message>, outputHandlers: OutputHandlersList): DOM.Node {
     switch (vNode.tag) {
         case VirtualDomTree.Text:
-            const text = realizeVirtualDomText(vNode)
-            text.monarch_outputHandlers = outputHandlers
-            return text
+            return realizeVirtualDomText(vNode, outputHandlers)
         case VirtualDomTree.Tagger:
             return realizeVirtualDomTagger(vNode, outputHandlers)
         case VirtualDomTree.Keyed:
@@ -294,23 +296,39 @@ export function realize<message>(vNode: VirtualDomTree<message>, outputHandlers:
 
     const domNode = realizeVirtualDomElementNS(vNode)
 
-    for (let child of vNode.children ?? []) {
-        const childNode = realize(child, outputHandlers)
+    // Note: We are not using document fragment because the DOM node
+    // has not been inserted to the DOM tree. So it won't bring us any performance.
+    if (vNode.tag === VirtualDomTree.CustomHtmlElement) {
+        for (let name in vNode.slots) {
+            const children = parseChildren(vNode.slots[name]).value
+            const length = children.length
 
-        // TODO: use document fragment to reduce DOM changes.
-        domNode.appendChild(childNode)
+            for (let ix = 0; ix < length; ix++) {
+                const childDomElement = <Element>realize(children[ix], outputHandlers)
+                childDomElement.slot = name
+                domNode.appendChild(childDomElement)
+            }
+        }
+    } else {
+        const children = vNode.children && LazyMorphism.unsafe_evaluate(vNode.children, parseChildren)
+
+        children && Children.unsafe_realize(children, outputHandlers, domNode.appendChild)
     }
 
-    vNode.facts && unsafe_organizeFacts(vNode)
-    vNode.organizedFacts && unsafe_applyFacts(domNode, vNode.organizedFacts)
+    const facts = vNode.facts && LazyMorphism.unsafe_evaluate(vNode.facts, organizeFacts(vNode.tagName))
+    facts && unsafe_applyFacts(domNode, facts)
 
-    domNode.monarch_outputHandlers = outputHandlers
+    domNode.__MONARCH_UNSAFE_OUTPUT_HANDLERS = outputHandlers
 
     return domNode
 }
 
-export function realizeVirtualDomText({ text }: VirtualDomTree.Text): Text {
-    return document.createTextNode(text)
+export function realizeVirtualDomText({ text }: VirtualDomTree.Text, outputHandlers: OutputHandlersList): Text {
+    const node = document.createTextNode(text)
+
+    node.__MONARCH_UNSAFE_OUTPUT_HANDLERS = outputHandlers
+
+    return node
 }
 
 export function realizeVirtualDomTagger<a, b>(
@@ -322,11 +340,15 @@ export function realizeVirtualDomTagger<a, b>(
     return realize(tagger.vNode, { value: tagger.f, next: outputHandlers })
 }
 
-export function realizeVirtualDomElementNS<a>({
-    ns,
-    tagName,
-}: VirtualDomTree.ElementNS<a> | VirtualDomTree.KeyedElementNS<a>): Element {
-    return ns ? document.createElementNS(ns, tagName) : document.createElement(tagName)
+export function realizeVirtualDomElementNS<message>(
+    vNode: VirtualDomTree.ElementNS<message> | VirtualDomTree.CustomHtmlElement<message>,
+): Element {
+    const { tagName, ns } = vNode
+
+    if (vNode.tag === VirtualDomTree.CustomHtmlElement && window.customElements.get(vNode.tagName) === undefined)
+        window.customElements.define(vNode.tagName, vNode.ctor)
+
+    return ns !== undefined ? document.createElementNS(ns, tagName) : document.createElement(tagName)
 }
 
 function unsafe_flattenVirtualDomTaggers<a, b>(tagger: VirtualDomTree.Tagger<a, b>) {
@@ -344,53 +366,55 @@ function unsafe_flattenVirtualDomTaggers<a, b>(tagger: VirtualDomTree.Tagger<a, 
     tagger.vNode = subVNode
 }
 
-export type DownstreamNode<a, b> = {
+export interface DownstreamNode<a, b> {
     x: VirtualDomTree<a>
     y: VirtualDomTree<b>
-    ix?: number
+    targetDomNode: DOM.Node
 }
 
-export type Diff<a, b> = {
-    patches: Patch[]
-    downstreamNodes?: DownstreamNode<a, b>[]
+export interface DiffResult<a, b> {
+    downstreamNodes: List.Type<DownstreamNode<a, b>>
+    patches: List.Type<Patch>
 }
 
-export function diff<a, b>(x: VirtualDomTree<a>, y: VirtualDomTree<b>): Diff<a, b> {
-    const patches: Patch[] = []
+export function diff<a, b>(
+    x: VirtualDomTree<a>,
+    y: VirtualDomTree<b>,
+    targetDomNode: DOM.Node,
+    patches: List.Type<Patch>,
+    downstreamNodes: List.Type<DownstreamNode<a, b>>,
+): DiffResult<a, b> {
+    if (x === y) return { patches, downstreamNodes }
 
-    if (x === y) {
-        return { patches }
-    }
-
-    if (x.tag !== y.tag) {
-        patches.push(Patch.mkRedraw(y))
-
-        return { patches }
-    }
+    if (x.tag !== y.tag) return { patches: List.mkCons(Patch.mkRedraw(targetDomNode, y), patches), downstreamNodes }
 
     switch (x.tag) {
         case VirtualDomTree.Text:
-            return unsafe_diffText(x, <VirtualDomTree.Text>y, patches)
+            return diffText(x, <typeof x>y, <DOM.Text>targetDomNode, patches, downstreamNodes)
         case VirtualDomTree.ElementNS:
-            return unsafe_diffElementNS(x, <VirtualDomTree.ElementNS<b>>y, patches)
-        case VirtualDomTree.KeyedElementNS:
-            return unsafe_diffElementNS(x, <VirtualDomTree.KeyedElementNS<b>>y, patches)
+            return diffElementNS(x, <typeof x>y, <DOM.Element>targetDomNode, patches, downstreamNodes)
+        case VirtualDomTree.CustomHtmlElement:
+            return undefined
         case VirtualDomTree.Tagger:
-            return unsafe_diffTagger(x, <VirtualDomTree.Tagger<any, any>>y, patches)
+            return diffTagger(x, <typeof x>y, targetDomNode, patches, downstreamNodes)
         case VirtualDomTree.Keyed:
-            return diff(x.vNode, (<VirtualDomTree.Keyed<VirtualDomTree<b>>>y).vNode)
+            return diff(x.vNode, (<typeof x>y).vNode, targetDomNode, patches, downstreamNodes)
     }
 }
 
-function unsafe_diffText<a, b>(x: VirtualDomTree.Text, y: VirtualDomTree.Text, patches: Patch[]): Diff<a, b> {
-    if (x.text === y.text) return { patches }
+function diffText<a, b>(
+    x: VirtualDomTree.Text,
+    y: VirtualDomTree.Text,
+    targetTextNode: DOM.Text,
+    patches: List.Type<Patch>,
+    downstreamNodes: List.Type<DownstreamNode<a, b>>,
+): DiffResult<a, b> {
+    if (x.text === y.text) return { patches, downstreamNodes }
 
-    patches.push(Patch.mkText(y.text))
-
-    return { patches }
+    return { patches: List.mkCons(Patch.mkText(targetTextNode, y.text), patches), downstreamNodes }
 }
 
-function pairwiseRefEq<a>(xs: readonly a[], ys: readonly a[]): boolean {
+function pairwiseRefEq<a>(xs: ReadonlyArray<a>, ys: ReadonlyArray<a>): boolean {
     for (var i = 0; i < xs.length; i++) {
         if (xs[i] !== ys[i]) return false
     }
@@ -398,245 +422,128 @@ function pairwiseRefEq<a>(xs: readonly a[], ys: readonly a[]): boolean {
     return true
 }
 
-function unsafe_diffTagger<a, b, c, d>(
+function diffTagger<a, b, c, d>(
     x: VirtualDomTree.Tagger<a, b>,
     y: VirtualDomTree.Tagger<c, d>,
-    patches: Patch[],
-): Diff<b, d> {
+    targetDomNode: DOM.Node,
+    patches: List.Type<Patch>,
+    downstreamNodes: List.Type<DownstreamNode<a, b>>,
+): DiffResult<b, d> {
     unsafe_flattenVirtualDomTaggers(y)
 
     const nested = typeof x.f !== 'function' || typeof y.f !== 'function'
 
     if (nested && x.f.length !== y.f.length) {
-        patches.push(Patch.mkRedraw(y))
-
-        return { patches }
+        return { patches: List.mkCons(Patch.mkRedraw(targetDomNode, y), patches), downstreamNodes }
     }
 
     if (nested ? !pairwiseRefEq(<Function[]>x.f, <Function[]>y.f) : x.f !== y.f) {
-        patches.push(Patch.mkTagger(y.f))
+        patches = List.mkCons(Patch.mkTagger(targetDomNode, y.f), patches)
     }
 
-    return { patches, downstreamNodes: [{ x: x.vNode, y: y.vNode }] }
+    return {
+        patches,
+        downstreamNodes: List.mkCons({ x: x.vNode, y: y.vNode, targetDomNode: targetDomNode }, downstreamNodes),
+    }
 }
 
-function unsafe_diffElementNS<
-    a,
-    x extends VirtualDomTree.ElementNS<a> | VirtualDomTree.KeyedElementNS<a>,
-    b,
-    y extends x extends VirtualDomTree.ElementNS<a> ? VirtualDomTree.ElementNS<b> : VirtualDomTree.KeyedElementNS<b>
->(x: x, y: y, patches: Patch[]): Diff<a, b> {
-    if (x.ns !== y.ns || x.tagName !== y.tagName) {
-        patches.push(Patch.mkRedraw(y))
-        return { patches }
+function diffElementNS<a, b>(
+    x: VirtualDomTree.ElementNS<a>,
+    y: VirtualDomTree.ElementNS<a>,
+    targetDomElement: DOM.Element,
+    patches: List.Type<Patch>,
+    downstreamNodes: List.Type<DownstreamNode<a, b>>,
+): DiffResult<a, b> {
+    if (x.ns !== y.ns || x.tagName !== y.tagName)
+        return { patches: List.mkCons(Patch.mkRedraw(targetDomElement, y), patches), downstreamNodes }
+
+    const xFacts = x.facts && LazyMorphism.unsafe_evaluate(x.facts, organizeFacts(x.tagName))
+    const yFacts = y.facts && LazyMorphism.unsafe_evaluate(y.facts, organizeFacts(x.tagName))
+
+    if (xFacts !== undefined || yFacts !== undefined) {
+        const diff = diffFacts(xFacts, yFacts)
+
+        if (diff !== undefined) patches = List.mkCons(Patch.mkFacts(targetDomElement, diff), patches)
     }
 
-    x.facts && unsafe_organizeFacts(x)
-    y.facts && unsafe_organizeFacts(y)
+    const xChildren = x.children && LazyMorphism.unsafe_evaluate(x.children, parseChildren)
+    const yChildren = y.children && LazyMorphism.unsafe_evaluate(y.children, parseChildren)
 
-    if (x.organizedFacts || y.organizedFacts) {
-        const diff = diffFacts(x.organizedFacts, y.organizedFacts)
-
-        diff && patches.push(Patch.mkFacts(diff))
-    }
-
-    const unsafe_diffChildren: Function =
-        x.tag === VirtualDomTree.ElementNS ? unsafe_diffElementNSChildren : unsafe_diffKeyedElementNSChildren
-
-    const downstreamNodes = unsafe_diffChildren(x.children, y.children, patches)
-
-    return { patches, downstreamNodes }
+    return Children.diff(xChildren, yChildren, targetDomElement, patches, downstreamNodes)
 }
 
-function unsafe_diffElementNSChildren<a, b>(
-    xs: ReadonlyArray<VirtualDomTree<a>> | undefined,
-    ys: ReadonlyArray<VirtualDomTree<b>> | undefined,
-    patches: Patch[],
-): DownstreamNode<a, b>[] {
-    const xsLength = xs?.length ?? 0
-    const ysLength = ys?.length ?? 0
+function isEmptyObject(o: {}): boolean {
+    let a = true
 
-    if (xsLength > ysLength) {
-        patches.push(Patch.mkRemoveFromEnd(xsLength - ysLength))
-    } else if (xsLength < ysLength) {
-        patches.push(Patch.mkAppend(ys!, xsLength))
-    }
-
-    const minChildrenLength = Math.min(xsLength, ysLength)
-
-    const downstreamNodes: DownstreamNode<a, b>[] = []
-
-    for (let ix = 0; ix < minChildrenLength; ix++) {
-        downstreamNodes.push({ x: xs![ix], y: ys![ix], ix })
-    }
-
-    return downstreamNodes
-}
-
-function unsafe_diffKeyedElementNSChildren<a, b>(
-    xs: ReadonlyArray<VirtualDomTree.Keyed<VirtualDomTree<a>>> | undefined,
-    ys: ReadonlyArray<VirtualDomTree.Keyed<VirtualDomTree<b>>> | undefined,
-    patches: Patch[],
-): DownstreamNode<a, b>[] {
-    const history: ReorderHistory<a, b> = ReorderHistory.mk()
-
-    const xsLength = xs?.length ?? 0
-    const ysLength = ys?.length ?? 0
-
-    let xIx = 0
-    let yIx = 0
-
-    const downstreamNodes: DownstreamNode<a, b>[] = []
-
-    while (xIx < xsLength && yIx < ysLength) {
-        const x = xs![xIx]
-        const y = ys![yIx]
-
-        const xKey = x.key
-        const yKey = y.key
-
-        /**
-         * x->y
-         * ----
-         * A  A
-         * -  -
-         *
-         * Cross match.
-         */
-        if (xKey == yKey) {
-            downstreamNodes.push({ x, y, ix: yIx })
-
-            xIx += 1
-            yIx += 1
-
-            continue
-        }
-
-        const nextX = xs![xIx + 1]
-        const nextY = ys![yIx + 1]
-
-        const nextXKey = nextX?.key
-        const nextYKey = nextY?.key
-
-        const upsideObliqueMatch = nextXKey === yKey
-        const downsideObliqueMatch = nextYKey === xKey
-
-        /**
-         * x->y
-         * ----
-         * A  B
-         * B  A
-         *
-         * Children has been swaped.
-         *
-         * - Push `A` to the downstream diffs.
-         * - Move `B` before the `A`.
-         */
-        if (upsideObliqueMatch && downsideObliqueMatch) {
-            downstreamNodes.push({ x, y: nextY, ix: yIx + 1 })
-
-            ReorderHistory.unsafe_move(yKey, nextX, xIx + 1, y, yIx, downstreamNodes, history)
-
-            xIx += 2
-            yIx += 2
-
-            continue
-        }
-
-        /**
-         * x->y
-         * ----
-         * A  B
-         * C  A
-         *
-         * Downside oblique match.
-         *
-         * - Push the `A` to the downstream diffs.
-         * - Candidate `B` for insertion as its in the new virtual DOM tree.
-         */
-        if (downsideObliqueMatch) {
-            downstreamNodes.push({ x, y: nextY, ix: yIx + 1 })
-
-            ReorderHistory.unsafe_insert(yKey, y, yIx, downstreamNodes, history)
-
-            xIx += 1
-            yIx += 2
-
-            continue
-        }
-
-        /**
-         * x->y
-         * ----
-         * A  B
-         * B  C
-         *
-         * Upside oblique match.
-         *
-         * - Push the `B` to the downstream diffs.
-         * - Candidate `A` for removing as its in the old virtual DOM tree.
-         */
-        if (upsideObliqueMatch) {
-            downstreamNodes.push({ x: nextX, y, ix: yIx })
-
-            ReorderHistory.unsafe_remove(xKey, x, xIx, downstreamNodes, history)
-
-            xIx += 2
-            yIx += 1
-
-            continue
-        }
-
-        /**
-         * x->y
-         * ----
-         * A  B
-         * C  C
-         *
-         * Next horizontal match.
-         *
-         * - Push the `C` to the downstream diffs.
-         * - Candidate `A` for removing as its in the old virtual DOM tree.
-         * - Candidate `B` for insertion as its in the new virtual DOM tree.
-         */
-        if (nextX && nextXKey === nextYKey) {
-            downstreamNodes.push({ x: nextX, y: nextY, ix: yIx + 1 })
-
-            ReorderHistory.unsafe_remove(xKey, x, xIx, downstreamNodes, history)
-            ReorderHistory.unsafe_insert(yKey, y, yIx, downstreamNodes, history)
-
-            xIx += 2
-            yIx += 2
-
-            continue
-        }
-
+    for (const _ in o) {
+        a = false
         break
     }
 
-    // Consume rest of old children and candidate them for removing.
-    while (xIx < xsLength) {
-        const x = xs![xIx]
-        const xKey = x.key
+    return a
+}
 
-        ReorderHistory.unsafe_remove(xKey, x, xIx, downstreamNodes, history)
+function diffCustomHtmlElement<a, b>(
+    x: VirtualDomTree.CustomHtmlElement<a>,
+    y: VirtualDomTree.CustomHtmlElement<a>,
+    targetDomElement: DOM.Element,
+    patches: List.Type<Patch>,
+    downstreamNodes: List.Type<DownstreamNode<a, b>>,
+): DiffResult<a, b> {
+    const isNotSameNs = x.ns !== y.ns
+    const isNotSameTagName = x.tagName !== y.tagName
 
-        xIx += 1
+    if (isNotSameNs || isNotSameTagName)
+        return { downstreamNodes, patches: List.mkCons(Patch.mkRedraw(targetDomElement, y), patches) }
+
+    const xFacts = x.facts && LazyMorphism.unsafe_evaluate(x.facts, organizeFacts(x.tagName))
+    const yFacts = y.facts && LazyMorphism.unsafe_evaluate(y.facts, organizeFacts(x.tagName))
+
+    if (xFacts !== undefined || yFacts !== undefined) {
+        const diff = diffFacts(xFacts, yFacts)
+
+        if (diff !== undefined) {
+            // send fact diff to custom element to decide new render
+            unsafe_applyFacts(targetDomElement, diff)
+            // patches = List.mkCons(Patch.mkFacts(targetDomElement, diff), patches)
+        }
     }
 
-    // Consume rest of new children and candidate them for inserting.
-    while (yIx < ysLength) {
-        const y = ys![yIx]
-        const yKey = y.key
+    const xSlots = x.slots
+    const ySlots = y.slots
 
-        ReorderHistory.unsafe_insert(yKey, y, yIx, downstreamNodes, history, true)
+    const isXSlotsEmpty = xSlots === undefined || isEmptyObject(xSlots)
+    const isYSlotsEmpty = ySlots === undefined || isEmptyObject(ySlots)
 
-        yIx += 1
+    if (isXSlotsEmpty && isYSlotsEmpty) return { patches, downstreamNodes }
+    if (isXSlotsEmpty)
+        return { downstreamNodes, patches: List.mkCons(Patch.mkRedrawSlots(targetDomElement, ySlots!), patches) }
+    if (isYSlotsEmpty) return { downstreamNodes, patches: List.mkCons(Patch.mkCastrate(targetDomElement), patches) }
+
+    for (const name in xSlots) {
+        if (name in ySlots!) {
+            const xChildren = parseChildren(xSlots[name])
+            const yChildren = parseChildren(ySlots![name])
+
+            const result = Children.diff(xChildren, yChildren, targetDomElement, patches, downstreamNodes, name)
+            patches = result.patches
+            downstreamNodes = result.downstreamNodes
+
+            continue
+        }
+
+        patches = List.mkCons(Patch.mkRemoveSlot(targetDomElement, name), patches)
     }
 
-    patches.push(Patch.mkReorder(history))
+    for (const name in ySlots) {
+        if (name in xSlots!) continue
 
-    return downstreamNodes
+        const children = parseChildren(ySlots[name])
+
+        patches = List.mkCons(Patch.mkAddSlot(targetDomElement, name, children), patches)
+    }
+
+    return { patches, downstreamNodes }
 }
 
 type SumWithSubTypes<T extends {}> = T | T[keyof T]
@@ -682,4 +589,20 @@ function diffFacts<a extends SumWithSubTypes<OrganizedFacts>>(x: a | undefined, 
     }
 
     return diff!
+}
+
+function parseChildren<message>(
+    vNodes: VirtualDomTree<message> | ReadonlyArray<VirtualDomTree<message>>,
+): Children.Type<message> {
+    vNodes = Array.isArray(vNodes) ? vNodes : [vNodes]
+
+    return vNodes[0]?.tag === VirtualDomTree.Keyed
+        ? Children.mkKeyed(<ReadonlyArray<VirtualDomTree.Keyed<VirtualDomTree<message>>>>vNodes)
+        : Children.mkPairwise(vNodes)
+}
+
+function parseSlots<message>(slots: {
+    [key: string]: VirtualDomTree<message> | ReadonlyArray<VirtualDomTree<message>>
+}): { [key: string]: Children.Type<message> } {
+    return <any>undefined
 }

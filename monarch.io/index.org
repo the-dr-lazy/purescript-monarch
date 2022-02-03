@@ -1,0 +1,29 @@
+#+TITLE: The Project Monarch
+
+* Introduction
+
+#+begin_src purescript
+main :: Effect Unit
+main = do
+  container <- getRootContainer
+  Monarch.mkApplication { init, update, view, command, container }
+#+end_src
+
+#+begin_src shell
+echo "Hello!"
+#+end_src
+
+#+RESULTS:
+: Hello!
+
+* Quickstart
+
+* Architecture
+
+* Application
+
+** View
+
+** Command
+
+* Element

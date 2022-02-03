@@ -1,6 +1,6 @@
 /*
  * Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <the-dr-lazy@pm.me>
- * Copyright  : (c) 2020-2021 Monarch
+ * Copyright  : (c) 2020-2022 Monarch
  * License    : MPL 2.0
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -11,9 +11,11 @@
 import { VirtualDomTree } from 'monarch/Monarch/VirtualDom/VirtualDomTree'
 import { OutputHandlersList } from 'monarch/Monarch/VirtualDom/OutputHandlersList'
 
-const attributesKeyName = 'attributes'
+export const attributesKeyName = 'attributes'
 export const keyPropertyName = 'key'
-const outputKeyPrefix = 'on'
+export const outputKeyPrefix = 'on'
+export const slotNamePropertyName = 'name'
+export const defaultSlotName = 'default'
 
 export interface Facts {
     [key: string]: unknown
@@ -35,14 +37,10 @@ export enum FactCategory {
     Output,
 }
 
-export function unsafe_organizeFacts(
-    element: VirtualDomTree.ElementNS<any> | VirtualDomTree.KeyedElementNS<any>,
-): void {
+export const organizeFacts = (tagName: string) => (facts: Facts): OrganizedFacts => {
     const organizedFacts: OrganizedFacts = {}
 
-    const { facts } = element
-
-    for (const key in facts!) {
+    for (const key in facts) {
         if (key === attributesKeyName) {
             organizedFacts[FactCategory.Attribute] = facts[key]
 
@@ -67,40 +65,40 @@ export function unsafe_organizeFacts(
         organizedFacts[FactCategory.Property]![key] = facts[key]
     }
 
-    element.organizedFacts = organizedFacts
-    element.facts = undefined
+    return organizedFacts
 }
 
-export function unsafe_applyFacts(domNode: Node, diff: OrganizedFacts): void {
-    for (const category in diff) {
-        const subDiff = (<any>diff)[category]
-
+export function unsafe_applyFacts(domElement: Element, diff: OrganizedFacts): void {
+    Object.entries(diff).forEach(([category, subDiff]) => {
         switch (+category) {
             case FactCategory.Property:
-                return unsafe_applyProperties(domNode, subDiff)
+                return unsafe_applyProperties(domElement, subDiff)
             case FactCategory.Attribute:
-                return unsafe_applyAttributes(<Element>domNode, subDiff)
+                return unsafe_applyAttributes(domElement, subDiff)
             case FactCategory.Output:
-                return unsafe_applyOutputs(domNode, subDiff)
+                return unsafe_applyOutputs(domElement, subDiff)
         }
-    }
+    })
 }
 
-function unsafe_applyAttributes(domNode: Element, attributes: OrganizedFacts[FactCategory.Attribute]): void {
+function unsafe_applyAttributes(domElement: Element, attributes: OrganizedFacts[FactCategory.Attribute]): void {
     for (var key in attributes) {
         const value = attributes[key]
 
-        value !== undefined ? domNode.setAttribute(key, value) : domNode.removeAttribute(key)
+        value !== undefined ? domElement.setAttribute(key, value) : domElement.removeAttribute(key)
     }
 }
 
-function unsafe_applyProperties(
-    domNode: { [key: string]: any },
-    properties: OrganizedFacts[FactCategory.Property],
-): void {
+function unsafe_applyProperties(domElement: Element, properties: OrganizedFacts[FactCategory.Property]): void {
+    const supportsPropertyParsingBypassing = domElement.unsafe_bypassPropertyParsing !== undefined
+
+    supportsPropertyParsingBypassing && domElement.unsafe_bypassPropertyParsing!(true)
+
     for (const key in properties) {
-        domNode[key] = properties[key]
+        ;(<any>domElement)[key] = properties[key]
     }
+
+    supportsPropertyParsingBypassing && domElement.unsafe_bypassPropertyParsing!(false)
 }
 
 declare global {
@@ -109,16 +107,16 @@ declare global {
     }
 }
 
-function unsafe_applyOutputs(domNode: Node, outputs: OrganizedFacts[FactCategory.Output]): void {
-    const outputHandlerInterceptors = (domNode.monarch_outputHandlerInterceptors =
-        domNode.monarch_outputHandlerInterceptors || {})
+function unsafe_applyOutputs(domElement: Element, outputs: OrganizedFacts[FactCategory.Output]): void {
+    const outputHandlerInterceptors = (domElement.monarch_outputHandlerInterceptors =
+        domElement.monarch_outputHandlerInterceptors || {})
 
     for (const name in outputs) {
         var newHandler = outputs[name]
         var oldOutputHandlerInterceptor = outputHandlerInterceptors[name]
 
         if (!newHandler) {
-            domNode.removeEventListener(name, oldOutputHandlerInterceptor!)
+            domElement.removeEventListener(name, oldOutputHandlerInterceptor!)
             outputHandlerInterceptors[name] = undefined
 
             continue
@@ -130,8 +128,11 @@ function unsafe_applyOutputs(domNode: Node, outputs: OrganizedFacts[FactCategory
             continue
         }
 
-        oldOutputHandlerInterceptor = mkOutputHandlerInterceptor(newHandler, () => domNode.monarch_outputHandlers!)
-        domNode.addEventListener(name, oldOutputHandlerInterceptor)
+        oldOutputHandlerInterceptor = mkOutputHandlerInterceptor(
+            newHandler,
+            () => domElement.__MONARCH_UNSAFE_OUTPUT_HANDLERS!,
+        )
+        domElement.addEventListener(name, oldOutputHandlerInterceptor)
 
         outputHandlerInterceptors[name] = oldOutputHandlerInterceptor
     }

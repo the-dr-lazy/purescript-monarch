@@ -1,6 +1,6 @@
 /*
  * Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <the-dr-lazy@pm.me>
- * Copyright  : (c) 2020-2021 Monarch
+ * Copyright  : (c) 2020-2022 Monarch
  * License    : MPL 2.0
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -11,6 +11,8 @@
 import { VirtualDomTree, DownstreamNode, realize } from 'monarch/Monarch/VirtualDom/VirtualDomTree'
 import { ChildNodeByKeyMap } from './ChildNodeByKeyMap'
 import { OutputHandlersList } from './OutputHandlersList'
+import * as List from 'monarch/Monarch/Data/List'
+
 export type ReorderHistory<a, b> = {
     commitByKey: Map<any, ReorderHistory.Commit<a, b>>
     endInsertKeys: Set<any>
@@ -131,10 +133,11 @@ export namespace ReorderHistory {
         key: any,
         vNode: VirtualDomTree<b>,
         ix: number,
-        downstreamNodes: DownstreamNode<a, b>[],
+        childDomNodes: DOM.NodeListOf<DOM.ChildNode>,
+        downstreamNodes: List.Type<DownstreamNode<a, b>>,
         history: ReorderHistory<a, b>,
         isEndInsert = false,
-    ): void {
+    ): List.Type<DownstreamNode<a, b>> {
         const { commitByKey, endInsertKeys } = history
         const commit = commitByKey.get(key)
 
@@ -142,7 +145,7 @@ export namespace ReorderHistory {
             commitByKey.set(key, Commit.mkInsert(vNode, ix))
             isEndInsert && endInsertKeys.add(key)
 
-            return
+            return downstreamNodes
         }
 
         if (commit.tag === Commit.Remove) {
@@ -150,41 +153,38 @@ export namespace ReorderHistory {
             commitByKey.set(key, Commit.mkMove(commit.ix, ix))
             isEndInsert && endInsertKeys.add(key)
 
-            downstreamNodes.push({ x: commit.vNode, y: vNode, ix })
-
-            return
+            return List.mkCons({ x: commit.vNode, y: vNode, targetDomNode: childDomNodes[ix] }, downstreamNodes)
         }
 
-        // TODO: warning to the user about duplicate key in development mode
-        unsafe_insert(resolveKeyConfliction(key), vNode, ix, downstreamNodes, history)
+        // ToDo: Warn the user about duplicate key in development mode
+        return unsafe_insert(resolveKeyConfliction(key), vNode, ix, childDomNodes, downstreamNodes, history)
     }
 
     export function unsafe_remove<a, b>(
         key: any,
         vNode: VirtualDomTree<a>,
         ix: number,
-        downstreamNodes: DownstreamNode<a, b>[],
+        childDomNodes: DOM.NodeListOf<DOM.ChildNode>,
+        downstreamNodes: List.Type<DownstreamNode<a, b>>,
         history: ReorderHistory<a, b>,
-    ): void {
+    ): List.Type<DownstreamNode<a, b>> {
         const { commitByKey } = history
         const commit = commitByKey.get(key)
 
         if (!commit) {
             commitByKey.set(key, Commit.mkRemove(vNode, ix))
 
-            return
+            return downstreamNodes
         }
 
         if (commit.tag === Commit.Insert) {
             commitByKey.set(key, Commit.mkMove(ix, commit.ix))
 
-            downstreamNodes.push({ x: vNode, y: commit.vNode, ix: commit.ix })
-
-            return
+            return List.mkCons({ x: vNode, y: commit.vNode, targetDomNode: childDomNodes[commit.ix] }, downstreamNodes)
         }
 
-        // TODO: warning to the user about duplicate key in development mode
-        unsafe_remove(resolveKeyConfliction(key), vNode, ix, downstreamNodes, history)
+        // ToDo: Warn the user about duplicate key in development mode
+        return unsafe_remove(resolveKeyConfliction(key), vNode, ix, childDomNodes, downstreamNodes, history)
     }
 
     export function unsafe_move<a, b>(
@@ -193,22 +193,33 @@ export namespace ReorderHistory {
         fromIx: number,
         newVirtualNode: VirtualDomTree<b>,
         toIx: number,
-        downstreamNodes: DownstreamNode<a, b>[],
+        childDomNodes: DOM.NodeListOf<DOM.ChildNode>,
+        downstreamNodes: List.Type<DownstreamNode<a, b>>,
         history: ReorderHistory<a, b>,
-    ): void {
+    ): List.Type<DownstreamNode<a, b>> {
         const { commitByKey } = history
         const commit = commitByKey.get(key)
 
-        if (!commit) {
+        if (commit === undefined) {
             commitByKey.set(key, Commit.mkMove(fromIx, toIx))
 
-            downstreamNodes.push({ x: oldVirtualNode, y: newVirtualNode, ix: toIx })
-
-            return
+            return List.mkCons(
+                { x: oldVirtualNode, y: newVirtualNode, targetDomNode: childDomNodes[toIx] },
+                downstreamNodes,
+            )
         }
 
-        // TODO: warning to the user about duplicate key in development mode
-        unsafe_move(resolveKeyConfliction(key), oldVirtualNode, fromIx, newVirtualNode, toIx, downstreamNodes, history)
+        // ToDo: Warn the user about duplicate key in development mode
+        return unsafe_move(
+            resolveKeyConfliction(key),
+            oldVirtualNode,
+            fromIx,
+            newVirtualNode,
+            toIx,
+            childDomNodes,
+            downstreamNodes,
+            history,
+        )
     }
 }
 

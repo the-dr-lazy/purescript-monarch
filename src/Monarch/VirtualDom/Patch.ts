@@ -1,6 +1,6 @@
 /*
  * Maintainer : Mohammad Hasani (the-dr-lazy.github.io) <the-dr-lazy@pm.me>
- * Copyright  : (c) 2020-2021 Monarch
+ * Copyright  : (c) 2020-2022 Monarch
  * License    : MPL 2.0
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -13,6 +13,7 @@ import { OrganizedFacts, unsafe_applyFacts } from 'monarch/Monarch/VirtualDom/Fa
 import { OutputHandlersList } from 'monarch/Monarch/VirtualDom/OutputHandlersList'
 import { ReorderHistory } from 'monarch/Monarch/VirtualDom/ReorderHistory'
 import { ChildNodeByKeyMap } from './ChildNodeByKeyMap'
+import * as Children from 'monarch/Monarch/VirtualDom/VirtualDomTree/Children'
 
 /**
  * Patch ADT
@@ -21,23 +22,35 @@ export type Patch =
     | Patch.Redraw
     | Patch.Text
     | Patch.Facts
-    | Patch.RemoveFromEnd
-    | Patch.Append
+    | Patch.RedrawChildren
+    // | Patch.RemoveFromEnd
+    // | Patch.Append
+    // | Patch.Castrate
     | Patch.Tagger
     | Patch.Reorder
+    | Patch.AddSlot
+    | Patch.RemoveSlot
+    | Patch.RedrawSlot
 
 export namespace Patch {
     /**
      * Disjoint union tags for `Patch` type
+     *
+     * Note: Don't use the 4x for any other tagged unions.
      */
     const enum Tag {
-        Redraw,
-        Text,
-        Facts,
-        RemoveFromEnd,
-        Append,
-        Tagger,
-        Reorder,
+        Redraw = 40,
+        RedrawChildren = 41,
+        Text = 42,
+        Facts = 43,
+        RemoveFromEnd = 44,
+        Append = 45,
+        Tagger = 46,
+        Reorder = 47,
+        Castrate = 48,
+        RemoveSlot = 49,
+        AddSlot = 410,
+        RedrawSlots = 411,
     }
 
     // SUM TYPE: Redraw
@@ -53,12 +66,26 @@ export namespace Patch {
      */
     export interface Redraw extends Tagged<typeof Redraw> {
         vNode: VirtualDomTree<any>
+        targetDomNode: DOM.Node
     }
     /**
      * Smart data constructor for `Redraw` type
      */
-    export function mkRedraw(vNode: VirtualDomTree<any>): Redraw {
-        return { tag: Redraw, vNode }
+    export function mkRedraw(targetDomNode: DOM.Node, vNode: VirtualDomTree<any>): Redraw {
+        return { tag: Redraw, vNode, targetDomNode }
+    }
+
+    // SUM TYPE: RedrawChildren
+
+    export const RedrawChildren = Tag.RedrawChildren
+
+    export interface RedrawChildren extends Tagged<Tag.RedrawChildren> {
+        targetDomNode: DOM.ParentNode
+        children: Children.Type<any>
+    }
+
+    export function mkRedrawChildren(targetDomNode: DOM.ParentNode, children: Children.Type<any>): RedrawChildren {
+        return { tag: RedrawChildren, targetDomNode, children }
     }
 
     // SUM TYPE: Text
@@ -74,12 +101,13 @@ export namespace Patch {
      */
     export interface Text extends Tagged<typeof Text> {
         text: string
+        targetTextNode: DOM.Text
     }
     /**
      * Smart data constructor for `Text` type
      */
-    export function mkText(text: string): Text {
-        return { tag: Text, text }
+    export function mkText(targetTextNode: DOM.Text, text: string): Text {
+        return { tag: Text, text, targetTextNode }
     }
 
     // SUM TYPE: Facts
@@ -95,12 +123,13 @@ export namespace Patch {
      */
     export interface Facts extends Tagged<typeof Facts> {
         diff: OrganizedFacts
+        targetDomElement: DOM.Element
     }
     /**
      * Smart data constructor for `Facts` type
      */
-    export function mkFacts(diff: OrganizedFacts): Facts {
-        return { tag: Facts, diff }
+    export function mkFacts(targetDomElement: DOM.Element, diff: OrganizedFacts): Facts {
+        return { tag: Facts, diff, targetDomElement }
     }
 
     // SUM TYPE: RemoveFromEnd
@@ -116,15 +145,16 @@ export namespace Patch {
      */
     export interface RemoveFromEnd extends Tagged<typeof RemoveFromEnd> {
         delta: number
+        targetDomNode: DOM.ParentNode
     }
     /**
      * Smart data constructor for `RemoveFromEnd` type
      */
-    export function mkRemoveFromEnd(delta: number): RemoveFromEnd {
-        return { tag: RemoveFromEnd, delta }
+    export function mkRemoveFromEnd(targetDomNode: DOM.ParentNode, delta: number): RemoveFromEnd {
+        return { tag: RemoveFromEnd, delta, targetDomNode }
     }
 
-    // SUM TYPE: Appeend
+    // SUM TYPE: Append
 
     /**
      * `Append` tag
@@ -136,14 +166,19 @@ export namespace Patch {
      * `Append` type constructor
      */
     export interface Append extends Tagged<typeof Append> {
-        children: readonly VirtualDomTree<any>[]
+        children: ReadonlyArray<VirtualDomTree<any>>
         from: number
+        targetDomNode: DOM.ParentNode
     }
     /**
      * Smart data constructor for `Append` type
      */
-    export function mkAppend<message>(children: readonly VirtualDomTree<message>[], from = 0): Append {
-        return { tag: Append, children, from }
+    export function mkAppend(
+        targetDomNode: DOM.ParentNode,
+        children: ReadonlyArray<VirtualDomTree<any>>,
+        from = 0,
+    ): Append {
+        return { tag: Append, children, from, targetDomNode }
     }
 
     // SUM TYPE: Tagger
@@ -159,12 +194,13 @@ export namespace Patch {
      */
     export interface Tagger extends Tagged<typeof Tagger> {
         fs: Function | Function[]
+        targetDomNode: DOM.Node
     }
     /**
      * Smart data constructor for `Tagger` type
      */
-    export function mkTagger(fs: Function | Function[]): Tagger {
-        return { tag: Tagger, fs }
+    export function mkTagger(targetDomNode: DOM.Node, fs: Function | Function[]): Tagger {
+        return { tag: Tagger, fs, targetDomNode }
     }
 
     // SUM TYPE: Reorder
@@ -180,74 +216,128 @@ export namespace Patch {
      */
     export interface Reorder extends Tagged<typeof Reorder> {
         history: ReorderHistory<unknown, unknown>
+        targetDomNode: DOM.ParentNode
     }
     /**
      * Smart data constructor for `Reorder` type
      */
-    export function mkReorder<a, b>(history: ReorderHistory<a, b>): Reorder {
-        return { tag: Reorder, history }
+    export function mkReorder<a, b>(targetDomNode: DOM.ParentNode, history: ReorderHistory<a, b>): Reorder {
+        return { tag: Reorder, history, targetDomNode }
+    }
+
+    // SUM TYPE: Castrate
+    export const Castrate = Tag.Castrate
+
+    export interface Castrate extends Tagged<typeof Castrate> {
+        targetDomNode: DOM.ParentNode
+    }
+
+    export function mkCastrate(targetDomNode: DOM.ParentNode): Castrate {
+        return { tag: Tag.Castrate, targetDomNode }
+    }
+
+    // SUM TYPE: RemoveSlot
+    export const RemoveSlot = Tag.RemoveSlot
+
+    export interface RemoveSlot extends Tagged<Tag.RemoveSlot> {
+        targetDomElement: DOM.Element
+        name: string
+    }
+
+    export function mkRemoveSlot(targetDomElement: DOM.Element, name: string): RemoveSlot {
+        return { tag: Tag.RemoveSlot, targetDomElement, name }
+    }
+
+    // SUM TYPE: AddSlot
+    //
+    export const AddSlot = Tag.AddSlot
+
+    export interface AddSlot extends Tagged<Tag.AddSlot> {
+        targetDomElement: DOM.Element
+        name: string
+        children: Children.Type<any>
+    }
+
+    export function mkAddSlot(targetDomElement: DOM.Element, name: string, children: Children.Type<any>): AddSlot {
+        return { tag: AddSlot, targetDomElement, name, children }
+    }
+
+    // SUM TYPE: Redraw Slots
+    export const RedrawSlots = Tag.RedrawSlots
+
+    export interface RedrawSlots extends Tagged<Tag.RedrawSlots> {
+        targetDomElement: DOM.Element
+        slots: any
+    }
+
+    export function mkRedrawSlots(): RedrawSlots {
+        return { jk }
     }
 }
 
-export function unsafe_applyPatch(domNode: Node, patch: Patch): void {
+export function unsafe_applyPatch(patch: Patch): void {
     switch (patch.tag) {
-        case Patch.Text:
-            return unsafe_applyTextPatch(<Text>domNode, patch)
-
         case Patch.Redraw:
-            return unsafe_applyRedrawPatch(domNode, patch)
-
+            return unsafe_applyRedrawPatch(patch)
+        case Patch.RedrawChildren:
+            return unsafe_applyRedrawChildrenPatch(patch)
+        case Patch.Text:
+            return unsafe_applyTextPatch(patch)
         case Patch.Facts:
-            return unsafe_applyFacts(domNode, patch.diff)
-
+            return unsafe_applyFacts(patch.targetDomElement, patch.diff)
         case Patch.RemoveFromEnd:
-            return unsafe_applyRemoveFromEndPatch(domNode, patch)
-
+            return unsafe_applyRemoveFromEndPatch(patch)
         case Patch.Append:
-            return unsafe_applyAppendPatch(domNode, patch)
-
+            return unsafe_applyAppendPatch(patch)
         case Patch.Tagger:
-            return unsafe_applyTaggerPatch(domNode, patch)
-
+            return unsafe_applyTaggerPatch(patch)
         case Patch.Reorder:
-            return unsafe_applyReorderPatch(domNode, patch)
+            return unsafe_applyReorderPatch(patch)
+        case Patch.Castrate:
+            return unsafe_applyCastratePatch(patch)
     }
 }
 
-function unsafe_applyTextPatch(textNode: Text, { text }: Patch.Text): void {
-    textNode.replaceData(0, textNode.length, text)
+function unsafe_applyRedrawPatch({ vNode, targetDomNode }: Patch.Redraw): void {
+    const newDomNode = realize(vNode, targetDomNode.__MONARCH_UNSAFE_OUTPUT_HANDLERS!)
+
+    targetDomNode.parentNode!.replaceChild(newDomNode, targetDomNode)
 }
 
-function unsafe_applyRedrawPatch(oldDomNode: Node, { vNode }: Patch.Redraw): void {
-    const newDomNode = realize(vNode, oldDomNode.monarch_outputHandlers!)
+function unsafe_applyRedrawChildrenPatch({ targetDomNode, children }: Patch.RedrawChildren): void {
+    const childDomNodes: Array<DOM.Node> = []
 
-    oldDomNode.parentNode!.replaceChild(newDomNode, oldDomNode)
+    Children.unsafe_realize(children, targetDomNode.__MONARCH_UNSAFE_OUTPUT_HANDLERS, childDomNodes.push)
+
+    targetDomNode.replaceChildren(...childDomNodes)
 }
 
-function unsafe_applyRemoveFromEndPatch(domNode: Node, { delta }: Patch.RemoveFromEnd): void {
+function unsafe_applyTextPatch({ text, targetTextNode }: Patch.Text): void {
+    targetTextNode.replaceData(0, targetTextNode.length, text)
+}
+
+function unsafe_applyRemoveFromEndPatch({ delta, targetDomNode }: Patch.RemoveFromEnd): void {
     for (let i = 0; i < delta; i++) {
-        domNode.removeChild(domNode.childNodes[domNode.childNodes.length - 1])
+        targetDomNode.removeChild(targetDomNode.childNodes[targetDomNode.childNodes.length - 1])
     }
 }
 
-function unsafe_applyAppendPatch(domNode: Node, { children, from }: Patch.Append): void {
+function unsafe_applyAppendPatch({ children, from, targetDomNode }: Patch.Append): void {
     let ix = from
-    const fragment = ix === children.length - 1 ? domNode : document.createDocumentFragment()
+    const fragment = ix === children.length - 1 ? targetDomNode : document.createDocumentFragment()
 
     for (; ix < children.length; ix++) {
-        fragment.appendChild(realize(children[ix], domNode.monarch_outputHandlers!))
+        fragment.appendChild(realize(children[ix], targetDomNode.__MONARCH_UNSAFE_OUTPUT_HANDLERS!))
     }
 
-    if (fragment !== domNode) {
-        domNode.appendChild(fragment)
-    }
+    if (fragment !== targetDomNode) targetDomNode.appendChild(fragment)
 }
 
-function unsafe_applyTaggerPatch(domNode: Node, { fs }: Patch.Tagger): void {
-    ;(<OutputHandlersList.Cons>domNode.monarch_outputHandlers).value = fs
+function unsafe_applyTaggerPatch({ fs, targetDomNode }: Patch.Tagger): void {
+    ;(<OutputHandlersList.Cons>targetDomNode.__MONARCH_UNSAFE_OUTPUT_HANDLERS).value = fs
 }
 
-function unsafe_applyReorderPatch(domNode: Node, { history: { commitByKey, endInsertKeys } }: Patch.Reorder): void {
+function unsafe_applyReorderPatch({ history: { commitByKey, endInsertKeys }, targetDomNode }: Patch.Reorder): void {
     const childNodeByKey: ChildNodeByKeyMap = new Map()
 
     for (let [key, commit] of commitByKey) {
@@ -255,36 +345,40 @@ function unsafe_applyReorderPatch(domNode: Node, { history: { commitByKey, endIn
 
         const ix = commit.tag === ReorderHistory.Commit.Move ? commit.fromIx : commit.ix
 
-        childNodeByKey.set(key, domNode.childNodes[ix])
+        childNodeByKey.set(key, targetDomNode.childNodes[ix])
     }
 
-    const fragment: Node | undefined = (() => {
-        switch (endInsertKeys.size) {
-            case 0:
-                return undefined
-            case 1:
-                const key = endInsertKeys.values().next().value
+    let fragment: Node | undefined
+    switch (endInsertKeys.size) {
+        case 0:
+            fragment = undefined
+            break
+        case 1:
+            const key = endInsertKeys.values().next().value
+            const commit = <ReorderHistory.Commit.Insert<any> | ReorderHistory.Commit.Move>commitByKey.get(key)!
+            const node = ReorderHistory.Commit.push(
+                key,
+                commit,
+                childNodeByKey,
+                targetDomNode.__MONARCH_UNSAFE_OUTPUT_HANDLERS!,
+            )
+            fragment = node
+            break
+        default:
+            fragment = document.createDocumentFragment()
+
+            for (let key of endInsertKeys) {
                 const commit = <ReorderHistory.Commit.Insert<any> | ReorderHistory.Commit.Move>commitByKey.get(key)!
-                const node = ReorderHistory.Commit.push(key, commit, childNodeByKey, domNode.monarch_outputHandlers!)
-                return node
-            default:
-                const fragment = document.createDocumentFragment()
+                const node = ReorderHistory.Commit.push(
+                    key,
+                    commit,
+                    childNodeByKey,
+                    targetDomNode.__MONARCH_UNSAFE_OUTPUT_HANDLERS!,
+                )
 
-                for (let key of endInsertKeys) {
-                    const commit = <ReorderHistory.Commit.Insert<any> | ReorderHistory.Commit.Move>commitByKey.get(key)!
-                    const node = ReorderHistory.Commit.push(
-                        key,
-                        commit,
-                        childNodeByKey,
-                        domNode.monarch_outputHandlers!,
-                    )
-
-                    fragment!.appendChild(node)
-                }
-
-                return fragment
-        }
-    })()
+                fragment!.appendChild(node)
+            }
+    }
 
     const removedKeys = []
 
@@ -297,18 +391,27 @@ function unsafe_applyReorderPatch(domNode: Node, { history: { commitByKey, endIn
 
         if (endInsertKeys.has(key)) continue
 
-        const node = ReorderHistory.Commit.push(key, commit, childNodeByKey, domNode.monarch_outputHandlers!)
+        const node = ReorderHistory.Commit.push(
+            key,
+            commit,
+            childNodeByKey,
+            targetDomNode.__MONARCH_UNSAFE_OUTPUT_HANDLERS!,
+        )
         const ix = commit.tag === ReorderHistory.Commit.Move ? commit.toIx : commit.ix
 
-        domNode.insertBefore(node, domNode.childNodes[ix])
+        targetDomNode.insertBefore(node, targetDomNode.childNodes[ix])
     }
 
     for (let ix = 0; ix < removedKeys.length; ix++) {
         const key = removedKeys[ix]
         const node = childNodeByKey.get(key)!
 
-        domNode.removeChild(node)
+        targetDomNode.removeChild(node)
     }
 
-    fragment && domNode.appendChild(fragment)
+    fragment && targetDomNode.appendChild(fragment)
+}
+
+function unsafe_applyCastratePatch({ targetDomNode }: Patch.Castrate): void {
+    targetDomNode.replaceChildren()
 }

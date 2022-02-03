@@ -8,4 +8,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-export const foreign_screenX = (e: MouseEvent): number => e.screenX
+// Children:
+// Draw
+// Redraw
+// Clear
+// Change -> Add, Remove, Move
+//
+//
+// Slots:
+// Draw
+// Clear
+// Change -> Add Slot, Remove Slot, Redraw Slot
