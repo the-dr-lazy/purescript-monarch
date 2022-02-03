@@ -11,13 +11,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 module Monarch.Html
     ( module Monarch.VirtualDom.VirtualDomTree.Prelude
-    , Html
+    , Root
     , div
-    , div_
-    , div'
     , button
-    , button_
-    , button'
     ) where
 
 import Monarch.Html.Facts.Attributes
@@ -28,27 +24,12 @@ import Monarch.VirtualDom.VirtualDomTree as VirtualDomTree
 import Monarch.VirtualDom.VirtualDomTree.Prelude
 import Monarch.VirtualDom.Facts.Hooks
 import Monarch.Type.Maybe
+import Undefined
 
--- Data Type
+type Root = VirtualDomTree Nothing ()
 
-type Html = VirtualDomTree Nothing ()
+div :: VirtualDomTree.Node HtmlDivElementProperties HtmlDivElementOutputs HtmlDivElementAttributes
+div facts = VirtualDomTree.node { ns: undefined, tagName: "div", facts }
 
--- Elements
-
-div :: Node HtmlDivElementProperties HtmlDivElementOutputs HtmlDivElementAttributes
-div = node "div"
-
-div_ :: Node_
-div_ = node_ "div"
-
-div' :: forall message. Html message
-div' = node' "div"
-
-button :: Node HtmlButtonElementProperties HtmlButtonElementOutputs HtmlButtonElementAttributes
-button = node "button"
-
-button_ :: Node_
-button_ = node_ "button"
-
-button' :: forall message. Html message
-button' = node' "button"
+button :: VirtualDomTree.Node HtmlButtonElementProperties HtmlButtonElementOutputs HtmlButtonElementAttributes
+button facts = VirtualDomTree.node { ns: undefined, tagName: "button", facts }

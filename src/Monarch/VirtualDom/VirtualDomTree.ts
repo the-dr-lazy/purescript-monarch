@@ -18,8 +18,7 @@ import {
     FactCategory,
     keyPropertyName,
 } from 'monarch/Monarch/VirtualDom/Facts'
-import { ReorderHistory, resolveKeyConfliction } from 'monarch/Monarch/VirtualDom/ReorderHistory'
-import { ChildNodeByKeyMap } from 'monarch/Monarch/VirtualDom/ChildNodeByKeyMap'
+import { ReorderHistory } from 'monarch/Monarch/VirtualDom/ReorderHistory'
 
 /**
  * Virtual DOM tree ADT
@@ -210,6 +209,11 @@ export namespace VirtualDomTree {
      */
     export interface Offscreen {}
 
+    export type Node = (
+        facts: Facts,
+    ) => <message>(children: ReadonlyArray<VirtualDomTree<message>>) => VirtualDomTree<message>
+    export type Leaf = <message>(facts: Facts) => VirtualDomTree<message>
+
     // INTERNAL
 
     interface Parent<message> {
@@ -219,8 +223,8 @@ export namespace VirtualDomTree {
     type SumWithKeyed<vNode extends VirtualDomTree<any>> = vNode | VirtualDomTree.Keyed<vNode>
 }
 
-type TagName = keyof HTMLElementTagNameMap
-type NS = 'http://www.w3.org/1999/xhtml' | 'http://www.w3.org/2000/svg' | 'http://www.w3.org/1998/Math/MathML'
+export type TagName = keyof HTMLElementTagNameMap | string
+export type NS = 'http://www.w3.org/1999/xhtml' | 'http://www.w3.org/2000/svg' | 'http://www.w3.org/1998/Math/MathML'
 
 // prettier-ignore
 interface FMapVirtualDomTree {
@@ -238,34 +242,13 @@ export const fmapVirtualDomTree: FMapVirtualDomTree = f => vNode => {
     return tagger
 }
 
+export const node = <message>(spec: { ns: NS; tagName: TagName; facts: Facts }): VirtualDomTree<message> =>
+    VirtualDomTree.mkElementNS(spec.ns, spec.tagName, spec.facts, spec.facts.children)
+
+export const leaf = <message>(spec: { ns: NS; tagName: TagName; facts: Facts }): VirtualDomTree<message> =>
+    VirtualDomTree.mkElementNS(spec.ns, spec.tagName, spec.facts, undefined)
+
 export const text = VirtualDomTree.mkText
-
-// prettier-ignore
-interface ElementNS {
-    (ns: NS): (tagName: TagName) => (facts: Facts) => <message>(children: VirtualDomTree<message>[]) => VirtualDomTree<message>
-}
-
-// prettier-ignore
-export const elementNS: ElementNS = ns => tagName => facts => children =>
-    VirtualDomTree.mkElementNS(ns, tagName, facts, children)
-
-// prettier-ignore
-interface ElementNS_ {
-    (ns?: NS): (tagName: TagName) => <message>(children: VirtualDomTree<message>[]) => VirtualDomTree<message>
-}
-
-// prettier-ignore
-export const elementNS_: ElementNS_ = ns => tagName => children =>
-    VirtualDomTree.mkElementNS(ns, tagName, undefined, children)
-
-// prettier-ignore
-interface ElementNS__ {
-    (ns?: NS): <message>(tagName: TagName) => VirtualDomTree<message>
-}
-
-// prettier-ignore
-export const elementNS__: ElementNS__ = ns => tagName =>
-    VirtualDomTree.mkElementNS(ns, tagName)
 
 // prettier-ignore
 interface Keyed {

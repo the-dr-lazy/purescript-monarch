@@ -18,10 +18,12 @@ type Facts
     (outputs :: Row Type -> Row Type)
     (attributes :: Row Type)
     (hooks :: Row Type)
-    (key :: Type) = properties
+    (key :: Type)
+    (r :: Row Type) = properties
     + outputs
     +
         ( attributes :: { | attributes }
         , hooks :: { | hooks }
         , key :: key
+        | r
         )

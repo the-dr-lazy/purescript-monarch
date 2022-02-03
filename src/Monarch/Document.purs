@@ -18,7 +18,7 @@ module Monarch.Document
 import Prelude
 import Data.Maybe
 import Data.Nullable
-import Monarch.Html (Html)
+import Monarch.Html as Html
 import Monarch.Command (BASIC, MkHoist, mkHoist)
 import Effect (Effect)
 import Web.HTML (HTMLElement)
@@ -33,7 +33,7 @@ type CommonSpec model message output effects a r =
     , interpreter :: Run effects a -> Run (BASIC message output ()) a
     , onOutput :: output -> Effect Unit
     , update :: message -> model -> model
-    , view :: model -> Html message
+    , view :: model -> Html.Root message
     | r
     )
 
