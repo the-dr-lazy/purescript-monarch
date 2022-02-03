@@ -11,14 +11,16 @@
 import { VirtualDomTree } from 'monarch/Monarch/VirtualDom/VirtualDomTree'
 import { OutputHandlersList } from 'monarch/Monarch/VirtualDom/OutputHandlersList'
 
-const attributesKeyName = 'attributes'
+export const attributesKeyName = 'attributes'
 export const keyPropertyName = 'key'
-const outputKeyPrefix = 'on'
+export const childrenKeyName = 'children'
+export const outputKeyPrefix = 'on'
 
 export interface Facts {
     [key: string]: unknown
     [keyPropertyName]?: unknown
     [attributesKeyName]?: { [key: string]: string }
+    [childrenKeyName]?: ReadonlyArray<VirtualDomTree<any>>
 }
 
 type OutputHandler = <a>(event: Event) => a
@@ -43,6 +45,8 @@ export function unsafe_organizeFacts(
     const { facts } = element
 
     for (const key in facts!) {
+        if (key === childrenKeyName) continue
+
         if (key === attributesKeyName) {
             organizedFacts[FactCategory.Attribute] = facts[key]
 

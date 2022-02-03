@@ -24,4 +24,4 @@ ns :: String
 ns = "http://www.w3.org/2000/svg"
 
 svg :: VirtualDomTree.Node SvgSvgElementProperties SvgSvgElementOutputs SvgSvgElementAttributes
-svg facts children = VirtualDomTree.node { ns, tagName: "svg", facts, children }
+svg facts = VirtualDomTree.node { ns, tagName: "svg", facts }

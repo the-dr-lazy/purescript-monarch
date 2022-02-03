@@ -43,12 +43,11 @@ instance Functor (VirtualDomTree key slots) where
 type Node :: (Row Type -> Row Type) -> (Type -> Row Type -> Row Type) -> (Row Type -> Row Type) -> Type
 type Node mk_properties mk_outputs mk_attributes =
     forall facts _facts _key key child_key attributes hooks slots message
-     . Row.Union facts _facts (Facts mk_properties (mk_outputs message) attributes hooks _key)
+     . Row.Union facts _facts (Facts mk_properties (mk_outputs message) attributes hooks _key (children :: Array (VirtualDomTree child_key slots message)))
     => Row.OptionalRecordCons facts "attrs" (mk_attributes ()) attributes
     => Row.OptionalRecordCons facts "hooks" (Hooks message) hooks
     => ExtractKeyType facts key
     => { | facts }
-    -> Array (VirtualDomTree child_key slots message)
     -> VirtualDomTree key slots message
 
 foreign import node
@@ -56,14 +55,13 @@ foreign import node
      . { ns :: String
        , tagName :: String
        , facts :: { | facts }
-       , children :: Array (VirtualDomTree child_key slots message)
        }
     -> VirtualDomTree key slots message
 
 type Leaf :: (Row Type -> Row Type) -> (Type -> Row Type -> Row Type) -> (Row Type -> Row Type) -> Type
 type Leaf mk_properties mk_outputs mk_attributes =
     forall facts _facts _key key attributes hooks slots message
-     . Row.Union facts _facts (Facts mk_properties (mk_outputs message) attributes hooks _key)
+     . Row.Union facts _facts (Facts mk_properties (mk_outputs message) attributes hooks _key ())
     => Row.OptionalRecordCons facts "attrs" (mk_attributes ()) attributes
     => Row.OptionalRecordCons facts "hooks" (Hooks message) hooks
     => ExtractKeyType facts key

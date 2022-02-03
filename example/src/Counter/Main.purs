@@ -39,11 +39,13 @@ update = case _ of
 
 view :: Model -> Html.Root Message
 view model =
-    Html.div {}
-        [ Html.button { onClick: const UserClickedDecreaseButton } [ Html.text "-" ]
-        , Html.text $ show model
-        , Html.button { onClick: const UserClickedIncreaseButton } [ Html.text "+" ]
-        ]
+    Html.div
+        { children:
+              [ Html.button { onClick: const UserClickedDecreaseButton, children: [ Html.text "-" ] }
+              , Html.text $ show model
+              , Html.button { onClick: const UserClickedIncreaseButton, children: [ Html.text "+" ] }
+              ]
+        }
 
 command
     :: Message

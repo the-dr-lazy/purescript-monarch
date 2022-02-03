@@ -29,7 +29,7 @@ import Undefined
 type Root = VirtualDomTree Nothing ()
 
 div :: VirtualDomTree.Node HtmlDivElementProperties HtmlDivElementOutputs HtmlDivElementAttributes
-div facts children = VirtualDomTree.node { ns: undefined, tagName: "div", facts, children }
+div facts = VirtualDomTree.node { ns: undefined, tagName: "div", facts }
 
 button :: VirtualDomTree.Node HtmlButtonElementProperties HtmlButtonElementOutputs HtmlButtonElementAttributes
-button facts children = VirtualDomTree.node { ns: undefined, tagName: "button", facts, children }
+button facts = VirtualDomTree.node { ns: undefined, tagName: "button", facts }

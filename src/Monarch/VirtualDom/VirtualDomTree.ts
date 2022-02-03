@@ -242,27 +242,11 @@ export const fmapVirtualDomTree: FMapVirtualDomTree = f => vNode => {
     return tagger
 }
 
-export const node = <message>({
-    ns,
-    tagName,
-    facts,
-    children,
-}: {
-    ns: NS
-    tagName: TagName
-    facts: Facts
-    children: ReadonlyArray<VirtualDomTree<message>>
-}): VirtualDomTree<message> => VirtualDomTree.mkElementNS(ns, tagName, facts, children)
+export const node = <message>(spec: { ns: NS; tagName: TagName; facts: Facts }): VirtualDomTree<message> =>
+    VirtualDomTree.mkElementNS(spec.ns, spec.tagName, spec.facts, spec.facts.children)
 
-export const leaf = <message>({
-    ns,
-    tagName,
-    facts,
-}: {
-    ns: NS
-    tagName: TagName
-    facts: Facts
-}): VirtualDomTree<message> => VirtualDomTree.mkElementNS(ns, tagName, facts, undefined)
+export const leaf = <message>(spec: { ns: NS; tagName: TagName; facts: Facts }): VirtualDomTree<message> =>
+    VirtualDomTree.mkElementNS(spec.ns, spec.tagName, spec.facts, undefined)
 
 export const text = VirtualDomTree.mkText
 
