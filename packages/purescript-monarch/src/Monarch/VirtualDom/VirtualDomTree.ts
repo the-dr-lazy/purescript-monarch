@@ -8,8 +8,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { VirtualDomTree, NS, TagName } from '@purescript-monarch/core/VirtualDom/VirtualDomTree'
-import { Facts } from '@purescript-monarch/core/VirtualDom/Facts'
+import { VirtualDomTree, NS, TagName } from '@purescript-monarch/core/src/VirtualDom/VirtualDomTree'
+import { Facts } from '@purescript-monarch/core/src/VirtualDom/Facts'
 
 // prettier-ignore
 interface FMapVirtualDomTree {

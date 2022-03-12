@@ -1,5 +1,5 @@
 {
-    "include": ["./packages/purescript-monarch/src/**/*.ts", "./packages/purescript-monarch-core/src/**/*.ts"],
+    "include": ["src/**/*.ts"],
     "compilerOptions": {
         "target": "es5",
         "module": "commonjs",
