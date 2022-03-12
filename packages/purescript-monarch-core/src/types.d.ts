@@ -8,10 +8,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { Spec, unsafe_document } from '@purescript-monarch/core/src/Document'
+//
+// Primitives
+//
+type Unit = void
+type Int = number
+type Lazy<a> = () => a
 
-interface Document {
-    <model, message, output, effects>(spec: Spec<model, message, output, effects>): Effect<Unit>
+//
+// Data Types
+//
+type Effect<a> = Lazy<a>
+
+interface Tagged<a> {
+    tag: a
 }
 
-export const document: Document = spec => () => unsafe_document(spec)
+declare module 'asap'

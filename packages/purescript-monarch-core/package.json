@@ -5,10 +5,8 @@
     "main": "index.js",
     "scripts": {
         "start": "parcel ./example/index.html",
-        "build:dependencies": "spago build --deps-only",
         "build:ts": "tsc -p tsconfig.json --outDir node_modules/.temp/ts/src && cpx 'node_modules/.temp/ts/src/**/*.js' src",
-        "build:purs": "spago build",
-        "build": "run-s build:dependencies build:ts build:purs clean:temp",
+        "build": "run-s build:ts clean:temp",
         "clean": "git clean -Xdf",
         "clean:temp": "rimraf node_modules/.temp",
         "test": "echo \"Error: no test specified\" && exit 1"
