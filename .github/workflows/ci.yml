@@ -38,13 +38,15 @@ jobs:
                       output
 
             - name: Install NPM dependencies
-              run: nix -Lv develop -c npm ci
+              run: |
+                  nix -Lv develop -c npm ci
+                  nix -Lv develop -c lerna bootstrap
 
             - name: Install & build PureScript dependencies
-              run: nix -Lv develop -c spago build --deps-only
+              run: nix -Lv develop -c lerna run build:dependencies
 
             - name: Build TypeScript
-              run: nix -Lv develop -c tsc -p tsconfig.json
+              run: nix -Lv develop -c lerna run build:ts
 
             - name: Build PureScript
-              run: nix -Lv develop -c spago build
+              run: nix -Lv develop -c lerna run build:purs
