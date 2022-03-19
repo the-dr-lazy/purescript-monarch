@@ -34,12 +34,12 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduc
 
 ## Versioning
 
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](thebrodmann/purescript-monarch/tags).
+We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](the-dr-lazy/purescript-monarch/tags).
 
 ## Authors
 
-- **Mohammad Hasani** - _Maintainer_ - [amygdala :: ∀ a. a → IO Memory](https://github.com/thebrodmann)
-- **Mahdi Seyedan** - _Collaborator_ - [jedimahdi](https://github.com/jedimahdi)
+-   **Mohammad Hasani** - _Maintainer_ - [amygdala :: ∀ a. a → IO Memory](https://github.com/the-dr-lazy)
+-   **Mahdi Seyedan** - _Collaborator_ - [jedimahdi](https://github.com/jedimahdi)
 
 ## License
 
@@ -47,5 +47,5 @@ This project licensed under the MPL License - see the [LICENSE](LICENSE) file fo
 
 ## Acknowledgments
 
-- [Elm](https://elm-lang.org/)
-- [Halogen](https://github.com/purescript-halogen/purescript-halogen)
+-   [Elm](https://elm-lang.org/)
+-   [Halogen](https://github.com/purescript-halogen/purescript-halogen)
