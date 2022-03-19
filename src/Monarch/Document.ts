@@ -8,7 +8,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { Spec, unsafe_document } from '@purescript-monarch/core/src/Document'
+import { Spec, unsafe_document } from '@purescript-monarch/core/lib/Document'
 
 interface Document {
     <model, message, output, effects>(spec: Spec<model, message, output, effects>): Effect<Unit>

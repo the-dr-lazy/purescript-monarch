@@ -24,7 +24,7 @@ pkgs.stable.mkShell {
     # Command line tools:
     {
       inherit (pkgs.stable) cachix gitFull gitflow;
-      inherit (pkgs.unstable.nodePackages) parcel-bundler lerna;
+      inherit (pkgs.unstable.nodePackages) parcel-bundler;
     }
 
     ###################################################

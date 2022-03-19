@@ -1,6 +1,6 @@
 { name = "monarch"
 , license = "MPL"
-, repository = "https://github.com/thebrodmann/monarch"
+, repository = "https://github.com/the-dr-lazy/purescript-monarch"
 , dependencies =
   [ "aff"
   , "arrays"
