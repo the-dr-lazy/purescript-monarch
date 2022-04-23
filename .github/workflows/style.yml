@@ -2,9 +2,9 @@ name: Code Style
 
 on:
     pull_request:
+        types: [synchronize, opened, reopened]
     push:
-        braches:
-            - master
+        branches: [master]
 
 jobs:
     checks:
