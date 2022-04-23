@@ -4,7 +4,7 @@ on:
     pull_request:
         types: [synchronize, opened, reopened]
     push:
-        branches: [master]
+        branches: [master, next]
     schedule:
         # Run once per week (At 00:00 on Sunday) to maintain cache
         - cron: '0 0 * * 0'
